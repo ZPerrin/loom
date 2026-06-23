@@ -1,5 +1,5 @@
 ---
-kind: readme
+kind: bogus
 status: living
 updated: 2026-06-23
 ---

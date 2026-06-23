@@ -18,6 +18,8 @@ assert_contains "$dout" "BROKEN"   "reports BROKEN link"
 assert_contains "$dout" "nope/missing.md" "names the broken href"
 assert_contains "$dout" "CODELINK" "reports CODELINK"
 assert_contains "$dout" "MISSING"  "reports MISSING list-path link"
+assert_contains "$dout" "FRONTMATTER" "reports bad frontmatter kind"
+assert_contains "$dout" "STAMP"       "reports missing Overview stamp"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
 finish

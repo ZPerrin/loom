@@ -116,10 +116,52 @@ check_links() { # $1=file
   done < <(scan_lines "$f")
 }
 
+in_list() { printf '%s\n' "$2" | grep -qxF "$1"; }
+
+check_frontmatter() { # $1=file
+  local f="$1" rel; rel="${f#"$ROOT"/}"
+  local first; IFS= read -r first < "$f"
+  if [ "$first" != "---" ]; then
+    add "FRONTMATTER $rel: missing frontmatter (expected \`---\` on line 1)"; return
+  fi
+  local kind status updated line k v
+  while IFS= read -r line; do
+    [ "$line" = "---" ] && break
+    case "$line" in
+      *:*) k="${line%%:*}"; v="${line#*:}"; v="${v# }"
+           case "$k" in kind) kind="$v";; status) status="$v";; updated) updated="$v";; esac ;;
+    esac
+  done < <(tail -n +2 "$f")
+  in_list "${kind:-}" "$KINDS" || add "FRONTMATTER $rel: kind=${kind:-} not allowed"
+  in_list "${status:-}" "$STATUSES" || add "FRONTMATTER $rel: status=${status:-} not allowed"
+  case "${updated:-}" in
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+    *) add "FRONTMATTER $rel: updated=${updated:-} not an ISO date (YYYY-MM-DD)" ;;
+  esac
+}
+
+check_stamp() { # $1=file  (subshell-safe version)
+  local f="$1" rel r; rel="${f#"$ROOT"/}"
+  local first; IFS= read -r first < "$f"
+  [ "$first" = "---" ] && add "STAMP $rel: README should stay frontmatter-free (use a stamped \`## Overview\`)"
+  r="$(awk '
+    /^##[ \t]+Overview[ \t]*$/ { seen=1; next }
+    seen { if ($0 ~ /^[ \t]*$/) next
+           if ($0 ~ /^_updated:[ \t]*[0-9]{4}-[0-9]{2}-[0-9]{2}_?[ \t]*$/) {print "OK"; exit}
+           print "NOSTAMP"; exit }
+    END { if (!seen) print "NOOVERVIEW" }' "$f")"
+  case "$r" in
+    NOSTAMP)    add "STAMP $rel: \`## Overview\` missing \`_updated: YYYY-MM-DD_\` stamp" ;;
+    NOOVERVIEW) add "STAMP $rel: missing \`## Overview\` section" ;;
+  esac
+}
+
 # --- run ---
 for f in $(frontmatter_docs; stamped_readmes; skill_docs); do
   check_links "$f"
 done
+for f in $(frontmatter_docs); do check_frontmatter "$f"; done
+for f in $(stamped_readmes); do check_stamp "$f"; done
 
 if [ -z "$FINDINGS" ]; then
   echo "doc-linter: clean ✓"
