@@ -8,6 +8,18 @@ function dequote(s) {
   if (s ~ /^".*"$/) s = substr(s, 2, length(s) - 2)
   return s
 }
+function strip_comment(s,   i, c, inq, out) {
+  inq = 0; out = ""
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (c == "\"") { inq = !inq; out = out c; continue }
+    if (c == "#" && !inq) break
+    out = out c
+  }
+  sub(/[ \t]+$/, "", out)
+  return out
+}
+{ $0 = strip_comment($0) }
 /^[ \t]*#/   { next }   # full-line comment
 /^[ \t]*$/   { next }   # blank
 /^[ \t]*\[\[/ { print "parse-toml: unsupported array-of-tables: " $0 > "/dev/stderr"; exit 2 }

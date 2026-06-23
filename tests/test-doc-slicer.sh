@@ -5,6 +5,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 SLICER="$DIR/../hooks/doc-slicer"
 R="$DIR/fixtures/slice-repo"
 
+rm -rf "$R/.git"
 ( cd "$R" && git init -q . && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: slice repo" )
 out="$(cd "$R" && bash "$SLICER" 2>&1)"; rc=$?
 assert_exit "$rc" "0" "slicer exits 0"

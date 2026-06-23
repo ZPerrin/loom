@@ -51,13 +51,19 @@ exists() { [ -e "$1" ]; }
 frontmatter_docs() {  # tier 1: docs/ tree + AGENTS.md
   exists "$ROOT/AGENTS.md" && printf '%s\n' "$ROOT/AGENTS.md"
   exists "$ROOT/docs/README.md" && printf '%s\n' "$ROOT/docs/README.md"
-  for sub in $SUBDIRS; do
-    for f in "$ROOT/docs/$sub"/*.md; do exists "$f" && printf '%s\n' "$f"; done
-  done
+  while IFS= read -r sub; do
+    [ -n "$sub" ] && for f in "$ROOT/docs/$sub"/*.md; do exists "$f" && printf '%s\n' "$f"; done
+  done <<EOF
+$SUBDIRS
+EOF
 }
 stamped_readmes() {   # tier 2: root + module READMEs
   exists "$ROOT/README.md" && printf '%s\n' "$ROOT/README.md"
-  for m in $MODULES; do exists "$ROOT/$m/README.md" && printf '%s\n' "$ROOT/$m/README.md"; done
+  while IFS= read -r m; do
+    [ -n "$m" ] && exists "$ROOT/$m/README.md" && printf '%s\n' "$ROOT/$m/README.md"
+  done <<EOF
+$MODULES
+EOF
 }
 skill_docs() {        # any in-repo skills (none under a plugin install)
   for f in "$ROOT"/.claude/skills/*/SKILL.md; do exists "$f" && printf '%s\n' "$f"; done
@@ -157,11 +163,9 @@ check_stamp() { # $1=file  (subshell-safe version)
 }
 
 # --- run ---
-for f in $(frontmatter_docs; stamped_readmes; skill_docs); do
-  check_links "$f"
-done
-for f in $(frontmatter_docs); do check_frontmatter "$f"; done
-for f in $(stamped_readmes); do check_stamp "$f"; done
+while IFS= read -r f; do [ -n "$f" ] && check_links "$f"; done < <(frontmatter_docs; stamped_readmes; skill_docs)
+while IFS= read -r f; do [ -n "$f" ] && check_frontmatter "$f"; done < <(frontmatter_docs)
+while IFS= read -r f; do [ -n "$f" ] && check_stamp "$f"; done < <(stamped_readmes)
 
 if [ -z "$FINDINGS" ]; then
   echo "doc-linter: clean ✓"

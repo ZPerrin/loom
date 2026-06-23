@@ -19,4 +19,12 @@ assert_not_contains "$out" "# a comment"                 "comment stripped"
 awk -f "$AWK" "$F/aot.toml" >/dev/null 2>&1
 assert_exit "$?" "2" "array-of-tables rejected with exit 2"
 
+# Fix 1 regression: trailing comments (outside quotes) must be stripped;
+# ## inside a quoted value must be preserved.
+cout="$(awk -f "$AWK" "$F/comments.toml" 2>&1)"; crc=$?
+assert_exit "$crc" "0" "trailing-comment toml exits 0 (not 2)"
+assert_contains "$cout" "lint.kinds=readme"              "trailing-comment: readme kind"
+assert_contains "$cout" "lint.kinds=guide"               "trailing-comment: guide kind"
+assert_contains "$cout" "context.sections=docs/config/roadmap.md > ## Now" "trailing-comment: ## inside quotes preserved"
+
 finish

@@ -1,5 +1,5 @@
 [modules]
-dirs = ["mod"]
+dirs = ["mod", "my mod"]
 [lint]
 kinds = ["readme", "reference"]
 statuses = ["living"]

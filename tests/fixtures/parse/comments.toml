@@ -1,0 +1,4 @@
+[lint]
+kinds = ["readme", "guide"]   # trailing comment after an array
+[context]
+sections = ["docs/config/roadmap.md > ## Now"]  # value contains ## which must survive

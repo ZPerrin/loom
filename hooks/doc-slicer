@@ -26,6 +26,7 @@ fi
 cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
 
 COMMITS="$(cfg_get context.recent_commits)"; COMMITS="${COMMITS:-15}"
+case "$COMMITS" in ''|*[!0-9]*) COMMITS=15 ;; esac
 INCLUDE_MODULES="$(cfg_get context.include_modules)"
 MODULES="$(cfg_get modules.dirs)"
 
@@ -61,10 +62,14 @@ done
 # module slices
 if [ "${INCLUDE_MODULES:-}" = "true" ] && [ -n "$MODULES" ]; then
   printf '## Module Map\n\n_Slices from each module, pointing at the deeper module docs:_\n\n'
-  for m in $MODULES; do
-    line="$(map_line "$m")"
-    [ -n "$line" ] && printf '### %s\n' "$line"
-    emit_section "$ROOT/$m/README.md" "## Overview"
-    printf '\n'
-  done
+  while IFS= read -r m; do
+    [ -n "$m" ] && {
+      line="$(map_line "$m")"
+      [ -n "$line" ] && printf '### %s\n' "$line"
+      emit_section "$ROOT/$m/README.md" "## Overview"
+      printf '\n'
+    }
+  done <<EOF
+$MODULES
+EOF
 fi
