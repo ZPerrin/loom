@@ -140,10 +140,11 @@ docs_subdirs = ["config", "specs", "plans", "design"]
 - `[table]` header lines set the current section.
 - `key = "string"`, `key = 42`, `key = true|false` — scalars (quotes stripped).
 - `key = ["a", "b", "c"]` — single-line arrays (split on `,`, quotes/space stripped).
-- Whole-line `#` comments and blank lines ignored.
+- Whole-line and trailing `#` comments (the parser strips the first `#` outside
+  double-quotes, so `## Now` inside a quoted value survives) and blank lines ignored.
 
 **Not supported** (fail loudly, don't half-parse): arrays-of-tables (`[[x]]`), inline
-tables (`{…}`), multiline arrays/strings, trailing/inline comments after a value.
+tables (`{…}`), multiline arrays/strings.
 
 Encoding notes: section slices are compound strings `"file > ## Header"` (split on the
 first ` > `) since we avoid arrays-of-tables; slice order is fixed
