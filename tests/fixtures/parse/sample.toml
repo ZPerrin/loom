@@ -1,0 +1,11 @@
+# a comment
+[modules]
+dirs = ["backend", "frontend", "cdk"]
+
+[context]
+recent_commits = 15
+sections = ["docs/config/roadmap.md > ## Now"]
+include_modules = true
+
+[lint]
+kinds = ["charter", "readme"]
