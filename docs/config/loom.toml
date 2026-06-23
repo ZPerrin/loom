@@ -1,0 +1,13 @@
+# loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
+[modules]
+dirs = []
+
+[context]
+recent_commits = 15
+sections = ["docs/config/roadmap.md > ## Now"]
+include_modules = false
+
+[lint]
+kinds = ["charter", "roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
+statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
+docs_subdirs = ["config"]
