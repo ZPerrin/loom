@@ -67,10 +67,59 @@ FINDINGS=""
 add() { FINDINGS="${FINDINGS}$1
 "; }
 
-# (checks added in later tasks)
+# Emit, per line of a markdown file, candidate findings. awk extracts; bash
+# resolves filesystem existence (awk can't stat). Fenced code blocks skipped.
+# Output lines: "BROKEN<TAB>href", "CODELINK<TAB>text", "MISSING<TAB>span".
+scan_lines() { # $1=file
+  awk '
+    /^[ \t]*```/ { fence = !fence; next }
+    fence { next }
+    {
+      line = $0
+      # links: [text](href)
+      s = line
+      while (match(s, /\[[^]]*\]\([^)]+\)/)) {
+        chunk = substr(s, RSTART, RLENGTH)
+        href = chunk; sub(/^[^(]*\(/, "", href); sub(/\)$/, "", href)
+        sub(/#.*$/, "", href)
+        if (href !~ /^(https?:|mailto:)/ && href != "") print "BROKEN\t" href
+        # code-styled link text: [`...`](
+        if (chunk ~ /^\[`[^`]*`\]\(/) {
+          t = chunk; sub(/^\[`/, "", t); sub(/`\].*$/, "", t); print "CODELINK\t" t
+        }
+        s = substr(s, RSTART + RLENGTH)
+      }
+      # MISSING: list lead "- `path` — desc" that is not itself a link
+      if (line ~ /^[ \t]*[-*][ \t]+`[^`]+`[ \t]*—/ && line !~ /\]\(/) {
+        span = line; sub(/^[ \t]*[-*][ \t]+`/, "", span); sub(/`.*$/, "", span)
+        if (span ~ /[\/.]/) print "MISSING\t" span
+      }
+    }
+  ' "$1"
+}
+
+check_links() { # $1=file
+  local f="$1" dir rel kind rest
+  dir="$(dirname "$f")"; rel="${f#"$ROOT"/}"
+  while IFS=$'\t' read -r kind rest; do
+    case "$kind" in
+      BROKEN)
+        [ -e "$dir/$rest" ] || add "BROKEN   $rel: $rest" ;;
+      CODELINK)
+        add "CODELINK $rel: \`$rest\` — use plain link text [$rest](…)" ;;
+      MISSING)
+        local tgt="$dir/$rest"
+        if [ -e "$tgt" ] && ! git -C "$ROOT" check-ignore -q "$tgt" 2>/dev/null; then
+          add "MISSING $rel: list path \`$rest\` should be a link"
+        fi ;;
+    esac
+  done < <(scan_lines "$f")
+}
 
 # --- run ---
-# placeholder run wiring; checks appended in Tasks 4-7.
+for f in $(frontmatter_docs; stamped_readmes; skill_docs); do
+  check_links "$f"
+done
 
 if [ -z "$FINDINGS" ]; then
   echo "doc-linter: clean ✓"

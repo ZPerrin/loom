@@ -1,0 +1,6 @@
+[modules]
+dirs = ["mod"]
+[lint]
+kinds = ["readme", "reference"]
+statuses = ["living"]
+docs_subdirs = ["config"]
