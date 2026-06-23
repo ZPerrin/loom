@@ -1,0 +1,12 @@
+{
+  "name": "loom",
+  "version": "0.0.1",
+  "description": "A self-maintaining docs & context harness — keeps a repo's documentation, and thus agent context, high-quality almost autonomously. Scratch / experimental, extracted from the jack repo.",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.codex.json",
+  "interface": {
+    "displayName": "Loom (dev)",
+    "shortDescription": "Self-maintaining docs & context harness",
+    "developerName": "Zebulon Perrin"
+  }
+}

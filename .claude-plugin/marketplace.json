@@ -1,0 +1,11 @@
+{
+  "name": "loom-dev",
+  "owner": { "name": "Zebulon Perrin" },
+  "plugins": [
+    {
+      "name": "loom",
+      "source": "./",
+      "description": "Self-maintaining docs & context harness (scratch)."
+    }
+  ]
+}
