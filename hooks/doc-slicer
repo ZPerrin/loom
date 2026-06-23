@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# doc-slicer — SessionStart context for loom (bash 3.2 + awk, no deps).
+# Emits, to stdout: a preamble, a git "Bearings" block, then configured slices
+# (roadmap/section slices, then per-module Overview slices). Config from
+# <repo>/docs/config/loom.toml (TOML subset) or embedded defaults.
+set -u
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+PARSE_AWK="$SELF_DIR/../scripts/lib/parse-toml.awk"
+
+repo_root() {
+  git rev-parse --show-toplevel 2>/dev/null && return
+  printf '%s\n' "${CLAUDE_PROJECT_DIR:-$PWD}"
+}
+ROOT="$(repo_root)"
+
+DEFAULT_CFG='context.recent_commits=15
+context.sections=docs/config/roadmap.md > ## Now
+context.include_modules=true'
+CONF="$ROOT/docs/config/loom.toml"
+if [ -f "$CONF" ]; then
+  CFG="$(awk -f "$PARSE_AWK" "$CONF")" || CFG="$DEFAULT_CFG"
+else
+  CFG="$DEFAULT_CFG"
+fi
+cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
+
+COMMITS="$(cfg_get context.recent_commits)"; COMMITS="${COMMITS:-15}"
+INCLUDE_MODULES="$(cfg_get context.include_modules)"
+MODULES="$(cfg_get modules.dirs)"
+
+# print the markdown under "<header>" in <file>, header line excluded.
+emit_section() { # $1=file $2=header
+  [ -f "$1" ] || return 0
+  awk -v hdr="$2" '
+    $0 == hdr { cap = 1; next }
+    cap && /^## / { exit }
+    cap { print }
+  ' "$1"
+}
+# the root README Module-Map bullet for <dir>, minus leading "- ".
+map_line() { # $1=dir
+  [ -f "$ROOT/README.md" ] || return 0
+  awk -v d="$1" 'index($0, "[" d "]") { sub(/^- /, ""); print; exit }' "$ROOT/README.md"
+}
+
+printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. Read the deeper docs when a task goes past a slice._\n\n'
+
+printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
+git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"
+printf '\n'
+
+# configured section slices (e.g. roadmap "## Now")
+cfg_get context.sections | while IFS= read -r entry; do
+  [ -n "$entry" ] || continue
+  file="${entry%% > *}"; header="${entry#* > }"
+  body="$(emit_section "$ROOT/$file" "$header")"
+  [ -n "$body" ] && printf '%s\n\n' "$body"
+done
+
+# module slices
+if [ "${INCLUDE_MODULES:-}" = "true" ] && [ -n "$MODULES" ]; then
+  printf '## Module Map\n\n_Slices from each module, pointing at the deeper module docs:_\n\n'
+  for m in $MODULES; do
+    line="$(map_line "$m")"
+    [ -n "$line" ] && printf '### %s\n' "$line"
+    emit_section "$ROOT/$m/README.md" "## Overview"
+    printf '\n'
+  done
+fi

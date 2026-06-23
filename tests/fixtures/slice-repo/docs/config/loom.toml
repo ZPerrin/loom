@@ -1,0 +1,6 @@
+[modules]
+dirs = ["mod"]
+[context]
+recent_commits = 5
+sections = ["docs/config/roadmap.md > ## Now"]
+include_modules = true
