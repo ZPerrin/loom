@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# doc-linter — doc hygiene for loom-managed Markdown (bash 3.2 + awk, no deps).
+# Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
+# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated values).
+# Config: <repo>/docs/config/loom.toml ([lint] kinds/statuses) or embedded defaults.
+set -u
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
+. "$SELF_DIR/lib/discover.sh"
+ROOT="$(loom_repo_root)"
+
+# --- config: normalized "table.key=value" text, from loom.toml or defaults ---
+DEFAULT_CFG='lint.kinds=charter
+lint.kinds=roadmap
+lint.kinds=readme
+lint.kinds=guide
+lint.kinds=reference
+lint.kinds=spec
+lint.kinds=plan
+lint.kinds=design
+lint.kinds=review
+lint.statuses=living
+lint.statuses=hardened
+lint.statuses=superseded
+lint.statuses=scaffolding
+lint.statuses=ideation'
+CONF="$ROOT/docs/config/loom.toml"
+if [ -f "$CONF" ]; then
+  CFG="$(awk -f "$PARSE_AWK" "$CONF")" || { echo "doc-linter: bad loom.toml" >&2; exit 2; }
+else
+  CFG="$DEFAULT_CFG"
+fi
+cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
+
+KINDS="$(cfg_get lint.kinds)"
+STATUSES="$(cfg_get lint.statuses)"
+
+FINDINGS=""
+add() { FINDINGS="${FINDINGS}$1
+"; }
+
+# Emit, per line of a markdown file, candidate findings. awk extracts; bash resolves
+# filesystem existence. Fenced code blocks skipped.
+# Output lines: "BROKEN<TAB>href", "CODELINK<TAB>text", "MISSING<TAB>span".
+scan_lines() { # $1=file
+  awk '
+    /^[ \t]*```/ { fence = !fence; next }
+    fence { next }
+    {
+      line = $0
+      s = line
+      while (match(s, /\[[^]]*\]\([^)]+\)/)) {
+        chunk = substr(s, RSTART, RLENGTH)
+        href = chunk; sub(/^[^(]*\(/, "", href); sub(/\)$/, "", href)
+        sub(/#.*$/, "", href)
+        if (href !~ /^(https?:|mailto:)/ && href != "") print "BROKEN\t" href
+        if (chunk ~ /^\[`[^`]*`\]\(/) {
+          t = chunk; sub(/^\[`/, "", t); sub(/`\].*$/, "", t); print "CODELINK\t" t
+        }
+        s = substr(s, RSTART + RLENGTH)
+      }
+      if (line ~ /^[ \t]*[-*][ \t]+`[^`]+`[ \t]*—/ && line !~ /\]\(/) {
+        span = line; sub(/^[ \t]*[-*][ \t]+`/, "", span); sub(/`.*$/, "", span)
+        if (span ~ /[\/.]/) print "MISSING\t" span
+      }
+    }
+  ' "$1"
+}
+
+check_links() { # $1=file
+  local f="$1" dir rel kind rest tgt
+  dir="$(dirname "$f")"; rel="${f#"$ROOT"/}"
+  while IFS=$'\t' read -r kind rest; do
+    case "$kind" in
+      BROKEN)
+        [ -e "$dir/$rest" ] || add "BROKEN   $rel: $rest" ;;
+      CODELINK)
+        add "CODELINK $rel: \`$rest\` — use plain link text [$rest](…)" ;;
+      MISSING)
+        tgt="$dir/$rest"
+        if [ -e "$tgt" ] && ! git -C "$ROOT" check-ignore -q "$tgt" 2>/dev/null; then
+          add "MISSING $rel: list path \`$rest\` should be a link"
+        fi ;;
+    esac
+  done < <(scan_lines "$f")
+}
+
+in_list() { printf '%s\n' "$2" | grep -qxF "$1"; }
+
+check_frontmatter() { # $1=file  (every managed doc has frontmatter; validate values)
+  local f="$1" rel; rel="${f#"$ROOT"/}"
+  local kind status updated line k v
+  while IFS= read -r line; do
+    [ "$line" = "---" ] && break   # exact close; managed_docs guarantees a well-formed fence
+    case "$line" in
+      *:*) k="${line%%:*}"; v="${line#*:}"; v="${v# }"
+           case "$k" in kind) kind="$v";; status) status="$v";; updated) updated="$v";; esac ;;
+    esac
+  done < <(tail -n +2 "$f")
+  in_list "${kind:-}" "$KINDS" || add "FRONTMATTER $rel: kind=${kind:-} not allowed"
+  in_list "${status:-}" "$STATUSES" || add "FRONTMATTER $rel: status=${status:-} not allowed"
+  case "${updated:-}" in
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+    *) add "FRONTMATTER $rel: updated=${updated:-} not an ISO date (YYYY-MM-DD)" ;;
+  esac
+}
+
+# --- run: lint the discovered managed set (current shell, so add() persists) ---
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  f="$ROOT/$rel"
+  check_links "$f"
+  check_frontmatter "$f"
+done < <(managed_docs "$ROOT")
+
+if [ -z "$FINDINGS" ]; then
+  echo "doc-linter: clean ✓"
+  exit 0
+fi
+printf '%s' "$FINDINGS"
+exit 1

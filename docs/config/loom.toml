@@ -1,0 +1,12 @@
+# loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
+[discovery]
+exclude = ["tests/fixtures"]
+
+[context]
+recent_commits = 15
+slice_headers = ["## Now"]
+inject_fields = ["updated", "kind", "location"]
+
+[lint]
+kinds = ["charter", "roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
+statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]

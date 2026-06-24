@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# doc-slicer — SessionStart context for loom (bash 3.2 + awk, no deps).
+# Emits a preamble, a git "Bearings" block, then harvests every section whose header is
+# in context.slice_headers across the discovered managed-doc set, each prefixed with a
+# context.inject_fields annotation (frontmatter values; `location` = the source path).
+# Path-free: slices are found by discovery + header, so moving a file never breaks them.
+set -u
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+PARSE_AWK="$SELF_DIR/../scripts/lib/parse-toml.awk"
+. "$SELF_DIR/../scripts/lib/discover.sh"
+ROOT="$(loom_repo_root)"
+
+DEFAULT_CFG='context.recent_commits=15
+context.slice_headers=## Now
+context.inject_fields=updated
+context.inject_fields=kind
+context.inject_fields=location'
+CONF="$ROOT/docs/config/loom.toml"
+if [ -f "$CONF" ]; then
+  CFG="$(awk -f "$PARSE_AWK" "$CONF")" || CFG="$DEFAULT_CFG"
+else
+  CFG="$DEFAULT_CFG"
+fi
+cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
+
+COMMITS="$(cfg_get context.recent_commits)"; COMMITS="${COMMITS:-15}"
+case "$COMMITS" in ''|*[!0-9]*) COMMITS=15 ;; esac
+SLICE_HEADERS="$(cfg_get context.slice_headers)"
+INJECT_FIELDS="$(cfg_get context.inject_fields)"
+
+# print the markdown under "<header>" in <file>, header line excluded, stop at next "## ".
+# Match is exact ($0 == hdr); trailing whitespace in the file would prevent a match.
+emit_section() { # $1=file $2=header
+  [ -f "$1" ] || return 0
+  awk -v hdr="$2" '
+    $0 == hdr { cap = 1; next }
+    cap && /^## / { exit }
+    cap { print }
+  ' "$1"
+}
+
+# one-line annotation for a managed doc, built from INJECT_FIELDS in order.
+annotate() { # $1=rel
+  local rel="$1" abs="$ROOT/$1" out="" field val v
+  while IFS= read -r field; do
+    [ -n "$field" ] || continue
+    case "$field" in
+      location) val="$rel" ;;
+      *) v="$(frontmatter_field "$abs" "$field")"; [ -n "$v" ] && val="$field: $v" || val="" ;;
+    esac
+    [ -n "$val" ] && { [ -n "$out" ] && out="$out · $val" || out="$val"; }
+  done <<EOF
+$INJECT_FIELDS
+EOF
+  printf '%s' "$out"
+}
+
+printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. Read the deeper docs when a task goes past a slice._\n\n'
+
+printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
+git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"
+printf '\n'
+
+# Harvest configured headers across the managed set (cache the set once).
+MANAGED="$(managed_docs "$ROOT")"
+while IFS= read -r hdr; do
+  [ -n "$hdr" ] || continue
+  shown=""
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    body="$(emit_section "$ROOT/$rel" "$hdr")"
+    [ -n "$body" ] || continue
+    if [ -z "$shown" ]; then printf '## %s\n\n' "${hdr#"## "}"; shown=1; fi
+    ann="$(annotate "$rel")"
+    [ -n "$ann" ] && printf '_%s_\n\n' "$ann"
+    printf '%s\n\n' "$body"
+  done <<EOF
+$MANAGED
+EOF
+done <<EOF
+$SLICE_HEADERS
+EOF

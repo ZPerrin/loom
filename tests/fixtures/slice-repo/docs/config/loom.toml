@@ -1,0 +1,4 @@
+[context]
+recent_commits = 15
+slice_headers = ["## Now", "## Module Map"]
+inject_fields = ["kind", "location"]
