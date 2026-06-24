@@ -976,13 +976,16 @@ In `docs/config/loom.toml`, delete the `[modules]` table entirely:
 [modules]
 dirs = []
 ```
-Leave `[context]` (set in Task 2) and `[lint]` as-is. Then change the `[lint]` table to drop `docs_subdirs` — remove this line:
+Leave `[discovery]` (added in Task 1b), `[context]` (set in Task 2), and `[lint]` as-is. Then change the `[lint]` table to drop `docs_subdirs` — remove this line:
 ```toml
 docs_subdirs = ["config"]
 ```
-The final `loom.toml` is exactly:
+The final `loom.toml` is exactly (note `[discovery]` MUST be kept — it is what excludes loom's test fixtures from its own managed set):
 ```toml
 # loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
+[discovery]
+exclude = ["tests/fixtures"]
+
 [context]
 recent_commits = 15
 slice_headers = ["## Now"]
