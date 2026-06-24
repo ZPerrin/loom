@@ -1,6 +1,8 @@
-# Project
+---
+kind: readme
+status: living
+updated: 2026-06-23
+---
+# clean
 
-## Overview
-_updated: 2026-06-23_
-
-A project.
+A tidy repo with no findings.

@@ -1,7 +1,11 @@
+---
+kind: readme
+status: living
+updated: 2026-06-23
+---
 # loom
 
 ## Overview
-_updated: 2026-06-23_
 
 A self-maintaining **docs & context harness**, packaged as a plugin for Claude Code and Codex. Skills (`dress`, `weave`, `weft`, `warp`) keep a repo's documentation — and therefore the agent's working context — high-quality *almost autonomously*; a SessionStart hook stitches targeted doc slices into each session's opening bearings.
 
@@ -27,7 +31,7 @@ The harness is a loom; sessions are woven on it.
 | **weft** | session-*close* — distill work into docs | `skills/weft` |
 | **warp** | session-*open* bookend — orient before work | `skills/warp` (stub) |
 | **doc-slicer** | the per-session context the hook threads in ("Bearings") | `hooks/doc-slicer` |
-| **doc-linter** | doc hygiene checks (links, frontmatter, stamps) | `scripts/doc-linter` |
+| **doc-linter** | doc hygiene checks (links + frontmatter) | `scripts/doc-linter` |
 
 ## Try it (local, for iteration)
 

@@ -7,9 +7,19 @@ updated: 2026-06-23
 
 loom is a docs & context harness. Its own docs follow the convention it ships:
 
-- **Tier 1 (frontmatter docs):** everything under `docs/config/` plus `AGENTS.md` open with `kind` / `status` / `updated` frontmatter.
-- **Tier 2 (stamped READMEs):** the root `README.md` (and any module READMEs) stay frontmatter-free and instead carry a `## Overview` with an `_updated: YYYY-MM-DD_` stamp.
-- **Config:** `docs/config/loom.toml` drives the linter (`kinds`/`statuses`/`docs_subdirs`) and the SessionStart slicer (`recent_commits`/`sections`/`modules`).
-- **Links are routing:** one home per fact, surfaced by progressive disclosure (root map → deeper doc → code).
+- **Membership is discovery, not enumeration.** A doc is loom-managed iff it opens with
+  YAML frontmatter carrying a `kind:` key (`status` and `updated` too). loom finds the
+  managed set with git (`scripts/doc-scan`) — tracked, staged, and uncommitted markdown,
+  with gitignored paths excluded. No registry of paths to maintain.
+- **One frontmatter rule for every doc.** READMEs included — there is no separate
+  "stamped, frontmatter-free" tier. Freshness lives in the `updated` field.
+- **Config drives behavior, not membership.** `docs/config/loom.toml` carries `[context]`
+  (`recent_commits` / `slice_headers` / `inject_fields` for the SessionStart slicer) and
+  `[lint]` (`kinds` / `statuses` — the validation vocabulary, and `kinds` is the discovery
+  key). It enumerates no files or modules. A `[discovery] exclude` list keeps chosen trees
+  (e.g. `tests/fixtures`) out of the managed set.
+- **Links are routing:** one home per fact, surfaced by progressive disclosure (root map →
+  deeper doc → code).
 
-The design specs and plans for loom live under `docs/superpowers/` and are intentionally outside the linted `docs_subdirs`.
+The design specs and plans under `docs/superpowers/` are intentionally frontmatter-free, so
+discovery treats them as unmanaged scaffolding rather than durable docs.

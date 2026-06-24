@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # doc-linter — doc hygiene for loom-managed Markdown (bash 3.2 + awk, no deps).
-# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER, STAMP (two-tier).
-# Config: <repo>/docs/config/loom.toml (TOML subset) or embedded defaults.
+# Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
+# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated values).
+# Config: <repo>/docs/config/loom.toml ([lint] kinds/statuses) or embedded defaults.
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
-
-repo_root() {
-  git rev-parse --show-toplevel 2>/dev/null && return
-  printf '%s\n' "${CLAUDE_PROJECT_DIR:-$PWD}"
-}
-ROOT="$(repo_root)"
+. "$SELF_DIR/lib/discover.sh"
+ROOT="$(loom_repo_root)"
 
 # --- config: normalized "table.key=value" text, from loom.toml or defaults ---
 DEFAULT_CFG='lint.kinds=charter
@@ -27,11 +24,7 @@ lint.statuses=living
 lint.statuses=hardened
 lint.statuses=superseded
 lint.statuses=scaffolding
-lint.statuses=ideation
-lint.docs_subdirs=config
-lint.docs_subdirs=specs
-lint.docs_subdirs=plans
-lint.docs_subdirs=design'
+lint.statuses=ideation'
 CONF="$ROOT/docs/config/loom.toml"
 if [ -f "$CONF" ]; then
   CFG="$(awk -f "$PARSE_AWK" "$CONF")" || { echo "doc-linter: bad loom.toml" >&2; exit 2; }
@@ -42,39 +35,13 @@ cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); p
 
 KINDS="$(cfg_get lint.kinds)"
 STATUSES="$(cfg_get lint.statuses)"
-SUBDIRS="$(cfg_get lint.docs_subdirs)"
-MODULES="$(cfg_get modules.dirs)"
-
-# --- file lists ---
-exists() { [ -e "$1" ]; }
-
-frontmatter_docs() {  # tier 1: docs/ tree + AGENTS.md
-  exists "$ROOT/AGENTS.md" && printf '%s\n' "$ROOT/AGENTS.md"
-  exists "$ROOT/docs/README.md" && printf '%s\n' "$ROOT/docs/README.md"
-  while IFS= read -r sub; do
-    [ -n "$sub" ] && for f in "$ROOT/docs/$sub"/*.md; do exists "$f" && printf '%s\n' "$f"; done
-  done <<EOF
-$SUBDIRS
-EOF
-}
-stamped_readmes() {   # tier 2: root + module READMEs
-  exists "$ROOT/README.md" && printf '%s\n' "$ROOT/README.md"
-  while IFS= read -r m; do
-    [ -n "$m" ] && exists "$ROOT/$m/README.md" && printf '%s\n' "$ROOT/$m/README.md"
-  done <<EOF
-$MODULES
-EOF
-}
-skill_docs() {        # any in-repo skills (none under a plugin install)
-  for f in "$ROOT"/.claude/skills/*/SKILL.md; do exists "$f" && printf '%s\n' "$f"; done
-}
 
 FINDINGS=""
 add() { FINDINGS="${FINDINGS}$1
 "; }
 
-# Emit, per line of a markdown file, candidate findings. awk extracts; bash
-# resolves filesystem existence (awk can't stat). Fenced code blocks skipped.
+# Emit, per line of a markdown file, candidate findings. awk extracts; bash resolves
+# filesystem existence. Fenced code blocks skipped.
 # Output lines: "BROKEN<TAB>href", "CODELINK<TAB>text", "MISSING<TAB>span".
 scan_lines() { # $1=file
   awk '
@@ -82,20 +49,17 @@ scan_lines() { # $1=file
     fence { next }
     {
       line = $0
-      # links: [text](href)
       s = line
       while (match(s, /\[[^]]*\]\([^)]+\)/)) {
         chunk = substr(s, RSTART, RLENGTH)
         href = chunk; sub(/^[^(]*\(/, "", href); sub(/\)$/, "", href)
         sub(/#.*$/, "", href)
         if (href !~ /^(https?:|mailto:)/ && href != "") print "BROKEN\t" href
-        # code-styled link text: [`...`](
         if (chunk ~ /^\[`[^`]*`\]\(/) {
           t = chunk; sub(/^\[`/, "", t); sub(/`\].*$/, "", t); print "CODELINK\t" t
         }
         s = substr(s, RSTART + RLENGTH)
       }
-      # MISSING: list lead "- `path` — desc" that is not itself a link
       if (line ~ /^[ \t]*[-*][ \t]+`[^`]+`[ \t]*—/ && line !~ /\]\(/) {
         span = line; sub(/^[ \t]*[-*][ \t]+`/, "", span); sub(/`.*$/, "", span)
         if (span ~ /[\/.]/) print "MISSING\t" span
@@ -105,7 +69,7 @@ scan_lines() { # $1=file
 }
 
 check_links() { # $1=file
-  local f="$1" dir rel kind rest
+  local f="$1" dir rel kind rest tgt
   dir="$(dirname "$f")"; rel="${f#"$ROOT"/}"
   while IFS=$'\t' read -r kind rest; do
     case "$kind" in
@@ -114,7 +78,7 @@ check_links() { # $1=file
       CODELINK)
         add "CODELINK $rel: \`$rest\` — use plain link text [$rest](…)" ;;
       MISSING)
-        local tgt="$dir/$rest"
+        tgt="$dir/$rest"
         if [ -e "$tgt" ] && ! git -C "$ROOT" check-ignore -q "$tgt" 2>/dev/null; then
           add "MISSING $rel: list path \`$rest\` should be a link"
         fi ;;
@@ -124,15 +88,11 @@ check_links() { # $1=file
 
 in_list() { printf '%s\n' "$2" | grep -qxF "$1"; }
 
-check_frontmatter() { # $1=file
+check_frontmatter() { # $1=file  (every managed doc has frontmatter; validate values)
   local f="$1" rel; rel="${f#"$ROOT"/}"
-  local first; IFS= read -r first < "$f"
-  if [ "$first" != "---" ]; then
-    add "FRONTMATTER $rel: missing frontmatter (expected \`---\` on line 1)"; return
-  fi
   local kind status updated line k v
   while IFS= read -r line; do
-    [ "$line" = "---" ] && break
+    [ "$line" = "---" ] && break   # exact close; managed_docs guarantees a well-formed fence
     case "$line" in
       *:*) k="${line%%:*}"; v="${line#*:}"; v="${v# }"
            case "$k" in kind) kind="$v";; status) status="$v";; updated) updated="$v";; esac ;;
@@ -146,26 +106,13 @@ check_frontmatter() { # $1=file
   esac
 }
 
-check_stamp() { # $1=file  (subshell-safe version)
-  local f="$1" rel r; rel="${f#"$ROOT"/}"
-  local first; IFS= read -r first < "$f"
-  [ "$first" = "---" ] && add "STAMP $rel: README should stay frontmatter-free (use a stamped \`## Overview\`)"
-  r="$(awk '
-    /^##[ \t]+Overview[ \t]*$/ { seen=1; next }
-    seen { if ($0 ~ /^[ \t]*$/) next
-           if ($0 ~ /^_updated:[ \t]*[0-9]{4}-[0-9]{2}-[0-9]{2}_?[ \t]*$/) {print "OK"; exit}
-           print "NOSTAMP"; exit }
-    END { if (!seen) print "NOOVERVIEW" }' "$f")"
-  case "$r" in
-    NOSTAMP)    add "STAMP $rel: \`## Overview\` missing \`_updated: YYYY-MM-DD_\` stamp" ;;
-    NOOVERVIEW) add "STAMP $rel: missing \`## Overview\` section" ;;
-  esac
-}
-
-# --- run ---
-while IFS= read -r f; do [ -n "$f" ] && check_links "$f"; done < <(frontmatter_docs; stamped_readmes; skill_docs)
-while IFS= read -r f; do [ -n "$f" ] && check_frontmatter "$f"; done < <(frontmatter_docs)
-while IFS= read -r f; do [ -n "$f" ] && check_stamp "$f"; done < <(stamped_readmes)
+# --- run: lint the discovered managed set (current shell, so add() persists) ---
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  f="$ROOT/$rel"
+  check_links "$f"
+  check_frontmatter "$f"
+done < <(managed_docs "$ROOT")
 
 if [ -z "$FINDINGS" ]; then
   echo "doc-linter: clean ✓"

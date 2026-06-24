@@ -1,6 +1,3 @@
-[modules]
-dirs = ["mod"]
 [lint]
-kinds = ["readme", "reference"]
-statuses = ["living"]
-docs_subdirs = ["config"]
+kinds = ["charter", "roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
+statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]

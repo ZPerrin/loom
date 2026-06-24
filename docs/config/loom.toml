@@ -2,9 +2,6 @@
 [discovery]
 exclude = ["tests/fixtures"]
 
-[modules]
-dirs = []
-
 [context]
 recent_commits = 15
 slice_headers = ["## Now"]
@@ -13,4 +10,3 @@ inject_fields = ["updated", "kind", "location"]
 [lint]
 kinds = ["charter", "roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
-docs_subdirs = ["config"]

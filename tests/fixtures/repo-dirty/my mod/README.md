@@ -1,5 +1,8 @@
-# My Mod
+---
+kind: bogus
+status: living
+updated: 2026-06-23
+---
+# spaced
 
-## Overview
-
-No stamp line here.
+Bad kind in a directory whose name has a space.

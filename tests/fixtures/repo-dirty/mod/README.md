@@ -3,6 +3,6 @@ kind: readme
 status: living
 updated: 2026-06-23
 ---
-# docs
+# mod
 
-How docs work here.
+Valid module (a real MISSING-link target).
