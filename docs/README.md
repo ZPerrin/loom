@@ -21,5 +21,6 @@ loom is a docs & context harness. Its own docs follow the convention it ships:
 - **Links are routing:** one home per fact, surfaced by progressive disclosure (root map →
   deeper doc → code).
 
-The design specs and plans under `docs/superpowers/` are intentionally frontmatter-free, so
-discovery treats them as unmanaged scaffolding rather than durable docs.
+The design specs and plans under `docs/superpowers/`, and the skill `SKILL.md` files (whose
+frontmatter carries no `kind`), are intentionally unmanaged scaffolding — discovery surfaces
+them as candidates rather than treating them as durable docs.

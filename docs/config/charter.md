@@ -37,13 +37,15 @@ harness for the documentation-and-context problem.
 
 ## The knobs (`docs/config/loom.toml`)
 
-The plugin ships generic code (read-only cache); each repo owns its config. Two tables:
+The plugin ships generic code (read-only cache); each repo owns its config. Three tables:
 
 - `[context]` — what the SessionStart hook injects: `recent_commits` (git bearings),
   `slice_headers` (which sections to lift, by header — path-free), `inject_fields`
   (frontmatter to prefix each slice with, e.g. `updated`/`kind`/`location`).
 - `[lint]` — the validation vocabulary: `kinds` and `statuses` (the allowed frontmatter
   values). `kinds` is also the discovery key: a doc is managed iff it carries a `kind`.
+- `[discovery]` — `exclude`, path-prefix trees kept out of the managed set (e.g. test
+  fixtures, vendored docs) so discovery doesn't pick up markdown that isn't yours to manage.
 
 ## The tools (skills)
 
