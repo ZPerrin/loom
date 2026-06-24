@@ -1,4 +1,7 @@
 # loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
+[discovery]
+exclude = ["tests/fixtures"]
+
 [modules]
 dirs = []
 

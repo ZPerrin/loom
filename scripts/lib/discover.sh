@@ -5,12 +5,15 @@
 # uncommitted docs are visible. Degrades to a bounded find outside a git repo.
 # All paths are emitted repo-root-relative.
 
+_DISCOVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+
 loom_repo_root() {
   git rev-parse --show-toplevel 2>/dev/null && return
   printf '%s\n' "${CLAUDE_PROJECT_DIR:-$PWD}"
 }
 
-doc_universe() { # $1=ROOT  -> repo-relative *.md paths
+# raw markdown listing (git-aware, gitignore-respected; bounded find fallback)
+_list_md() { # $1=ROOT
   local root="$1"
   if git -C "$root" rev-parse --git-dir >/dev/null 2>&1; then
     git -C "$root" ls-files --cached --others --exclude-standard -- '*.md'
@@ -18,6 +21,35 @@ doc_universe() { # $1=ROOT  -> repo-relative *.md paths
     ( cd "$root" 2>/dev/null && find . -type f -name '*.md' \
         -not -path '*/.git/*' -not -path '*/node_modules/*' | sed 's|^\./||' )
   fi
+}
+
+# exclude path-prefixes from [discovery] exclude in <ROOT>/docs/config/loom.toml
+doc_excludes() { # $1=ROOT
+  local conf="$1/docs/config/loom.toml"
+  [ -f "$conf" ] || return 0
+  awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
+    | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'
+}
+
+_excluded() { # $1=relpath $2=newline-separated exclude prefixes -> 0 if excluded
+  local p="$1" e
+  while IFS= read -r e; do
+    [ -n "$e" ] || continue
+    e="${e%/}"   # tolerate a trailing slash in the exclude entry
+    case "$p" in "$e"|"$e"/*) return 0 ;; esac
+  done <<EOF
+$2
+EOF
+  return 1
+}
+
+doc_universe() { # $1=ROOT -> repo-relative *.md, minus [discovery] exclude prefixes
+  local root="$1" excl rel
+  excl="$(doc_excludes "$root")"
+  _list_md "$root" | while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    _excluded "$rel" "$excl" || printf '%s\n' "$rel"
+  done
 }
 
 has_kind_frontmatter() { # $1=abs file  -> exit 0 iff frontmatter has a kind: key
