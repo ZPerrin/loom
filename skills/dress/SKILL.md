@@ -11,7 +11,7 @@ Everything derives from a few decisions — settle them before generating:
 
 1. **Project identity** — the root `README.md` `## Overview` (what it is) and `## Module Map` (what exists), derived from the actual top-level code dirs.
 2. **Doc location & organization** — where `docs/` lives and how it is structured, captured as `docs/README.md`. This *is* the source of truth; lock it, then generate downstream.
-3. **The config** — `docs/config/loom.toml`: the module set, the SessionStart context slices, and the lint rules. Seed it from [templates/loom.toml](templates/loom.toml) and fill it from the chosen structure.
+3. **The config** — `docs/config/loom.toml`: the SessionStart context slices, the lint vocabulary, and the discovery exclusions. Seed it from [templates/loom.toml](templates/loom.toml) and fill it from the chosen structure.
 
 ## Detect-and-adapt
 
@@ -20,9 +20,9 @@ Everything derives from a few decisions — settle them before generating:
 
 ## Canonical layout to produce
 
-- `README.md` — `## Overview` (stamped) · `## Module Map` · `## Getting Started`; frontmatter-free.
+- `README.md` — frontmatter (`kind: readme`) + `## Overview` · `## Module Map` · `## Getting Started`. Like every managed doc, it opens with frontmatter; freshness is the `updated` field, not an inline stamp.
 - `AGENTS.md` (with `CLAUDE.md` symlink) — router + GLOBAL `## Agentic Guidelines` / `## Agentic Validation` only.
-- `<module>/README.md` — `## Overview` (stamped) · `## Setup` · `## Structure` · `## Agentic Guidelines` · `## Agentic Validation`.
+- `<module>/README.md` — frontmatter (`kind: readme`) + `## Overview` · `## Setup` · `## Structure` · `## Agentic Guidelines` · `## Agentic Validation`.
 - `docs/README.md` — how docs work (taxonomy / lifecycle / nomenclature / ethos): the source of truth.
 - `docs/config/` — `roadmap.md` (required) · `loom.toml` (required) · `charter.md` (optional).
 - `docs/{specs,plans,design,diagrams}/` — scaffolding + assets.
@@ -31,13 +31,23 @@ Everything derives from a few decisions — settle them before generating:
 
 `loom.toml` is what the plugin's runtime reads — there is no per-repo Python to edit. It is a small TOML subset: `[table]` headers, `key = scalar`, and single-line `key = ["arrays"]` (trailing `#` comments fine). Three tables:
 
-- `[modules] dirs = [...]` — the module set. Drives both the linter's stamped-README list and the slicer's per-module Overview slices.
-- `[context]` — what the SessionStart hook injects: `recent_commits` (git bearings), `sections` (each `"file > ## Header"`, e.g. the roadmap `## Now`), and `include_modules`. Start maximal, then trim *down* — the slice is paid every session, so cut to what changes the next action.
-- `[lint]` — `kinds` / `statuses` (frontmatter enums) and `docs_subdirs` (which `docs/` dirs carry frontmatter), mirroring the "Nomenclature" + "Module Map" in `docs/README.md`. The linter is a literal encoding of `docs/README.md`; keep them in agreement.
+- `[context]` — what the SessionStart hook injects: `recent_commits` (git bearings),
+  `slice_headers` (which sections to harvest, *by header* — path-free, so moving a file
+  never breaks a slice), and `inject_fields` (frontmatter to prefix each slice with, e.g.
+  `updated`/`kind`/`location`). Start maximal, then trim *down* — the slice is paid every
+  session, so cut to what changes the next action.
+- `[lint]` — `kinds` / `statuses` (frontmatter enums), mirroring the "Nomenclature" in
+  `docs/README.md`. `kinds` is also the discovery key: a doc is loom-managed iff it carries
+  a `kind`. The config enumerates no files or modules — membership is discovered.
+- `[discovery]` — `exclude`, a list of path-prefix trees kept out of the managed set
+  (e.g. `tests/fixtures`, vendored docs). Use it when discovery would otherwise pick up
+  markdown that isn't yours to manage.
 
 **Re-tune (the facilitator loop)** — to adjust what loads or what the linter enforces:
 1. Render the live context: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root, and show the operator the actual output with a rough per-slice line/token cost so the always-on tax is visible.
-2. Tune `[context]` / `[modules]` / `[lint]` in `loom.toml` with the operator — add/drop/reorder slices, add/remove modules, adjust enums to match `docs/README.md`. Re-render, re-show. Loop until it lands.
+2. Tune `[context]` / `[lint]` / `[discovery]` in `loom.toml` with the operator — add/drop/reorder
+   `slice_headers`, adjust `inject_fields`, adjust enums to match `docs/README.md`, exclude trees
+   that shouldn't be managed. Re-render, re-show. Loop until it lands.
 3. If a sliced header is missing, the slicer emits nothing for it — fix the doc with `/weft`, not by working around it here.
 
 ## Cohesion (the binding invariant)

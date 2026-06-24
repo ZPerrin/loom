@@ -1,19 +1,15 @@
-# loom.toml — per-repo harness config. Managed by /loom:dress.
-# A minimal starting point: tune it with /loom:dress as the repo grows.
+# loom.toml — per-repo harness config. The plugin ships generic code; this drives it.
+# [context] tunes the SessionStart slice; [lint] is the validation vocabulary;
+# [discovery] keeps chosen trees out of the managed set.
 
-[modules]
-# Dirs treated as modules. Each gets a stamped `## Overview` (linter) and an
-# Overview slice in the SessionStart context (slicer). Empty = no modules yet.
-dirs = []
+[discovery]
+exclude = []   # path-prefix trees to skip, e.g. ["tests/fixtures", "vendor"]
 
 [context]
-# What the SessionStart hook injects, in fixed order: commits, sections, modules.
 recent_commits = 15
-sections = ["docs/config/roadmap.md > ## Now"]   # each entry: "file > ## Header"
-include_modules = true
+slice_headers = ["## Now", "## Module Map"]   # sections to harvest, by header (path-free)
+inject_fields = ["updated", "kind", "location"]  # frontmatter to prefix each slice with
 
 [lint]
-# Frontmatter enums + the docs/ subdirs whose *.md carry frontmatter.
 kinds = ["charter", "roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
-docs_subdirs = ["config", "specs", "plans", "design"]
