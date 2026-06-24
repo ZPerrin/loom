@@ -2,6 +2,12 @@
 
 _Status: draft for review — 2026-06-23_
 
+> **Superseded in part (2026-06-23):** the enumerated managed-doc model (`[modules] dirs`,
+> `docs_subdirs`) and the two-tier frontmatter/stamp document model described here are
+> replaced by discovery-driven frontmatter and generic slicing — see
+> [2026-06-23-loom-discovery-frontmatter-redesign.md](2026-06-23-loom-discovery-frontmatter-redesign.md).
+> The bash+awk / data-driven / dual-tool decisions still hold.
+
 ## 1. Context & motivation
 
 `loom` is a self-maintaining docs & context harness, forklifted out of the `jack`

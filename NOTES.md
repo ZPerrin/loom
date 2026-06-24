@@ -4,21 +4,20 @@ Loose pile of thoughts. Not authoritative. Prune as things settle.
 
 ## Open questions
 
-- **Path references.** The skills (and the hook) were written for an in-tree `.claude/`
-  layout — they reference `../../../docs/README.md`, `.claude/skills/...`, etc. As an
-  *installed* plugin those break. Need to split "harness's own files" (→ `${CLAUDE_PLUGIN_ROOT}`
-  / `$PLUGIN_ROOT`) from "target repo's docs" (→ the working cwd). This is the main porting work.
-- **One repo, two manifests.** Claude (`.claude-plugin/`) and Codex (`.codex-plugin/`) are
-  near-mirrors. Hand-maintain both, or generate them from one shared core? Lean: hand-maintain
-  while small; generate once it hurts.
-- **Two hooks.json** only because the plugin-root env var differs (`${CLAUDE_PLUGIN_ROOT}`
-  vs `$PLUGIN_ROOT`). Otherwise identical. Candidate to collapse later.
-- **warp** — the session-*open* bookend of `wrap` — isn't built yet. It's the next real skill.
-- **Renaming** to textile terms (selvage/weave/dress/...) is deferred; current literal names
-  stay until the vocabulary earns its keep.
+- **warp** — the session-*open* bookend — is still a stub. It's the next real skill.
+- **Manifests** — Claude (`.claude-plugin/`) and Codex (`.codex-plugin/` + `.agents/`)
+  are hand-maintained. Generate from one core only once it hurts. Watch the Codex
+  local-marketplace `source.path: "./"` (may be rejected — confirm at smoke-test).
+- **Invisible README frontmatter** — GitHub renders a metadata table atop READMEs.
+  Accepted for now; an HTML-comment carrier is a possible future option.
+- **Omission-sweep noise** — the `docs/superpowers/` specs/plans and skill `SKILL.md`
+  files surface as unmanaged candidates (frontmatter without a `kind`, or none). That's
+  intentional — they're scaffolding. `[discovery] exclude` can suppress a whole tree if a
+  repo wants it quieter.
 
 ## Status
 
-- Skeleton only. Skills copied verbatim from `jack`; expect broken relative links until the
-  path-reference pass.
-- Marketplace + plugin manifests present for both tools so install can be exercised locally.
+- Core scripts (parser, discovery, linter, slicer, hook wiring) built and green.
+- Membership is discovery (frontmatter with a `kind:` key), not enumeration; one unified
+  frontmatter tier. `[discovery] exclude` keeps chosen trees out of the managed set.
+- Not yet smoke-tested as an installed plugin (Claude + Codex).
