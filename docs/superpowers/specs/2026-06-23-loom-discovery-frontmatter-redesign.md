@@ -147,11 +147,18 @@ subset). Embedded defaults in each script mirror this schema so loom still works
 
 The same `--others`-inclusive universe (§4.1) − discovered managed = **candidates**
 (markdown with no frontmatter, uncommitted ones included). weave surfaces them: "these
-look like docs but aren't loom-managed — adopt?" Advisory, never auto-mutating. With
-module/subdir enumeration gone, the sweep has no structural scope to lean on, so noise is
-controlled by **operator triage** (it's advisory — dismiss what isn't a doc) rather than a
-built-in filter. `scan_exclude` (a config glob) is **deferred** until a real false-positive
-recurs; it is the lever if triage alone proves noisy, not per-file tags.
+look like docs but aren't loom-managed — adopt?" Advisory, never auto-mutating.
+
+**Exclusion (`[discovery] exclude`) — in scope.** Originally deferred, but execution showed
+loom can't dogfood without it: a doc harness whose own test fixtures are intentionally
+malformed managed-looking docs would discover and lint them, and would harvest a fixture's
+`## Now` into its own bearings. So `doc_universe` applies a `[discovery] exclude = [...]`
+list of path prefixes from `loom.toml` (loom's own is `["tests/fixtures"]`), filtering the
+universe at the source so the linter, slicer, and the omission sweep all honor it
+uniformly. The exclusion is relative to the discovery root, so a fixture's own nested test
+repo (where the prefix doesn't exist) still sees its files normally. This replaces the
+deferred per-sweep `scan_exclude`; remaining sweep noise beyond excluded prefixes is still
+operator-triaged.
 
 ### 4.7 Uncommitted-doc robustness (weft/weave provenance)
 

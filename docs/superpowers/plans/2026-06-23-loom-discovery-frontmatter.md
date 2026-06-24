@@ -237,6 +237,123 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
+## Task 1b: Discovery exclusion knob
+
+Discovery sees loom's own `tests/fixtures/**` (tracked markdown with `kind:` frontmatter), which would break dogfooding (the dirty fixtures fail the linter; a fixture `## Now` leaks into the slicer). Add a universe-level `[discovery] exclude` prefix filter so all consumers honor it, and exclude loom's fixtures.
+
+**Files:**
+- Modify: `scripts/lib/discover.sh` (filter `doc_universe`; add `doc_excludes`/`_excluded`/`_list_md`)
+- Modify: `tests/test-discover.sh` (add an exclusion assertion)
+- Modify: `docs/config/loom.toml` (add `[discovery] exclude = ["tests/fixtures"]`)
+
+- [ ] **Step 1: Add the failing exclusion assertion**
+
+In `tests/test-discover.sh`, immediately before the final `finish`, insert:
+```bash
+# Exclusion: a [discovery] exclude prefix removes matching paths from the universe.
+rm -rf "$R/.git" "$R/docs"
+mkdir -p "$R/docs/config"
+printf '[discovery]\nexclude = ["sub"]\n' > "$R/docs/config/loom.toml"
+( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore docs/config/loom.toml )
+xman="$(managed_docs "$R")"
+assert_not_contains "$xman" "sub/c.md" "excluded prefix drops sub/c.md from managed set"
+assert_contains    "$xman" "a.md"     "non-excluded managed doc still present"
+rm -rf "$R/.git" "$R/docs"
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `bash tests/test-discover.sh`
+Expected: FAIL — `doc_universe` does not yet read `[discovery] exclude`, so `sub/c.md` is still listed.
+
+- [ ] **Step 3: Implement the exclusion filter**
+
+In `scripts/lib/discover.sh`, add a self-locating dir just below the header comment:
+```bash
+_DISCOVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+```
+Then replace the existing `doc_universe` function with these four functions:
+```bash
+# raw markdown listing (git-aware, gitignore-respected; bounded find fallback)
+_list_md() { # $1=ROOT
+  local root="$1"
+  if git -C "$root" rev-parse --git-dir >/dev/null 2>&1; then
+    git -C "$root" ls-files --cached --others --exclude-standard -- '*.md'
+  else
+    ( cd "$root" 2>/dev/null && find . -type f -name '*.md' \
+        -not -path '*/.git/*' -not -path '*/node_modules/*' | sed 's|^\./||' )
+  fi
+}
+
+# exclude path-prefixes from [discovery] exclude in <ROOT>/docs/config/loom.toml
+doc_excludes() { # $1=ROOT
+  local conf="$1/docs/config/loom.toml"
+  [ -f "$conf" ] || return 0
+  awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
+    | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'
+}
+
+_excluded() { # $1=relpath $2=newline-separated exclude prefixes -> 0 if excluded
+  local p="$1" e
+  while IFS= read -r e; do
+    [ -n "$e" ] || continue
+    case "$p" in "$e"|"$e"/*) return 0 ;; esac
+  done <<EOF
+$2
+EOF
+  return 1
+}
+
+doc_universe() { # $1=ROOT -> repo-relative *.md, minus [discovery] exclude prefixes
+  local root="$1" excl rel
+  excl="$(doc_excludes "$root")"
+  _list_md "$root" | while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    _excluded "$rel" "$excl" || printf '%s\n' "$rel"
+  done
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `bash tests/test-discover.sh`
+Expected: PASS — `test-discover.sh passed`.
+
+- [ ] **Step 5: Exclude loom's own fixtures**
+
+In `docs/config/loom.toml`, add a `[discovery]` table at the top (above `[modules]`):
+```toml
+[discovery]
+exclude = ["tests/fixtures"]
+```
+(This is harmless to the still-current old linter/slicer — they read `[lint]`/`[context]`, and `parse-toml.awk` parses the new table fine.)
+
+- [ ] **Step 6: Verify loom's own discovery now skips fixtures**
+
+Run: `bash scripts/doc-scan`
+Expected: under `# managed`, loom's real docs only — NO `tests/fixtures/**` paths. Under `# candidates`, the `docs/superpowers/**` specs/plans (still no `tests/fixtures/**`).
+
+- [ ] **Step 7: Run the full suite**
+
+Run: `bash tests/run`
+Expected: `ALL TESTS PASSED`.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add scripts/lib/discover.sh tests/test-discover.sh docs/config/loom.toml
+git commit -m "feat: [discovery] exclude — keep test fixtures out of the managed set
+
+doc_universe now filters repo-relative paths against [discovery] exclude prefixes
+from loom.toml, so the linter/slicer/doc-scan uniformly skip excluded trees. loom
+excludes tests/fixtures so it can dogfood its own harness without linting its
+intentionally-malformed fixtures or slicing their headers.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+---
+
 ## Task 2: Slicer → header harvester
 
 Rewrite the SessionStart slicer to harvest configured headers across the discovered set, path-free, with `inject_fields` annotations. Update loom's own `[context]` config and rebuild the slicer fixtures/tests. The linter is untouched, so the repo stays green.
