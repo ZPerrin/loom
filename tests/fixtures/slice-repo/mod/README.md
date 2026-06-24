@@ -1,6 +1,10 @@
-# Mod
+---
+kind: readme
+status: living
+updated: 2026-06-23
+---
+# mod
 
 ## Overview
-_updated: 2026-06-23_
 
 Module overview body.
