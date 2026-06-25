@@ -8,5 +8,5 @@ slice_headers = ["## Now"]
 inject_fields = ["updated", "kind", "location"]
 
 [lint]
-kinds = ["roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review"]
+kinds = ["roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review", "loom-config"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]

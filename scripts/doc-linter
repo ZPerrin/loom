@@ -19,6 +19,7 @@ lint.kinds=spec
 lint.kinds=plan
 lint.kinds=design
 lint.kinds=review
+lint.kinds=loom-config
 lint.statuses=living
 lint.statuses=hardened
 lint.statuses=superseded
