@@ -8,4 +8,4 @@ sections = ["docs/config/roadmap.md > ## Now"]
 include_modules = true
 
 [lint]
-kinds = ["charter", "readme"]
+kinds = ["roadmap", "readme"]

@@ -12,7 +12,7 @@ assert_contains "$out" "modules.dirs=cdk"                "array element 3"
 assert_contains "$out" "context.recent_commits=15"       "scalar int"
 assert_contains "$out" "context.include_modules=true"    "scalar bool"
 assert_contains "$out" "context.sections=docs/config/roadmap.md > ## Now" "array w/ spaces"
-assert_contains "$out" "lint.kinds=charter"              "lint array 1"
+assert_contains "$out" "lint.kinds=roadmap"              "lint array 1"
 assert_contains "$out" "lint.kinds=readme"               "lint array 2"
 assert_not_contains "$out" "# a comment"                 "comment stripped"
 

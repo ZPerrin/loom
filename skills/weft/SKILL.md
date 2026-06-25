@@ -19,7 +19,7 @@ Close-out finishes a feature/work branch: docs synced, tree clean, merged with a
 3. Distill from the code, not the spec. For each landed feature, refresh the touched module README's frontmatter `updated` field and `## Overview` paragraph, and record any durable build or infrastructure decision in that module README's `## Agentic Guidelines`. If a result earns its own doc — a schema, a subsystem, a diagram — add it under `docs/` and link it from the module README. Most features stop at an Overview paragraph; if nothing durable changed, write nothing.
 4. Move the roadmap only on milestone events: update `## Now`/`## Next`, check off `## Milestones` in `docs/config/roadmap.md`. No per-session entry — git is the activity log.
 5. Prune implemented `docs/specs/` and `docs/plans/` files and graduated `docs/design/` ideation, only once their essence is captured above. Leave directional reviews (kept as `kind: review` specs in `docs/specs/`) in place.
-6. Sync `docs/config/charter.md`, `AGENTS.md`, or the root `README.md` `## Overview` only if a durable fact changed.
+6. Sync `AGENTS.md` or the root `README.md` (its `## Why it exists` / `## What we believe` and overview) only if a durable fact changed.
 7. Run the bundled linter `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` and fix what it flags; `git add` the doc changes.
 
 Then **ask whether to close out**: "Close out this branch by merging? Into which branch?" (skip the question when invoked as `/weft into <branch>` — the target is given). If the operator declines, stop here: report and leave the diff staged. If they choose a target, continue with close-out.

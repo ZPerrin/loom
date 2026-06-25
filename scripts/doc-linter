@@ -11,8 +11,7 @@ PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
 ROOT="$(loom_repo_root)"
 
 # --- config: normalized "table.key=value" text, from loom.toml or defaults ---
-DEFAULT_CFG='lint.kinds=charter
-lint.kinds=roadmap
+DEFAULT_CFG='lint.kinds=roadmap
 lint.kinds=readme
 lint.kinds=guide
 lint.kinds=reference
