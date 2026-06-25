@@ -1,7 +1,7 @@
 ---
 kind: loom-config
 status: living
-updated: 2026-06-24
+updated: 2026-06-25
 ---
 # dress — loom's own overrides
 
@@ -12,5 +12,5 @@ do not re-impose the seed.
 - Root `README.md` headers: `## Why this project exists` · `## Core Principles` ·
   `## How it works` · `## Naming (textile ethos)` · `## Try it (local, for iteration)`.
 - This repo is flat — no module READMEs yet; the scripts, hooks, and skills are the units.
-- Scaffolding declared in `[discovery] scaffolding`: the design specs/plans under
-  `docs/superpowers/`, and the plugin's `skills/`. Surface them, never pester.
+- Excluded from discovery (`[discovery] exclude`): `tests/fixtures`, the plugin's `skills/`,
+  and the design specs/plans under `docs/superpowers/` — never tracked or nagged.

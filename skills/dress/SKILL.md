@@ -1,6 +1,6 @@
 ---
 name: dress
-description: Use when adopting loom on a repo, or re-tuning what it tracks — context slices, lint vocabulary, scaffolding disposition, or doc layout. Stands up (or re-tunes) the harness and proves it lint-clean.
+description: Use when adopting loom on a repo, or re-tuning what it tracks — context slices, lint vocabulary, exclusions, or doc layout. Stands up (or re-tunes) the harness and proves it lint-clean.
 ---
 
 Dress the loom: stand up or re-tune the doc harness conversationally — explaining each artifact as it lands and letting the operator pivot — so the result is a *coherent* harness, not just files. The runtime (the SessionStart slicer and the linter) ships with the plugin and runs from `${CLAUDE_PLUGIN_ROOT}`; what this skill writes into the repo is the **docs** plus a small **`docs/loom/loom.toml`**.
