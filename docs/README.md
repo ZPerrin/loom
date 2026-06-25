@@ -16,11 +16,13 @@ loom is a docs & context harness. Its own docs follow the convention it ships:
 - **Config drives behavior, not membership.** `docs/config/loom.toml` carries `[context]`
   (`recent_commits` / `slice_headers` / `inject_fields` for the SessionStart slicer) and
   `[lint]` (`kinds` / `statuses` — the validation vocabulary, and `kinds` is the discovery
-  key). It enumerates no files or modules. A `[discovery] exclude` list keeps chosen trees
-  (e.g. `tests/fixtures`) out of the managed set.
+  key). It enumerates no files or modules. `[discovery]` keeps chosen trees out of the managed
+  set (`exclude`) or surfaced-but-unmanaged (`scaffolding`); `[skills] config_dir` locates the
+  per-skill override docs (`kind: loom-config`) that carry a repo's own opinions — see
+  [repo-overrides](../references/repo-overrides.md).
 - **Links are routing:** one home per fact, surfaced by progressive disclosure (root map →
   deeper doc → code).
 
-The design specs and plans under `docs/superpowers/`, and the skill `SKILL.md` files (whose
-frontmatter carries no `kind`), are intentionally unmanaged scaffolding — discovery surfaces
-them as candidates rather than treating them as durable docs.
+Markdown that looks like a doc but isn't loom's to manage is *scaffolding*: `doc-scan` surfaces
+it under its own heading and the skills never pester about adopting it. loom's own scaffolding
+is the design specs/plans under `docs/superpowers/` and the plugin's `skills/`.
