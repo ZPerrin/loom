@@ -10,14 +10,11 @@ Loose pile of thoughts. Not authoritative. Prune as things settle.
   local-marketplace `source.path: "./"` (may be rejected — confirm at smoke-test).
 - **Invisible README frontmatter** — GitHub renders a metadata table atop READMEs.
   Accepted for now; an HTML-comment carrier is a possible future option.
-- **Omission-sweep noise** — the `docs/superpowers/` specs/plans and skill `SKILL.md`
-  files surface as unmanaged candidates (frontmatter without a `kind`, or none). That's
-  intentional — they're scaffolding. `[discovery] exclude` can suppress a whole tree if a
-  repo wants it quieter.
 
 ## Status
 
 - Core scripts (parser, discovery, linter, slicer, hook wiring) built and green.
 - Membership is discovery (frontmatter with a `kind:` key), not enumeration; one unified
-  frontmatter tier. `[discovery] exclude` keeps chosen trees out of the managed set.
+  frontmatter tier. `[discovery] exclude` drops trees from the managed set, `scaffolding`
+  surfaces-but-doesn't-pester; per-skill REPO OPINION lives in `docs/config/loom/<skill>.md`.
 - Not yet smoke-tested as an installed plugin (Claude + Codex).
