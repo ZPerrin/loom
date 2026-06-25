@@ -23,9 +23,9 @@ _list_md() { # $1=ROOT
   fi
 }
 
-# exclude path-prefixes from [discovery] exclude in <ROOT>/docs/config/loom.toml
+# exclude path-prefixes from [discovery] exclude in <ROOT>/docs/loom/loom.toml
 doc_excludes() { # $1=ROOT
-  local conf="$1/docs/config/loom.toml"
+  local conf="$1/docs/loom/loom.toml"
   [ -f "$conf" ] || return 0
   awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
     | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'
@@ -77,30 +77,6 @@ omission_candidates() { # $1=ROOT  -> repo-relative *.md lacking kind frontmatte
   doc_universe "$root" | while IFS= read -r rel; do
     [ -n "$rel" ] || continue
     has_kind_frontmatter "$root/$rel" || printf '%s\n' "$rel"
-  done
-}
-
-# scaffolding path-prefixes from [discovery] scaffolding (surfaced as candidates, not adopted)
-doc_scaffolding() { # $1=ROOT
-  local conf="$1/docs/config/loom.toml"
-  [ -f "$conf" ] || return 0
-  awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
-    | awk -F= '$1=="discovery.scaffolding"{sub(/^[^=]*=/,""); print}'
-}
-
-adoption_candidates() { # $1=ROOT  -> frontmatter-less docs NOT under a scaffolding prefix
-  local root="$1" scaf rel; scaf="$(doc_scaffolding "$root")"
-  omission_candidates "$root" | while IFS= read -r rel; do
-    [ -n "$rel" ] || continue
-    _excluded "$rel" "$scaf" || printf '%s\n' "$rel"
-  done
-}
-
-scaffolding_candidates() { # $1=ROOT  -> frontmatter-less docs under a scaffolding prefix
-  local root="$1" scaf rel; scaf="$(doc_scaffolding "$root")"
-  omission_candidates "$root" | while IFS= read -r rel; do
-    [ -n "$rel" ] || continue
-    _excluded "$rel" "$scaf" && printf '%s\n' "$rel"
   done
 }
 

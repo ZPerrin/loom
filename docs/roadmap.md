@@ -7,7 +7,7 @@ updated: 2026-06-24
 
 ## Now
 
-The harness conforms to the repo, not the reverse: skill instructions sort into MUST / DEFAULT / REPO OPINION, with per-repo opinion in `docs/config/loom/<skill>.md` overrides. Immediate focus: smoke-test the install on Claude + Codex, then build `warp`.
+The harness conforms to the repo, not the reverse: skill instructions sort into MUST / DEFAULT / REPO OPINION, with per-repo opinion in `docs/loom/<skill>.md` overrides. Immediate focus: smoke-test the install on Claude + Codex, then build `warp`.
 
 ## Next
 

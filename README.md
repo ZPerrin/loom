@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-06-24
+updated: 2026-06-25
 ---
 # loom
 
@@ -64,7 +64,7 @@ You get 4 skills plus a context slicer and linter - that's it.
 (`dress`, `weave`, `weft`, `warp`) keep a repo's documentation — and therefore the
 agent's working context — high-quality *almost autonomously*; a SessionStart hook stitches
 targeted doc slices into each session's opening bearings. Per-repo tuning lives in
-`docs/config/loom.toml`; the runtime is bash + awk with no external dependencies.
+`docs/loom/loom.toml`; the runtime is bash + awk with no external dependencies.
 
 ## Naming (textile ethos)
 

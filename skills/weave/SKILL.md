@@ -3,18 +3,18 @@ name: weave
 description: Use when docs have drifted after many sessions, milestones, or reviews and the whole tree needs reconciling against the current code. The whole-tree complement to weft's session-delta distill.
 ---
 
-Reconcile the entire documentation tree, re-derived from the current code, into a small durable navigation layer aligned to `docs/README.md`. Same ethos as `/weft`, but whole-tree in scope rather than the session delta. Treat docs as routing and decision context, not a running log: keep guidance that changes the next good action; prune or relocate text that is stale, duplicated, task-local, or merely ornamental.
+Reconcile the entire documentation tree, re-derived from the current code, into a small durable navigation layer aligned to [doc-convention](../../references/doc-convention.md). Same ethos as `/weft`, but whole-tree in scope rather than the session delta. Treat docs as routing and decision context, not a running log: keep guidance that changes the next good action; prune or relocate text that is stale, duplicated, task-local, or merely ornamental.
 
 **MUST:** enumerate the managed set with `doc-scan`, not agentic globbing — membership must be deterministic; run the linter and fix what it flags; stage, never commit. The editorial judgment between is **DEFAULT**, shapeable per repo.
 
 ## Load the repo's opinion first
 
-Read `docs/config/loom/weave.md` if it exists and let it shape the DEFAULT heuristics below — what this repo treats as low-leverage, how aggressively to collapse, which terms are intentionally local. It never relaxes a MUST. See [repo-overrides](../../references/repo-overrides.md).
+Read `docs/loom/weave.md` if it exists and let it shape the DEFAULT heuristics below — what this repo treats as low-leverage, how aggressively to collapse, which terms are intentionally local. It never relaxes a MUST. See [repo-overrides](../../references/repo-overrides.md).
 
 ## Workflow
 
 1. **Enumerate (MUST).** `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` — frontmatter discovery over tracked + uncommitted markdown, never agentic globbing. Then inspect by progressive disclosure: start at `AGENTS.md`, follow the root `README.md` `## Module Map`, scan headings before bodies; read only the docs and code the reconciliation touches.
-2. **Surface omissions and uncommitted work.** `doc-scan` prints `# candidates` (markdown with no `kind`) and `# scaffolding` (config-declared `[discovery] scaffolding`) separately. Ask whether any `# candidate` should be adopted as a managed doc; list the `# scaffolding` but don't pester about it. Then run `git status --porcelain -- '*.md'`: surface new/uncommitted (`??`/`A`) and deleted (` D`) managed docs and ask whether to distill/adopt or drop them — don't assume.
+2. **Surface omissions and uncommitted work.** `doc-scan` prints `# candidates` (markdown with no `kind`). Ask whether each should be adopted as a managed doc or added to `[discovery] exclude`; a candidate keeps surfacing until one or the other. Then run `git status --porcelain -- '*.md'`: surface new/uncommitted (`??`/`A`) and deleted (` D`) managed docs and ask whether to distill/adopt or drop them — don't assume.
 3. Identify stale, duplicated, misplaced, or low-leverage text. Preserve durable guidance; remove ordinary status, history, and task-local state (git holds it).
 4. Move each fact to its smallest stable home and collapse duplication to one home plus links. Module `README.md` files own their `## Overview`, setup, and commands; the root README `## Module Map` links to them rather than restating.
 5. Normalize product, module, workflow, command, heading, and concept names unless a local term is intentionally different.
@@ -26,7 +26,7 @@ Read `docs/config/loom/weave.md` if it exists and let it shape the DEFAULT heuri
 | Thought | Reality |
 |---|---|
 | "Globbing the docs is faster than `doc-scan`." | Membership must be deterministic and discovery-driven; a glob drifts from the managed set. |
-| "I'll adopt this stray markdown to be safe." | If it's under `[discovery] scaffolding`, surface it and move on — don't pester. |
+| "I'll adopt this stray markdown to be safe." | Ask once: adopt it (give it `kind:` frontmatter) or `[discovery] exclude` it. Don't silently adopt. |
 
 ## Output
 

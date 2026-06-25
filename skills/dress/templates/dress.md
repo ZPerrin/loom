@@ -11,4 +11,4 @@ a MUST. Delete this seed prose and write only what differs from the defaults.>
 - **Canonical headers:** <the headers this repo actually uses, if not the seed's
   Overview / Module Map / Getting Started.>
 - **Modules:** <which top-level dirs are modules, if discovery's guess is wrong.>
-- **Scaffolding:** <trees to declare in `[discovery] scaffolding` — surfaced, not adopted.>
+- **Exclusions:** <trees to drop from discovery in `[discovery] exclude` — never tracked or nagged.>

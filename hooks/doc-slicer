@@ -16,7 +16,7 @@ context.slice_headers=## Now
 context.inject_fields=updated
 context.inject_fields=kind
 context.inject_fields=location'
-CONF="$ROOT/docs/config/loom.toml"
+CONF="$ROOT/docs/loom/loom.toml"
 if [ -f "$CONF" ]; then
   CFG="$(awk -f "$PARSE_AWK" "$CONF")" || CFG="$DEFAULT_CFG"
 else
