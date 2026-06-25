@@ -13,17 +13,11 @@ loom is a docs & context harness. Its own docs follow the convention it ships:
   with gitignored paths excluded. No registry of paths to maintain.
 - **One frontmatter rule for every doc.** READMEs included — there is no separate
   "stamped, frontmatter-free" tier. Freshness lives in the `updated` field.
-- **Config drives behavior, not membership.** `docs/config/loom.toml` carries `[context]`
+- **Config drives behavior, not membership.** `docs/loom/loom.toml` carries `[context]`
   (`recent_commits` / `slice_headers` / `inject_fields` for the SessionStart slicer) and
   `[lint]` (`kinds` / `statuses` — the validation vocabulary, and `kinds` is the discovery
-  key). It enumerates no files or modules. `[discovery]` keeps chosen trees out of the managed
-  set (`exclude`) or surfaced-but-unmanaged (`scaffolding`); `[skills] config_dir` locates the
-  per-skill override docs (`kind: loom-config`) that carry a repo's own opinions — see
-  [repo-overrides](../references/repo-overrides.md).
+  key). It enumerates no files or modules. `[discovery] exclude` keeps chosen trees out of the
+  managed set; `[skills] config_dir` locates the per-skill override docs (`kind: loom-config`)
+  that carry a repo's own opinions — see [repo-overrides](../references/repo-overrides.md).
 - **Links are routing:** one home per fact, surfaced by progressive disclosure (root map →
   deeper doc → code).
-
-Markdown that looks like a doc but isn't loom's to manage is *scaffolding*: `doc-scan` surfaces
-it under its own heading and the skills never pester about adopting it. loom's own scaffolding
-is the plugin's `skills/` — the `SKILL.md` files, which carry their own frontmatter and aren't
-loom-managed docs.

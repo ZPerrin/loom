@@ -36,9 +36,9 @@ rm -rf "$R/.git" "$R/untracked.md" "$R/ignored.md"
 
 # Exclusion: a [discovery] exclude prefix removes matching paths from the universe.
 rm -rf "$R/.git" "$R/docs"
-mkdir -p "$R/docs/config"
-printf '[discovery]\nexclude = ["sub"]\n' > "$R/docs/config/loom.toml"
-( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore docs/config/loom.toml )
+mkdir -p "$R/docs/loom"
+printf '[discovery]\nexclude = ["sub"]\n' > "$R/docs/loom/loom.toml"
+( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore docs/loom/loom.toml )
 xman="$(managed_docs "$R")"
 assert_not_contains "$xman" "sub/c.md" "excluded prefix drops sub/c.md from managed set"
 assert_contains    "$xman" "a.md"     "non-excluded managed doc still present"

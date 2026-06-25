@@ -14,14 +14,14 @@ After distilling, **weft always asks whether to close out the branch** — sync 
 
 ## Load the repo's opinion first
 
-Read `docs/config/loom/weft.md` if it exists; it shapes *what* you distill and *where*, and names the branch/close-out convention. It never relaxes the gate. See [repo-overrides](../../references/repo-overrides.md).
+Read `docs/loom/weft.md` if it exists; it shapes *what* you distill and *where*, and names the branch/close-out convention. It never relaxes the gate. See [repo-overrides](../../references/repo-overrides.md).
 
 ## Distill (both modes)
 
 1. Scope the delta: `git log --oneline` and `git diff` against the last doc-sync commit or the branch base. Name what landed and any direction abandoned.
 2. **Surface uncommitted docs early.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `git status --porcelain -- '*.md'`. New/uncommitted (`??`/`A`) managed docs and `# candidate` files created this session are easy to miss — name them and confirm whether each should be distilled, adopted, or left. `doc-scan`'s `# scaffolding` partition is declared, not adopted — don't pester about it.
 3. **(DEFAULT)** Distill from the code, not the spec. For each landed feature, refresh the touched module README's frontmatter `updated` and `## Overview`, and record any durable build or infrastructure decision in that module's `## Agentic Guidelines`. If a result earns its own doc — a schema, a subsystem, a diagram — add it under `docs/` and link it from the module README. Most features stop at an Overview paragraph; if nothing durable changed, write nothing.
-4. **(DEFAULT)** Move the roadmap only on milestone events: update `## Now`/`## Next`, check off `## Milestones` in `docs/config/roadmap.md`. No per-session entry — git is the activity log.
+4. **(DEFAULT)** Move the roadmap only on milestone events: update `## Now`/`## Next`, check off `## Milestones` in `docs/roadmap.md`. No per-session entry — git is the activity log.
 5. **(DEFAULT)** Prune implemented `docs/specs`/`docs/plans` and graduated `docs/design` ideation, only once their essence is captured above. The prunable scaffolding is whatever `[discovery] scaffolding` declares — not a hardcoded path. Leave directional reviews (`kind: review` specs) in place.
 6. **(DEFAULT)** Sync `AGENTS.md` or the root `README.md` only if a durable fact changed.
 7. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` and fix what it flags; `git add` the doc changes.

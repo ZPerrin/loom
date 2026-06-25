@@ -15,6 +15,6 @@ Loose pile of thoughts. Not authoritative. Prune as things settle.
 
 - Core scripts (parser, discovery, linter, slicer, hook wiring) built and green.
 - Membership is discovery (frontmatter with a `kind:` key), not enumeration; one unified
-  frontmatter tier. `[discovery] exclude` drops trees from the managed set, `scaffolding`
-  surfaces-but-doesn't-pester; per-skill REPO OPINION lives in `docs/config/loom/<skill>.md`.
+  frontmatter tier. `[discovery] exclude` drops trees from the managed set entirely;
+  per-skill REPO OPINION lives in `docs/loom/<skill>.md`.
 - Not yet smoke-tested as an installed plugin (Claude + Codex).
