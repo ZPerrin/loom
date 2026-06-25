@@ -5,7 +5,7 @@
 
 [discovery]
 exclude = []        # path-prefix trees to drop entirely, e.g. ["tests/fixtures", "vendor"]
-scaffolding = []    # trees surfaced as candidates but never pestered about, e.g. ["docs/superpowers"]
+scaffolding = []    # trees surfaced as candidates but never pestered about, e.g. ["docs/plans"]
 
 # [skills]
 # config_dir = "docs/config/loom"   # default; relocate the whole set of <skill>.md overrides

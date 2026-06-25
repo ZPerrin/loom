@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-06-23
+updated: 2026-06-24
 ---
 # How loom's docs work
 
@@ -25,4 +25,5 @@ loom is a docs & context harness. Its own docs follow the convention it ships:
 
 Markdown that looks like a doc but isn't loom's to manage is *scaffolding*: `doc-scan` surfaces
 it under its own heading and the skills never pester about adopting it. loom's own scaffolding
-is the design specs/plans under `docs/superpowers/` and the plugin's `skills/`.
+is the plugin's `skills/` — the `SKILL.md` files, which carry their own frontmatter and aren't
+loom-managed docs.
