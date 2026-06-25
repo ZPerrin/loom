@@ -47,7 +47,7 @@ To adjust what loads or what the linter enforces:
 
 ## Cohesion (the binding invariant)
 
-Generate every dependent artifact *from* `docs/README.md` so a pivot propagates: module READMEs, `loom.toml`'s enums and slice list, the override docs. Offer pivots (which dirs are modules, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location) and recommend a core — but never leave a reference pointing at the old shape.
+Generate dependent artifacts as a coherent seed set so a pivot propagates: module READMEs, `loom.toml`'s enums and slice list, the override docs. An entry-point `readme` is at most an optional seed — never required, never special. Offer pivots (which dirs are modules, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location) and recommend a core — but never leave a reference pointing at the old shape.
 
 ## Self-check
 
