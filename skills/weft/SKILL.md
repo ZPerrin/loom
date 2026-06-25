@@ -1,38 +1,52 @@
 ---
 name: weft
-description: Wrap up a work session — distill its landed changes from the code into the durable doc layer (module README `## Overview` sections, decisions into module `## Agentic Guidelines`, roadmap on milestones), prune implemented specs/plans, and stage the diff. Invoke as `/weft into <branch>` to also close out the work branch: gate, commit the sync, and merge into <branch> with an explicit merge commit.
+description: Use when wrapping up a work session — distill landed changes into the durable docs and optionally close out the branch (gate, commit, merge). Invoke as "weft into <branch>" to name the merge target up front.
 ---
 
 Distill this session's landed work into the durable docs, then prune the scaffolding it leaves behind. Scope is the session delta, not the whole tree. Follow `docs/README.md`: editorial before additive, compression as craft, no edit without durable signal.
 
-After distilling, **weft always asks whether to close out the branch** — sync the docs, then offer to finish the work by merging per the close-out flow. Two invocations:
+After distilling, **weft always asks whether to close out the branch** — sync the docs, then offer to finish the work by merging. Two invocations:
 
-- **`/weft`** — distill + stage the doc diff, then ask "close out this branch by merging? into which branch?". If no, stop with the diff staged and **never commit** — the operator reviews and commits. If yes, run the close-out flow into the chosen branch.
-- **`/weft into <branch>`** — the same distill, but the target is already named: skip the question and run the close-out flow straight into `<branch>`.
+- **`/weft`** — distill + stage the doc diff, then ask "close out this branch by merging? into which branch?". If no, stop with the diff staged and **never commit** — the operator reviews and commits. If yes, run close-out into the chosen branch.
+- **`/weft into <branch>`** — the same distill, but the target is named: skip the question and run close-out straight into `<branch>`.
 
-Close-out finishes a feature/work branch: docs synced, tree clean, merged with an explicit commit, optionally cleaned up. Committing happens only on close-out — the operator opted in (by answering yes, or by naming a target).
+**MUST:** the close-out **gate** — lint clean *and* the untracked/missing check both pass before any merge; the merge is always `--no-ff` with a written commit; commit only on close-out opt-in (plain `/weft` stages, never commits); run the linter. What to distill and where, and what to prune, are **DEFAULT** — shaped by the repo.
+
+## Load the repo's opinion first
+
+Read `docs/config/loom/weft.md` if it exists; it shapes *what* you distill and *where*, and names the branch/close-out convention. It never relaxes the gate. See [repo-overrides](../../references/repo-overrides.md).
 
 ## Distill (both modes)
 
 1. Scope the delta: `git log --oneline` and `git diff` against the last doc-sync commit or the branch base. Name what landed and any direction abandoned.
-2. **Surface uncommitted docs early.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `git status --porcelain -- '*.md'`. New/uncommitted (`??`/`A`) managed docs and frontmatter-less candidates created this session are easy to miss — name them and confirm whether each should be distilled, adopted, or left, before refreshing the durable layer.
-3. Distill from the code, not the spec. For each landed feature, refresh the touched module README's frontmatter `updated` field and `## Overview` paragraph, and record any durable build or infrastructure decision in that module README's `## Agentic Guidelines`. If a result earns its own doc — a schema, a subsystem, a diagram — add it under `docs/` and link it from the module README. Most features stop at an Overview paragraph; if nothing durable changed, write nothing.
-4. Move the roadmap only on milestone events: update `## Now`/`## Next`, check off `## Milestones` in `docs/config/roadmap.md`. No per-session entry — git is the activity log.
-5. Prune implemented `docs/specs/` and `docs/plans/` files and graduated `docs/design/` ideation, only once their essence is captured above. Leave directional reviews (kept as `kind: review` specs in `docs/specs/`) in place.
-6. Sync `AGENTS.md` or the root `README.md` (its `## Why it exists` / `## What we believe` and overview) only if a durable fact changed.
-7. Run the bundled linter `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` and fix what it flags; `git add` the doc changes.
+2. **Surface uncommitted docs early.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `git status --porcelain -- '*.md'`. New/uncommitted (`??`/`A`) managed docs and `# candidate` files created this session are easy to miss — name them and confirm whether each should be distilled, adopted, or left. `doc-scan`'s `# scaffolding` partition is declared, not adopted — don't pester about it.
+3. **(DEFAULT)** Distill from the code, not the spec. For each landed feature, refresh the touched module README's frontmatter `updated` and `## Overview`, and record any durable build or infrastructure decision in that module's `## Agentic Guidelines`. If a result earns its own doc — a schema, a subsystem, a diagram — add it under `docs/` and link it from the module README. Most features stop at an Overview paragraph; if nothing durable changed, write nothing.
+4. **(DEFAULT)** Move the roadmap only on milestone events: update `## Now`/`## Next`, check off `## Milestones` in `docs/config/roadmap.md`. No per-session entry — git is the activity log.
+5. **(DEFAULT)** Prune implemented `docs/specs`/`docs/plans` and graduated `docs/design` ideation, only once their essence is captured above. The prunable scaffolding is whatever `[discovery] scaffolding` declares — not a hardcoded path. Leave directional reviews (`kind: review` specs) in place.
+6. **(DEFAULT)** Sync `AGENTS.md` or the root `README.md` only if a durable fact changed.
+7. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` and fix what it flags; `git add` the doc changes.
 
-Then **ask whether to close out**: "Close out this branch by merging? Into which branch?" (skip the question when invoked as `/weft into <branch>` — the target is given). If the operator declines, stop here: report and leave the diff staged. If they choose a target, continue with close-out.
+Then **ask whether to close out**: "Close out this branch by merging? Into which branch?" (skip when invoked as `/weft into <branch>` — the target is given). If the operator declines, stop here: report and leave the diff staged. If they choose a target, continue.
 
 ## Close out (on operator opt-in)
 
-8. **Gate before merging** — the work does not merge until both pass:
+8. **The gate (MUST) — the work does not merge until both pass:**
    - **Lint clean:** `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` exits 0.
-   - **Untracked / missing check:** `git status --porcelain`. Surface every untracked (`??`) and deleted/missing (` D`) path; stage what belongs in the sync and remove or explain what doesn't. Do not merge a tree with stray or orphaned files.
-   If either fails, stop and report — never merge through a failing gate.
+   - **Untracked / missing check:** `git status --porcelain`. Surface every untracked (`??`) and deleted/missing (` D`) path; stage what belongs in the sync, remove or explain what doesn't.
+
+   **Never merge through a failing gate. No exceptions** — not "it's a trivial doc change," not "lint is almost clean, I'll fix after the merge," not "the stray file is unrelated." If either check fails, stop and report.
 9. **Commit the sync** on the work branch: `git commit -m "docs(weft): <what was distilled>"` (project trailer per the repo's commit convention).
-10. **Merge with an explicit commit, as the last step:** `git checkout <branch>` then `git merge --no-ff <work-branch>` with a written merge-commit message naming the work. `--no-ff` is required — always an explicit merge commit, never a fast-forward. Re-run the linter on the merged result.
+10. **Merge with an explicit commit, as the last step:** `git checkout <branch>` then `git merge --no-ff <work-branch>` with a written merge-commit message naming the work. `--no-ff` always — never a fast-forward. Re-run the linter on the merged result.
 11. **Optionally clean up** — on operator confirmation, delete the merged branch (`git branch -d <work-branch>`) and `git worktree prune` if applicable. Skip if they want it kept.
+
+## Red flags
+
+| Thought | Reality |
+|---|---|
+| "It's a trivial doc change — skip the gate." | The gate has no size exemption. Lint + clean tree, every time. |
+| "Lint is almost clean; merge and fix after." | Never merge through a failing gate. Fix first, then merge. |
+| "A fast-forward is cleaner here." | Always `--no-ff`. The explicit merge commit is the record. |
+| "Plain `/weft`, but I'll commit to be helpful." | Plain `/weft` stages only. Committing is the operator's opt-in. |
 
 ## Output
 
