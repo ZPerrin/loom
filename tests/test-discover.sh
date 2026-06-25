@@ -44,4 +44,17 @@ assert_not_contains "$xman" "sub/c.md" "excluded prefix drops sub/c.md from mana
 assert_contains    "$xman" "a.md"     "non-excluded managed doc still present"
 rm -rf "$R/.git" "$R/docs"
 
+# Scaffolding: a [discovery] scaffolding prefix partitions candidates (surfaced, not adopted).
+rm -rf "$R/.git" "$R/docs" "$R/scaffold"
+mkdir -p "$R/docs/config" "$R/scaffold"
+printf '[discovery]\nscaffolding = ["scaffold"]\n' > "$R/docs/config/loom.toml"
+printf '# plain\n\nNo frontmatter.\n' > "$R/scaffold/note.md"
+( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore docs/config/loom.toml scaffold/note.md )
+adopt="$(adoption_candidates "$R")"
+scaf="$(scaffolding_candidates "$R")"
+assert_contains     "$scaf"  "scaffold/note.md" "scaffolding candidate surfaced under scaffolding"
+assert_not_contains "$adopt" "scaffold/note.md" "scaffolding candidate excluded from adoption list"
+assert_contains     "$adopt" "b.md"             "non-scaffolding candidate stays in adoption list"
+rm -rf "$R/.git" "$R/docs" "$R/scaffold"
+
 finish

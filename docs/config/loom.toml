@@ -1,6 +1,7 @@
 # loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
 [discovery]
 exclude = ["tests/fixtures"]
+scaffolding = ["docs/superpowers", "skills"]
 
 [context]
 recent_commits = 15

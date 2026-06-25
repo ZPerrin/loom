@@ -9,5 +9,7 @@ ROOT="$(loom_repo_root)"
 
 printf '# managed (%s)\n' "$ROOT"
 managed_docs "$ROOT"
-printf '# candidates — markdown without kind frontmatter\n'
-omission_candidates "$ROOT"
+printf '# candidates — markdown without kind frontmatter (adopt as managed, or leave)\n'
+adoption_candidates "$ROOT"
+printf '# scaffolding — config-declared unmanaged trees (surfaced, do not pester)\n'
+scaffolding_candidates "$ROOT"
