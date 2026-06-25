@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # doc-linter — doc hygiene for loom-managed Markdown (bash 3.2 + awk, no deps).
 # Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
-# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated values).
+# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs).
 # Config: <repo>/docs/config/loom.toml ([lint] kinds/statuses) or embedded defaults.
 set -u
 
@@ -35,6 +35,16 @@ cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); p
 
 KINDS="$(cfg_get lint.kinds)"
 STATUSES="$(cfg_get lint.statuses)"
+CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-docs/config/loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
+
+# Known skills = basenames of the plugin's skills/ dirs (sibling of scripts/). Empty if absent.
+SKILLS=""
+for _d in "$SELF_DIR"/../skills/*/; do
+  [ -d "$_d" ] || continue
+  _b="${_d%/}"; _b="${_b##*/}"
+  SKILLS="$SKILLS$_b
+"
+done
 
 FINDINGS=""
 add() { FINDINGS="${FINDINGS}$1
@@ -106,12 +116,26 @@ check_frontmatter() { # $1=file  (every managed doc has frontmatter; validate va
   esac
 }
 
+check_placement() { # $1=file $2=kind  — loom-config docs must live at <config_dir>/<skill>.md
+  [ "$2" = "loom-config" ] || return 0
+  local f="$1" rel dir base; rel="${f#"$ROOT"/}"
+  dir="$(dirname "$rel")"; base="$(basename "$rel" .md)"
+  if [ "$dir" != "$CONFIG_DIR" ]; then
+    add "PLACEMENT $rel: loom-config outside config_dir ($CONFIG_DIR/) — its skill won't find it"
+    return
+  fi
+  if [ -n "$SKILLS" ] && ! in_list "$base" "$SKILLS"; then
+    add "PLACEMENT $rel: no skill named '$base' — name a loom-config doc after the skill it configures"
+  fi
+}
+
 # --- run: lint the discovered managed set (current shell, so add() persists) ---
 while IFS= read -r rel; do
   [ -n "$rel" ] || continue
   f="$ROOT/$rel"
   check_links "$f"
   check_frontmatter "$f"
+  check_placement "$f" "$(frontmatter_field "$f" kind)"
 done < <(managed_docs "$ROOT")
 
 if [ -z "$FINDINGS" ]; then
