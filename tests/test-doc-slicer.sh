@@ -15,6 +15,7 @@ assert_contains "$out" "Shipping the slicer."  "harvests ## Now body"
 assert_contains "$out" "the example module"    "harvests ## Module Map body"
 assert_contains "$out" "kind: roadmap"         "inject_fields annotates kind"
 assert_contains "$out" "docs/config/roadmap.md" "inject_fields annotates location"
+assert_not_contains "$out" "BOGUS" "location annotation is path-derived, not read from frontmatter"
 assert_not_contains "$out" "Module overview body." "unconfigured ## Overview NOT harvested"
 rm -rf "$R/.git"
 
