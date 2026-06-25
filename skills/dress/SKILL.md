@@ -25,7 +25,7 @@ digraph dress {
 }
 ```
 
-- **Blank repo (DEFAULT seed).** Copy the seeds from [templates/](templates/) — `README.md`, `AGENTS.md` (with a `CLAUDE.md` symlink), a `module-README.md` per module, `docs-README.md`, `loom.toml`, and the `dress.md` override stub. Fill the `<…>` placeholders; set every `updated` to today's ISO date. Prompt for the identity one-liner and the module list. The seed is a starting shape, not law.
+- **Blank repo (DEFAULT seed).** Copy the seeds from [templates/](templates/) — `README.md`, `AGENTS.md` (with a `CLAUDE.md` symlink), a `module-README.md` per module, `loom.toml`, and the `dress.md` override stub (a `docs-README.md` is available but optional, not required). Fill the `<…>` placeholders; set every `updated` to today's ISO date. Prompt for the identity one-liner and the module list. The seed is a starting shape, not law.
 - **Existing repo.** Inventory what's there and **map content into homes** rather than overwrite: fold an existing intro into the repo's own Overview, derive the module map from real top-level dirs, fill module Overviews from code where obvious, and **flag gaps** ("backend has no Setup — fill via /weft") instead of inventing detail. Where the repo diverges from the seed — different canonical headers, a flat layout, excluded trees — record that in `docs/loom/dress.md` so future runs honor it. Never clobber existing prose silently.
 
 ## The config: `docs/loom/loom.toml`
