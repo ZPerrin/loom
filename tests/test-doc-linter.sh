@@ -28,4 +28,45 @@ assert_contains "$dout" "outside config_dir" "flags loom-config in the wrong dir
 assert_contains "$dout" "no skill named"     "flags loom-config with a non-skill basename"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
+# --- [warp] section validation (control-plane config enforcement) ---
+# Optional section; when present, the linter requires the core knobs, valid.
+WR="$DIR/fixtures/warp-repo"
+rm -rf "$WR"; mkdir -p "$WR/.loom"
+( cd "$WR" && git init -q . )
+
+# Absent -> no WARP finding, clean exit.
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
+assert_not_contains "$wo" "WARP" "[warp] absent: no warp finding"
+assert_exit "$wrc" "0" "[warp] absent: clean exit"
+
+# Present + valid -> no WARP finding.
+printf '[warp]\nbranch_convention = "zeb/<slug>"\nworktree = "never"\nwork_source = "github"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
+assert_not_contains "$wo" "WARP" "valid [warp]: no warp finding"
+
+# Missing worktree knob -> finding naming it, exit 1.
+printf '[warp]\nbranch_convention = "x"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
+assert_exit "$wrc" "1" "[warp] missing knob: exit 1"
+assert_contains "$wo" "WARP"     "[warp] missing worktree: warp finding"
+assert_contains "$wo" "worktree" "[warp] names the missing worktree knob"
+
+# Invalid worktree value -> finding naming the bad value.
+printf '[warp]\nbranch_convention = "x"\nworktree = "sometimes"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
+assert_contains "$wo" "sometimes" "[warp] invalid worktree value flagged"
+
+# Missing branch_convention -> finding.
+printf '[warp]\nworktree = "ask"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
+assert_contains "$wo" "branch_convention" "[warp] missing branch_convention: finding"
+
+# Missing work_source -> finding.
+printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
+assert_contains "$wo" "work_source" "[warp] missing work_source: finding"
+
+rm -rf "$WR"
+
 finish

@@ -20,9 +20,7 @@ MODE="full"
 if [ "${1:-}" = "--links" ]; then MODE="links"; shift; fi
 
 # --- config: normalized "table.key=value" text, from loom.toml or defaults ---
-DEFAULT_CFG='lint.kinds=roadmap
-lint.kinds=readme
-lint.kinds=guide
+DEFAULT_CFG='lint.kinds=readme
 lint.kinds=reference
 lint.kinds=spec
 lint.kinds=plan
@@ -138,6 +136,21 @@ check_placement() { # $1=file $2=kind  — loom-config docs must live at <config
   fi
 }
 
+check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
+  printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
+  local bc ws wt
+  bc="$(cfg_get warp.branch_convention)"
+  ws="$(cfg_get warp.work_source)"
+  wt="$(cfg_get warp.worktree)"
+  [ -n "$bc" ] || add "WARP     .loom/loom.toml: [warp] missing branch_convention"
+  [ -n "$ws" ] || add "WARP     .loom/loom.toml: [warp] missing work_source"
+  case "$wt" in
+    always|never|ask) ;;
+    "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask)" ;;
+    *)  add "WARP     .loom/loom.toml: [warp] worktree=$wt invalid (use always|never|ask)" ;;
+  esac
+}
+
 # --- run ---
 if [ "$MODE" = "links" ]; then
   # Prospective link check: BROKEN/CODELINK/MISSING only, no frontmatter required, so dress
@@ -166,6 +179,7 @@ else
     check_frontmatter "$f"
     check_placement "$f" "$(frontmatter_field "$f" kind)"
   done < <(managed_docs "$ROOT")
+  check_warp_config
 fi
 
 if [ -z "$FINDINGS" ]; then
