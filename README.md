@@ -95,3 +95,12 @@ Codex — add the local marketplace root, then install:
 codex plugin marketplace add /Users/zebulonperrin/IdeaProjects/loom
 codex plugin install loom
 ```
+
+update:
+
+```
+claude plugin marketplace update loom-dev   # re-scan the repo → sees 0.0.2
+claude plugin update loom@loom-dev          # promote: copies 0.0.2 into cache, updates registry
+```
+
+

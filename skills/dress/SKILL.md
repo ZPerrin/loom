@@ -5,7 +5,7 @@ description: Use when adopting loom on a repo for the first time, or re-tuning w
 
 Dress the loom: stand up or re-tune a repo's doc harness by **surveying first, proposing a shape, and writing only what the operator confirms** — so the result is a *coherent* harness the operator chose, not a skeleton imposed on them. The runtime (the SessionStart slicer and the linter) ships with the plugin and runs from `${CLAUDE_PLUGIN_ROOT}`; what this skill writes into the repo is the **docs** plus a small **`.loom/loom.toml`**. Every doc dress writes follows loom's editorial ethos — compression as craft, progressive disclosure, editorial before additive (see [doc-convention](../../references/doc-convention.md)).
 
-**MUST, every run:** survey, then **propose the plan and write nothing until the operator confirms it**; always write `.loom/loom.toml` (the one anchor the runtime trusts); stage, never commit (the operator commits); end lint-clean; never leave a cross-reference pointing at an old shape; never clobber or invent prose silently. Everything else below is a **DEFAULT** — a shape you *propose*, never impose.
+**MUST, every run:** survey, then **propose the plan and write nothing until the operator confirms it**; always write `.loom/loom.toml` (the one anchor the runtime trusts); stage, never commit (the operator commits); end lint-clean **for everything dress writes or moves** — pre-existing drift in prose dress leaves untouched is *flagged for `/weft`*, never silently repaired; never strand a cross-reference by a fold or move dress makes; never clobber or invent prose silently. Everything else below is a **DEFAULT** — a shape you *propose*, never impose.
 
 ## The spine
 
@@ -15,7 +15,8 @@ flowchart TD
     propose --> gate{"Operator confirms?"}
     gate -->|revise| propose
     gate -->|approved| write["Write the confirmed set"]
-    write --> check["Self-check — lint clean"]
+    write --> check["Self-check — lint clean for what dress wrote or moved"]
+    check -->|"surfaces a write the operator didn't confirm"| propose
 ```
 
 There is no separate "blank repo" path — a fresh repo is just a survey that comes back near-empty. Same spine, every time. Every doc-creating action lives in **Write**, downstream of the gate.
@@ -26,7 +27,8 @@ Read the lay of the land before forming an opinion:
 
 - The repo's own override, `.loom/dress.md` if present (relocatable via `[skills] config_dir`): it shapes the DEFAULTs below — it never disables a MUST. See [repo-overrides](../../references/repo-overrides.md).
 - Top-level dirs and what each *is*; existing docs and their frontmatter via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"`; code signals for what a module does.
-- The live always-on cost: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root — show the operator the actual slice with a rough per-slice line/token cost.
+- The live always-on cost: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root — then **reproduce the rendered slice inline in your message**, not as a bare tool run: tool output collapses in some clients, so the operator never sees what you're asking them to confirm. Quote it with a rough per-slice line/token cost.
+- The current lint state: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`. Pre-frontmatter it will flag missing `kind`/`status` on every doc — expected; dress is about to add them — so read it for the **cross-reference findings**. Pre-existing drift surfaced *now* is something to fold into the proposal or flag for `/weft`, never a surprise repair at self-check.
 
 ### 2. Propose — still no writes
 
@@ -34,12 +36,12 @@ Present a concrete plan the operator edits cell by cell. Recommend a core; mark 
 
 - **Modules** — which top-level dirs are modules *and why each is or isn't*. A module owns build/validate concerns; `docs/`, `scripts/`, and vendored dirs usually do not. Propose; never assume top-level = module.
 - **Doc homes** — for each doc, whether it is **seeded** (new, from [templates/](templates/)), **mapped** (existing content folded into a home), or **left as a flagged gap** ("backend has no Setup — fill via /weft"). Map existing content; never invent detail to fill a section.
-- **Config** (`.loom/loom.toml`, the small TOML subset documented in [templates/loom.toml](templates/loom.toml)) — the `[context]` slice (`recent_commits`; `slice_headers`, harvested *by header* so moving a file never breaks a slice; `inject_fields`) with its token cost; `[lint]` `kinds`/`statuses` mirroring [doc-convention](../../references/doc-convention.md); `[discovery] exclude` for trees to drop from the managed set; `[skills] config_dir` to relocate the overrides.
+- **Config** (`.loom/loom.toml`, the small TOML subset documented in [templates/loom.toml](templates/loom.toml)) — the `[context]` slice (`recent_commits`; `slice_headers`, harvested *by header* so moving a file never breaks a slice; `inject_fields`) with its token cost; `[lint]` `kinds`/`statuses` mirroring [doc-convention](../../references/doc-convention.md); `[discovery] exclude` for trees to drop from the managed set; `[skills] config_dir` to relocate the overrides. **Start from the [template](templates/loom.toml) defaults** — `inject_fields = [updated, kind, location]`, where `location` is the slice's provenance (which doc each harvested section came from); change or drop a default only with a stated reason, never silently.
 - **Pivots** — the structural calls that are the operator's, not yours: fold or keep a doc, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location.
 
 ### 3. Confirm — the facilitator loop
 
-The operator corrects; re-render the slice and its cost; loop until it lands. This loop governs **layout and config alike**, not just `[context]`. If a sliced header is missing, the slicer emits nothing for it — fix the doc with `/weft`, not by working around it here.
+The operator corrects; re-render the slice and its cost **inline in your message** (never leave it in collapsed tool output); loop until it lands. This loop governs **layout and config alike**, not just `[context]`. If a sliced header is missing, the slicer emits nothing for it — fix the doc with `/weft`, not by working around it here.
 
 ### 4. Write — only past the gate
 
@@ -47,6 +49,7 @@ Materialize the confirmed plan as one coherent pass; set every `updated` to toda
 
 - Seed a module `README.md` **only for a confirmed module with durable content**; otherwise flag the gap rather than create a hollow file.
 - Map existing prose into its home — never clobber it, never synthesize detail or elevate voice the operator didn't write.
+- Stamp frontmatter with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> kind=… status=… updated=<today>` — idempotent (sets/replaces the named keys, prepends a block when absent). Never hand-roll an inline shell loop: shell-reserved names like zsh's `status` silently fail the write.
 - Always write `.loom/loom.toml` (the MUST anchor).
 - Write `.loom/dress.md` **only if the confirmed plan diverges from a DEFAULT** — recording exactly those divergences (`kind: loom-config`), nothing more. No divergence, no override doc.
 
@@ -63,10 +66,11 @@ Propose and write the dependent artifacts as one coherent set so a pivot propaga
 | "The intro reads better rewritten; this WHY wants a 'The bet' section." | Fold the operator's words into a home; never author or elevate prose they didn't write. |
 | "I'll record this decision as an override so it sticks." | Write `dress.md` only for a confirmed divergence from a DEFAULT, and only the divergence — not notes the operator didn't ask for. |
 | "It's basically clean; I'll commit the harness." | dress stages; the operator commits. |
+| "Lint flags a stale link in a doc I'm adopting — I'll just fix it." | Did *dress* create that link by moving a doc? If not, it's pre-existing drift: flag it for `/weft`, or loop back to propose the repair. Stamping a doc's frontmatter is not license to edit its body. |
 
 ## Self-check
 
-End by running `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` — the harness is born lint-clean, which also proves the cross-reference web is coherent.
+End by running `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`. **Clean means everything dress wrote or moved is coherent** — the frontmatter it stamped, the config it wrote, every reference it folded or relocated — which also proves *that* cross-reference web is sound. A finding inside dress's own work: fix it, it's part of the confirmed pass. A finding in prose dress left untouched is **pre-existing drift the survey already surfaced** — flag it for `/weft`, never silently repair it. If such a fix genuinely belongs in this pass, loop back to **propose** it (the back-edge) and let the operator confirm; never reach past the gate to edit a body that wasn't in the plan.
 
 ## Output
 
