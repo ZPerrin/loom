@@ -28,7 +28,7 @@ Read the lay of the land before forming an opinion:
 - The repo's own override, `.loom/dress.md` if present (relocatable via `[skills] config_dir`): it shapes the DEFAULTs below — it never disables a MUST. See [repo-overrides](../../references/repo-overrides.md).
 - Top-level dirs and what each *is*; existing docs and their frontmatter via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"`; code signals for what a module does.
 - The live always-on cost: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root — then **reproduce the rendered slice inline in your message**, not as a bare tool run: tool output collapses in some clients, so the operator never sees what you're asking them to confirm. Quote it with a rough per-slice line/token cost.
-- The current lint state: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`. Pre-frontmatter it will flag missing `kind`/`status` on every doc — expected; dress is about to add them — so read it for the **cross-reference findings**. Pre-existing drift surfaced *now* is something to fold into the proposal or flag for `/weft`, never a surprise repair at self-check.
+- The cross-reference health of the docs you'd adopt: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter" --links` — link checks (BROKEN/CODELINK/MISSING) over the whole prospective set, frontmatter-agnostic. Use this, not the plain linter: the plain linter only sees *already-stamped* docs, so on a first dress it reports clean and hides exactly this drift. Whatever it surfaces, fold into the proposal (a repair the operator confirms) or flag for `/weft` — never a surprise repair at self-check. Don't re-implement the link check by hand; this *is* the real rule set.
 
 ### 2. Propose — still no writes
 
@@ -36,7 +36,7 @@ Present a concrete plan the operator edits cell by cell. Recommend a core; mark 
 
 - **Modules** — which top-level dirs are modules *and why each is or isn't*. A module owns build/validate concerns; `docs/`, `scripts/`, and vendored dirs usually do not. Propose; never assume top-level = module.
 - **Doc homes** — for each doc, whether it is **seeded** (new, from [templates/](templates/)), **mapped** (existing content folded into a home), or **left as a flagged gap** ("backend has no Setup — fill via /weft"). Map existing content; never invent detail to fill a section.
-- **Config** (`.loom/loom.toml`, the small TOML subset documented in [templates/loom.toml](templates/loom.toml)) — the `[context]` slice (`recent_commits`; `slice_headers`, harvested *by header* so moving a file never breaks a slice; `inject_fields`) with its token cost; `[lint]` `kinds`/`statuses` mirroring [doc-convention](../../references/doc-convention.md); `[discovery] exclude` for trees to drop from the managed set; `[skills] config_dir` to relocate the overrides. **Start from the [template](templates/loom.toml) defaults** — `inject_fields = [updated, kind, location]`, where `location` is the slice's provenance (which doc each harvested section came from); change or drop a default only with a stated reason, never silently.
+- **Config** (`.loom/loom.toml`, the small TOML subset documented in [templates/loom.toml](templates/loom.toml)) — the `[context]` slice (`recent_commits`; `slice_headers`, harvested *by header* — path-free, so moving a file never breaks a slice — from **every** managed doc that has that section, the same header across several docs being intended **layering**, not a clash: each contributes its slice under one heading, told apart by its `location` line (e.g. the root README's `## Module Map` lists the top-level modules; a `docs/README.md` `## Module Map` lists the doc subdirs); `inject_fields`) with its token cost; `[lint]` `kinds`/`statuses` mirroring [doc-convention](../../references/doc-convention.md); `[discovery] exclude` for trees to drop from the managed set; `[skills] config_dir` to relocate the overrides. **Start from the [template](templates/loom.toml) defaults** — `inject_fields = [updated, kind, location]`, where `location` is the slice's provenance (which doc each harvested section came from); change or drop a default only with a stated reason, never silently.
 - **Pivots** — the structural calls that are the operator's, not yours: fold or keep a doc, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location.
 
 ### 3. Confirm — the facilitator loop
@@ -47,7 +47,7 @@ The operator corrects; re-render the slice and its cost **inline in your message
 
 Materialize the confirmed plan as one coherent pass; set every `updated` to today's ISO date.
 
-- Seed a module `README.md` **only for a confirmed module with durable content**; otherwise flag the gap rather than create a hollow file.
+- Seed a `README.md` **only for a confirmed module (or doc-home like `docs/`) with durable content** — otherwise flag the gap, don't create a hollow file. Absent specific direction a seed **mirrors the reference [template](templates/README.md)**: its headers (`## Overview`, `## Module Map`, …), not invented ones, so it slices correctly by default. Adapt the content to the home and drop sections that don't apply; never redesign the skeleton or rename the harvested `## Module Map` (renaming drops it from the slice).
 - Map existing prose into its home — never clobber it, never synthesize detail or elevate voice the operator didn't write.
 - Stamp frontmatter with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> kind=… status=… updated=<today>` — idempotent (sets/replaces the named keys, prepends a block when absent). Never hand-roll an inline shell loop: shell-reserved names like zsh's `status` silently fail the write.
 - Always write `.loom/loom.toml` (the MUST anchor).
@@ -67,6 +67,7 @@ Propose and write the dependent artifacts as one coherent set so a pivot propaga
 | "I'll record this decision as an override so it sticks." | Write `dress.md` only for a confirmed divergence from a DEFAULT, and only the divergence — not notes the operator didn't ask for. |
 | "It's basically clean; I'll commit the harness." | dress stages; the operator commits. |
 | "Lint flags a stale link in a doc I'm adopting — I'll just fix it." | Did *dress* create that link by moving a doc? If not, it's pre-existing drift: flag it for `/weft`, or loop back to propose the repair. Stamping a doc's frontmatter is not license to edit its body. |
+| "A second `## Module Map` would double-harvest into the slice — I'll rename it." | That's the layering, not a clash. The slicer stacks each managed doc's section under one heading, told apart by its `location` line — a sub-tree README *should* reuse `## Module Map` (or `## Now`) to contribute its level. Renaming drops it from the slice entirely. |
 
 ## Self-check
 

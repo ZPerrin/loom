@@ -50,18 +50,18 @@ So loom does the loading: the SessionStart hook and slicer weave in just the sli
 
 *The harness is meant to conform to your codebase and tastes as you modify its configuration.*
 
-Which docs loom manages is *discovered* - a
+Which docs loom manages is *discovered*: a
   doc declares itself - not enumerated in a registry that drifts. 
 
-What loom *does* is
-  configured: sensible defaults, clear knobs, an edge case answered by a knob rather than a
+What loom does is
+  *configured*: sensible defaults, clear knobs, an edge case answered by a knob rather than a
   new hardcoded assumption.
 
 ## How it works
 
 You get 4 skills plus a context slicer and linter - that's it.  
 
-(`dress`, `weave`, `weft`, `warp`) keep a repo's documentation, and therefore the
+(`dress`, `warp` `weft`, `weave`) keep a repo's documentation, and therefore the
 agent's working context, high-quality *almost autonomously*. 
 
 A SessionStart hook stitches targeted doc slices into each session's opening bearings. Per-repo tuning lives in `.loom/loom.toml` and optional skill overrides. The runtime for the linter and slicer is bash + awk with no external dependencies.

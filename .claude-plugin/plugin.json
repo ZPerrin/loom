@@ -1,6 +1,6 @@
 {
   "name": "loom",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "A self-maintaining docs & context harness — keeps a repo's documentation, and thus agent context, high-quality almost autonomously. Scratch / experimental, extracted from the jack repo.",
   "author": { "name": "Zebulon Perrin" },
   "keywords": ["docs", "context", "harness", "skills", "progressive-disclosure"]
