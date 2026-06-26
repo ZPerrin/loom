@@ -12,8 +12,8 @@ updated: 2026-06-25
 ## Next
 
 - **Prove-out on real repos.** Run `dress` / `weave` / `weft` against varied external repos — different layouts, existing doc homes, messy histories — and fold what breaks back into the skills.
-- **Formalize the home.** Stand up the official git repository; the current one is scratch, not the final resting place.
-- **Codify publishing.** A repeatable release flow for the marketplaces — Claude (`.claude-plugin/`) and Codex (`.codex-plugin/` + `.agents/`) manifests, the Codex local-marketplace `source.path` question, and version bumps.
+- **Review the skill prose against its own ethos.** Some density in the skills is deliberate — it sets the writing-style tone for what the harness produces. But parts read as compression for the author rather than for the agent executing under load (e.g. dress's multi-clause `slice_headers` sentence). Audit the skills for comprehension, not just elegance; keep the tone-setting, trim the rest.
+- **Tighten the autonomy tone.** The README's "self-maintaining" / "almost autonomously" framing overclaims: loom automates the discipline, not the signal. Align the WHY + naming language with what the harness actually affects.
 
 ## Milestones
 

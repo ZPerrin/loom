@@ -15,5 +15,5 @@ slice_headers = ["## Now", "## Module Map"]   # sections to harvest, by header (
 inject_fields = ["updated", "kind", "location"]  # frontmatter to prefix each slice with
 
 [lint]
-kinds = ["roadmap", "readme", "guide", "reference", "spec", "plan", "design", "review", "loom-config"]
+kinds = ["readme", "reference", "spec", "plan", "design", "review", "loom-config"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]

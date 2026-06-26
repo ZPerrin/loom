@@ -1,7 +1,7 @@
 ---
-kind: reference
+kind: readme
 status: living
-updated: 2026-06-25
+updated: 2026-06-26
 ---
 # AGENTS
 

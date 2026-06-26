@@ -1,5 +1,5 @@
 ---
-kind: reference
+kind: readme
 status: living
 updated: <YYYY-MM-DD>
 ---

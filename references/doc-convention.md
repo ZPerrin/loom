@@ -35,12 +35,12 @@ Membership is discovery: a doc is loom-managed iff its frontmatter carries a `ki
 (`status` and `updated` too). Excluded trees (`[discovery] exclude`) are never managed;
 everything else without a `kind:` is a *candidate* until adopted or excluded.
 
-**kind** — what a doc *is*:
+**kind** — what a doc *is*. These are the shipped defaults; a repo adds the kinds it
+actually keeps in `loom.toml [lint] kinds` (loom itself adds `roadmap`):
 
-- `readme` — an entry point / map for a tree.
-- `reference` — durable, look-it-up facts (this doc).
-- `guide` — a how-to that walks a task.
-- `roadmap` — where the work is headed.
+- `readme` — the **front door** of a tree: it orients and routes (the map). Positional, not a
+  content flavor — it points at where durable detail lives rather than holding it.
+- `reference` — durable, look-it-up facts (this doc): the destination a `readme` routes to.
 - `spec` / `plan` — a design or an implementation plan; often transient.
 - `design` — design notes / ideation.
 - `review` — a directional review.
