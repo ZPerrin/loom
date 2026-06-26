@@ -9,7 +9,7 @@ Reconcile the entire documentation tree, re-derived from the current code, into 
 
 ## Load the repo's opinion first
 
-Read `docs/loom/weave.md` if it exists and let it shape the DEFAULT heuristics below — what this repo treats as low-leverage, how aggressively to collapse, which terms are intentionally local. It never relaxes a MUST. See [repo-overrides](../../references/repo-overrides.md).
+Read `.loom/weave.md` if it exists and let it shape the DEFAULT heuristics below — what this repo treats as low-leverage, how aggressively to collapse, which terms are intentionally local. It never relaxes a MUST. See [repo-overrides](../../references/repo-overrides.md).
 
 ## Workflow
 

@@ -18,8 +18,8 @@ one tier:
 ## Where a skill finds its override
 
 Resolution is deterministic: `<config_dir>/<skill>.md`, where `<skill>` is the skill name
-(`dress` · `weave` · `weft` · `warp`) and `config_dir` defaults to `docs/loom`,
-relocated for the whole set by `[skills] config_dir` in `docs/loom/loom.toml`. No override
+(`dress` · `weave` · `weft` · `warp`) and `config_dir` defaults to `.loom`,
+relocated for the whole set by `[skills] config_dir` in `.loom/loom.toml`. No override
 present means run the DEFAULTs. Load it and let it shape the DEFAULT steps — **it shapes how a
 step is applied; it never disables a MUST.**
 

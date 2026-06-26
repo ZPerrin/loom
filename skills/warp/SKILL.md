@@ -11,4 +11,4 @@ Intended scope (deliberately nebulous — warp is likely the first skill that's 
 - Optionally set up an isolated worktree.
 - Pull in ticket / issue / PR context (e.g. GitHub or Jira) so the session boots oriented.
 
-Each of those is a repo's call, so once built `warp` reads `docs/loom/warp.md` and is shaped by it — branch convention, worktree policy, ticket source (see [repo-overrides](../../references/repo-overrides.md)). Until then, if invoked, explain that `warp` is a placeholder and point at `/weft` for closing out work and `/dress` for standing up or tuning the harness.
+Each of those is a repo's call, so once built `warp` reads `.loom/warp.md` and is shaped by it — branch convention, worktree policy, ticket source (see [repo-overrides](../../references/repo-overrides.md)) — and writes any prose to loom's editorial ethos (see [doc-convention](../../references/doc-convention.md)). Until then, if invoked, explain that `warp` is a placeholder and point at `/weft` for closing out work and `/dress` for standing up or tuning the harness.

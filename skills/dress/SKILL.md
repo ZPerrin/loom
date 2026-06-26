@@ -1,66 +1,73 @@
 ---
 name: dress
-description: Use when adopting loom on a repo, or re-tuning what it tracks — context slices, lint vocabulary, exclusions, or doc layout. Stands up (or re-tunes) the harness and proves it lint-clean.
+description: Use when adopting loom on a repo for the first time, or re-tuning what an already-dressed repo tracks — context slices, lint vocabulary, exclusions, or doc layout.
 ---
 
-Dress the loom: stand up or re-tune the doc harness conversationally — explaining each artifact as it lands and letting the operator pivot — so the result is a *coherent* harness, not just files. The runtime (the SessionStart slicer and the linter) ships with the plugin and runs from `${CLAUDE_PLUGIN_ROOT}`; what this skill writes into the repo is the **docs** plus a small **`docs/loom/loom.toml`**.
+Dress the loom: stand up or re-tune a repo's doc harness by **surveying first, proposing a shape, and writing only what the operator confirms** — so the result is a *coherent* harness the operator chose, not a skeleton imposed on them. The runtime (the SessionStart slicer and the linter) ships with the plugin and runs from `${CLAUDE_PLUGIN_ROOT}`; what this skill writes into the repo is the **docs** plus a small **`.loom/loom.toml`**. Every doc dress writes follows loom's editorial ethos — compression as craft, progressive disclosure, editorial before additive (see [doc-convention](../../references/doc-convention.md)).
 
-**MUST, every run:** stage, never commit (the operator commits); write `docs/loom/loom.toml` (the one invariant anchor the runtime trusts); end lint-clean; never leave a cross-reference pointing at an old shape; on an existing repo, never clobber existing prose silently. Everything else below is a **DEFAULT** — a seed you may reshape.
+**MUST, every run:** survey, then **propose the plan and write nothing until the operator confirms it**; always write `.loom/loom.toml` (the one anchor the runtime trusts); stage, never commit (the operator commits); end lint-clean; never leave a cross-reference pointing at an old shape; never clobber or invent prose silently. Everything else below is a **DEFAULT** — a shape you *propose*, never impose.
 
-## Load the repo's opinion first
+## The spine
 
-Read `docs/loom/dress.md` if it exists (relocatable via `[skills] config_dir`) and let it shape the DEFAULT layout and seeds below — which headers are canonical, which dirs are modules, which trees to exclude. It shapes; it never disables a MUST. See [repo-overrides](../../references/repo-overrides.md).
-
-## Fresh vs. existing
-
-```dot
-digraph dress {
-  "Repo has docs already?" [shape=diamond];
-  "Blank: write the seed" [shape=box];
-  "Existing: map content into homes" [shape=box];
-  "Negotiate + write the repo's dress.md" [shape=box];
-  "Repo has docs already?" -> "Blank: write the seed" [label="no"];
-  "Repo has docs already?" -> "Existing: map content into homes" [label="yes"];
-  "Existing: map content into homes" -> "Negotiate + write the repo's dress.md";
-}
+```mermaid
+flowchart TD
+    survey["Survey — read the repo, write nothing"] --> propose["Propose the plan — modules, doc homes, config, pivots"]
+    propose --> gate{"Operator confirms?"}
+    gate -->|revise| propose
+    gate -->|approved| write["Write the confirmed set"]
+    write --> check["Self-check — lint clean"]
 ```
 
-- **Blank repo (DEFAULT seed).** Copy the seeds from [templates/](templates/) — `README.md`, `AGENTS.md` (with a `CLAUDE.md` symlink), a `module-README.md` per module, `loom.toml`, and the `dress.md` override stub (a `docs-README.md` is available but optional, not required). Fill the `<…>` placeholders; set every `updated` to today's ISO date. Prompt for the identity one-liner and the module list. The seed is a starting shape, not law.
-- **Existing repo.** Inventory what's there and **map content into homes** rather than overwrite: fold an existing intro into the repo's own Overview, derive the module map from real top-level dirs, fill module Overviews from code where obvious, and **flag gaps** ("backend has no Setup — fill via /weft") instead of inventing detail. Where the repo diverges from the seed — different canonical headers, a flat layout, excluded trees — record that in `docs/loom/dress.md` so future runs honor it. Never clobber existing prose silently.
+There is no separate "blank repo" path — a fresh repo is just a survey that comes back near-empty. Same spine, every time. Every doc-creating action lives in **Write**, downstream of the gate.
 
-## The config: `docs/loom/loom.toml`
+### 1. Survey — write nothing
 
-`loom.toml` is what the runtime reads — there is no per-repo code to edit. It is a small TOML subset (`[table]` headers, `key = scalar`, single-line `key = ["arrays"]`). The seed at [templates/loom.toml](templates/loom.toml) documents every table; fill it from the chosen structure rather than restating the schema:
+Read the lay of the land before forming an opinion:
 
-- `[context]` — what the SessionStart hook injects (`recent_commits`; `slice_headers`, harvested *by header* so moving a file never breaks a slice; `inject_fields`). Start maximal, then trim *down* — the slice is paid every session.
-- `[lint]` — `kinds` / `statuses`, mirroring the Nomenclature in [doc-convention](../../references/doc-convention.md). `kinds` is also the discovery key.
-- `[discovery]` — `exclude` drops a tree from the managed set entirely.
-- `[skills]` — `config_dir` relocates the per-skill override docs (default `docs/loom`).
+- The repo's own override, `.loom/dress.md` if present (relocatable via `[skills] config_dir`): it shapes the DEFAULTs below — it never disables a MUST. See [repo-overrides](../../references/repo-overrides.md).
+- Top-level dirs and what each *is*; existing docs and their frontmatter via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"`; code signals for what a module does.
+- The live always-on cost: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root — show the operator the actual slice with a rough per-slice line/token cost.
 
-## Re-tune (the facilitator loop)
+### 2. Propose — still no writes
 
-To adjust what loads or what the linter enforces:
+Present a concrete plan the operator edits cell by cell. Recommend a core; mark every choice correctable.
 
-1. Render the live context: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer"` from the repo root, and show the operator the actual output with a rough per-slice line/token cost so the always-on tax is visible.
-2. Tune `[context]` / `[lint]` / `[discovery]` with the operator — add/drop/reorder `slice_headers`, adjust `inject_fields`, match enums to [doc-convention](../../references/doc-convention.md), exclude the trees that shouldn't be managed. Re-render, re-show. Loop until it lands.
-3. If a sliced header is missing, the slicer emits nothing for it — fix the doc with `/weft`, not by working around it here.
+- **Modules** — which top-level dirs are modules *and why each is or isn't*. A module owns build/validate concerns; `docs/`, `scripts/`, and vendored dirs usually do not. Propose; never assume top-level = module.
+- **Doc homes** — for each doc, whether it is **seeded** (new, from [templates/](templates/)), **mapped** (existing content folded into a home), or **left as a flagged gap** ("backend has no Setup — fill via /weft"). Map existing content; never invent detail to fill a section.
+- **Config** (`.loom/loom.toml`, the small TOML subset documented in [templates/loom.toml](templates/loom.toml)) — the `[context]` slice (`recent_commits`; `slice_headers`, harvested *by header* so moving a file never breaks a slice; `inject_fields`) with its token cost; `[lint]` `kinds`/`statuses` mirroring [doc-convention](../../references/doc-convention.md); `[discovery] exclude` for trees to drop from the managed set; `[skills] config_dir` to relocate the overrides.
+- **Pivots** — the structural calls that are the operator's, not yours: fold or keep a doc, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location.
+
+### 3. Confirm — the facilitator loop
+
+The operator corrects; re-render the slice and its cost; loop until it lands. This loop governs **layout and config alike**, not just `[context]`. If a sliced header is missing, the slicer emits nothing for it — fix the doc with `/weft`, not by working around it here.
+
+### 4. Write — only past the gate
+
+Materialize the confirmed plan as one coherent pass; set every `updated` to today's ISO date.
+
+- Seed a module `README.md` **only for a confirmed module with durable content**; otherwise flag the gap rather than create a hollow file.
+- Map existing prose into its home — never clobber it, never synthesize detail or elevate voice the operator didn't write.
+- Always write `.loom/loom.toml` (the MUST anchor).
+- Write `.loom/dress.md` **only if the confirmed plan diverges from a DEFAULT** — recording exactly those divergences (`kind: loom-config`), nothing more. No divergence, no override doc.
 
 ## Cohesion (the binding invariant)
 
-Generate dependent artifacts as a coherent seed set so a pivot propagates: module READMEs, `loom.toml`'s enums and slice list, the override docs. An entry-point `readme` is at most an optional seed — never required, never special. Offer pivots (which dirs are modules, keep/drop `docs/design` + `docs/diagrams`, the `docs/` location) and recommend a core — but never leave a reference pointing at the old shape.
-
-## Self-check
-
-End by running `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` — the scaffold is born lint-clean, which also proves the cross-reference web is coherent.
+Propose and write the dependent artifacts as one coherent set so a pivot propagates: module READMEs, `loom.toml`'s enums and slice list, the override doc, the cross-reference web. An entry-point `readme` is at most an optional part of that set — never required, never special. A confirmed pivot updates every dependent in the same pass; never leave a reference pointing at the old shape.
 
 ## Red flags
 
 | Thought | Reality |
 |---|---|
-| "This repo obviously wants the canonical layout — skip the negotiation." | The seed is a DEFAULT. An existing repo gets its content mapped and its own `dress.md`, never the seed imposed. |
-| "I'll just overwrite the stale README intro." | Never clobber existing prose silently — fold it into a home, or flag the gap. |
-| "It's basically clean; I'll commit the scaffold." | dress stages; the operator commits. |
+| "I can see the modules — I'll write their READMEs now." | Propose first. A README is earned by a confirmed module with durable content; nothing is written before the operator confirms. |
+| "Fresh repo — I'll just drop the full seed skeleton." | No blank-repo shortcut exists. Survey → propose → confirm → write; the seed is a shape you propose, never a skeleton you impose. |
+| "The intro reads better rewritten; this WHY wants a 'The bet' section." | Fold the operator's words into a home; never author or elevate prose they didn't write. |
+| "I'll record this decision as an override so it sticks." | Write `dress.md` only for a confirmed divergence from a DEFAULT, and only the divergence — not notes the operator didn't ask for. |
+| "It's basically clean; I'll commit the harness." | dress stages; the operator commits. |
+
+## Self-check
+
+End by running `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` — the harness is born lint-clean, which also proves the cross-reference web is coherent.
 
 ## Output
 
-Report what was scaffolded vs. mapped from existing content, the pivots chosen, the `loom.toml` written, the repo's `dress.md` if one was written, gaps flagged for `/weft`, and the clean lint run.
+Report the confirmed plan (modules, doc homes, config, pivots), what was seeded vs. mapped vs. flagged as a gap, the `loom.toml` written, the `dress.md` if a divergence warranted one, gaps flagged for `/weft`, and the clean lint run.

@@ -2,7 +2,7 @@
 # doc-linter — doc hygiene for loom-managed Markdown (bash 3.2 + awk, no deps).
 # Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
 # Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs).
-# Config: <repo>/docs/loom/loom.toml ([lint] kinds/statuses) or embedded defaults.
+# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses) or embedded defaults.
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -25,7 +25,7 @@ lint.statuses=hardened
 lint.statuses=superseded
 lint.statuses=scaffolding
 lint.statuses=ideation'
-CONF="$ROOT/docs/loom/loom.toml"
+CONF="$ROOT/.loom/loom.toml"
 if [ -f "$CONF" ]; then
   CFG="$(awk -f "$PARSE_AWK" "$CONF")" || { echo "doc-linter: bad loom.toml" >&2; exit 2; }
 else
@@ -35,7 +35,7 @@ cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); p
 
 KINDS="$(cfg_get lint.kinds)"
 STATUSES="$(cfg_get lint.statuses)"
-CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-docs/loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
+CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-.loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
 
 # Known skills = basenames of the plugin's skills/ dirs (sibling of scripts/). Empty if absent.
 SKILLS=""

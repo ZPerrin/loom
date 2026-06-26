@@ -23,9 +23,9 @@ _list_md() { # $1=ROOT
   fi
 }
 
-# exclude path-prefixes from [discovery] exclude in <ROOT>/docs/loom/loom.toml
+# exclude path-prefixes from [discovery] exclude in <ROOT>/.loom/loom.toml
 doc_excludes() { # $1=ROOT
-  local conf="$1/docs/loom/loom.toml"
+  local conf="$1/.loom/loom.toml"
   [ -f "$conf" ] || return 0
   awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
     | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'

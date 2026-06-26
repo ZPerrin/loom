@@ -42,7 +42,9 @@ Dense, concrete, decision-useful prose, where every sentence earns its place by 
 
 For a human, that means never scavenger-hunting for a fact or maintaining an index that's stale the moment new code is committed. The right doc should sit where you would already think to look for it, and read like it belongs there.
 
-The agent's side is the same coin. Just as I'm not holding an entire document in my head to do one thing, an agent shouldn't load everything into context for every task - the more context I fill, the less intelligence and attention I keep for the work I'm actually trying to do. So loom does the loading: the SessionStart hook and slicer weave in just the slice a session needs, configured once and hand-fed never. The payoff is obvious — the right context up front while maintaining the *option* to pull more in as needed.
+The agent's concern is the flip side of the same coin. Just as I'm not holding an entire document in my head to do one thing, an agent shouldn't load everything into context for every task - the more context I fill, the less intelligence and attention I reserve for the work I'm actually trying to do. 
+
+So loom does the loading: the SessionStart hook and slicer weave in just the slice a session needs, configurable by the operator. The result is the right context up front while maintaining the *option* to pull more in as needed via regular agentic search.  At least that's the theory.
 
 **Discover structure; configure behavior.**
 
@@ -53,32 +55,30 @@ Which docs loom manages is *discovered* - a
 
 What loom *does* is
   configured: sensible defaults, clear knobs, an edge case answered by a knob rather than a
-  new hardcoded assumption. 
-
-
+  new hardcoded assumption.
 
 ## How it works
 
 You get 4 skills plus a context slicer and linter - that's it.  
 
-(`dress`, `weave`, `weft`, `warp`) keep a repo's documentation — and therefore the
-agent's working context — high-quality *almost autonomously*; a SessionStart hook stitches
-targeted doc slices into each session's opening bearings. Per-repo tuning lives in
-`docs/loom/loom.toml`; the runtime is bash + awk with no external dependencies.
+(`dress`, `weave`, `weft`, `warp`) keep a repo's documentation, and therefore the
+agent's working context, high-quality *almost autonomously*. 
+
+A SessionStart hook stitches targeted doc slices into each session's opening bearings. Per-repo tuning lives in `.loom/loom.toml` and optional skill overrides. The runtime for the linter and slicer is bash + awk with no external dependencies.
 
 ## Naming (textile ethos)
 
 The harness is a loom; sessions are woven on it.
 
-| term | what it names | where |
-|---|---|---|
-| **loom** | the system / this repo | here |
-| **dress** | stand up or re-tune the harness | `skills/dress` |
-| **weave** | re-weave the whole doc tree | `skills/weave` |
-| **weft** | session-*close* — distill work into docs | `skills/weft` |
-| **warp** | session-*open* bookend — orient before work | `skills/warp` (stub) |
-| **doc-slicer** | the per-session context the hook threads in ("Bearings") | `hooks/doc-slicer` |
-| **doc-linter** | doc hygiene checks (links + frontmatter) | `scripts/doc-linter` |
+| term | what it names                                                   | where |
+|---|-----------------------------------------------------------------|---|
+| **loom** | the system / this repo                                          | here |
+| **dress** | stand up or re-tune the harness                                 | `skills/dress` |
+| **warp** | session-*open* bookend — orient before work                     | `skills/warp` (stub) |
+| **weft** | session-*close* — distill work into docs/ close out the session | `skills/weft` |
+| **weave** | re-weave the whole doc tree                                     | `skills/weave` |
+| **doc-slicer** | the per-session context the hook threads in ("Bearings")        | `hooks/doc-slicer` |
+| **doc-linter** | doc hygiene checks (links + frontmatter)                        | `scripts/doc-linter` |
 
 ## Try it (local, for iteration)
 

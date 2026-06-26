@@ -7,7 +7,7 @@
 exclude = []        # path-prefix trees to drop entirely, e.g. ["tests/fixtures", "vendor"]
 
 # [skills]
-# config_dir = "docs/loom"   # default; relocate the whole set of <skill>.md overrides
+# config_dir = ".loom"   # default; relocate the whole set of <skill>.md overrides
 
 [context]
 recent_commits = 15

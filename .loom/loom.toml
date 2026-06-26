@@ -3,7 +3,7 @@
 exclude = ["tests/fixtures", "skills", "docs/superpowers"]
 
 [context]
-recent_commits = 15
+recent_commits = 10
 slice_headers = ["## Now"]
 inject_fields = ["updated", "kind", "location"]
 
