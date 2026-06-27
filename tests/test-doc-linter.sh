@@ -69,4 +69,35 @@ assert_contains "$wo" "work_source" "[warp] missing work_source: finding"
 
 rm -rf "$WR"
 
+# --- [weft] section validation (control-plane config enforcement) ---
+# Single optional knob; when [weft] is present, the linter requires cleanup, valid.
+WF="$DIR/fixtures/weft-repo"
+rm -rf "$WF"; mkdir -p "$WF/.loom"
+( cd "$WF" && git init -q . )
+
+# Absent -> no WEFT finding, clean exit.
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WF/.loom/loom.toml"
+fo="$(cd "$WF" && bash "$LINTER" 2>&1)"; frc=$?
+assert_not_contains "$fo" "WEFT" "[weft] absent: no weft finding"
+assert_exit "$frc" "0" "[weft] absent: clean exit"
+
+# Present + valid -> no WEFT finding.
+printf '[weft]\ncleanup = "always"\n' > "$WF/.loom/loom.toml"
+fo="$(cd "$WF" && bash "$LINTER" 2>&1)"
+assert_not_contains "$fo" "WEFT" "valid [weft]: no weft finding"
+
+# Present but empty (cleanup missing) -> finding naming it, exit 1.
+printf '[weft]\n' > "$WF/.loom/loom.toml"
+fo="$(cd "$WF" && bash "$LINTER" 2>&1)"; frc=$?
+assert_exit "$frc" "1" "[weft] missing knob: exit 1"
+assert_contains "$fo" "WEFT"    "[weft] missing cleanup: weft finding"
+assert_contains "$fo" "cleanup" "[weft] names the missing cleanup knob"
+
+# Invalid cleanup value -> finding naming the bad value.
+printf '[weft]\ncleanup = "sometimes"\n' > "$WF/.loom/loom.toml"
+fo="$(cd "$WF" && bash "$LINTER" 2>&1)"
+assert_contains "$fo" "sometimes" "[weft] invalid cleanup value flagged"
+
+rm -rf "$WF"
+
 finish

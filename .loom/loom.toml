@@ -15,3 +15,6 @@ statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
 branch_convention = "issue/<number>-<slug> | feature/<slug>"  # issue-backed off main | ad-hoc local
 work_source = "github"        # /warp <issue-ref> fetched from origin; free text/none → ad-hoc feature
 worktree = "always"           # standardized at ../loom-worktrees/<branch> (see warp.md)
+
+[weft]
+cleanup = "ask"               # after merge, weft asks whether to delete the branch + prune its worktree
