@@ -1,7 +1,7 @@
 ---
 kind: loom-config
 status: living
-updated: 2026-06-25
+updated: 2026-06-26
 ---
 # dress — loom's own overrides
 
@@ -12,5 +12,6 @@ do not re-impose the seed.
 - Root `README.md` headers: `## Why this project exists` · `## Core Principles` ·
   `## How it works` · `## Naming (textile ethos)` · `## Try it (local, for iteration)`.
 - This repo is flat — no module READMEs yet; the scripts, hooks, and skills are the units.
-- Excluded from discovery (`[discovery] exclude`): `tests/fixtures`, the plugin's `skills/`,
-  and the design specs/plans under `docs/superpowers/` — never tracked or nagged.
+- Excluded from discovery (`[discovery] exclude`): `tests/fixtures` and the plugin's `skills/`
+  — never tracked or nagged. Dated specs/plans are a managed set (`kind: spec`/`plan`) under
+  `docs/specs/` and `docs/plans/`, reconciled by weave/weft.

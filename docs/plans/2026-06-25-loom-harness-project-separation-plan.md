@@ -1,3 +1,8 @@
+---
+kind: plan
+status: superseded
+updated: 2026-06-26
+---
 # loom — harness/project separation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -16,7 +21,7 @@ philosophy a plugin home and repoints the skills. Phase 3 performs loom's own mi
 **Tech Stack:** bash 3.2 + awk (no Python/jq/node), a fixture-based test suite under `tests/`,
 Markdown docs with YAML frontmatter, TOML-subset config parsed by `scripts/lib/parse-toml.awk`.
 
-**Spec:** [docs/superpowers/specs/2026-06-25-loom-harness-project-separation-design.md](../specs/2026-06-25-loom-harness-project-separation-design.md)
+**Spec:** [docs/specs/2026-06-25-loom-harness-project-separation-spec.md](../specs/2026-06-25-loom-harness-project-separation-spec.md)
 
 ---
 
@@ -570,7 +575,7 @@ git commit -m "docs(loom): weft addendum opting into superpowers plan pruning"
 - [ ] **Step 1: Make the docs-README seed optional in the blank-repo step**
 
 In `skills/dress/SKILL.md:28`, change the seed list so `docs-README.md` is explicitly optional:
-`` Copy the seeds from [templates/](templates/) — `README.md`, `AGENTS.md` (with a `CLAUDE.md` symlink), a `module-README.md` per module, `loom.toml`, and the `dress.md` override stub (a `docs-README.md` is available but optional, not required). ``
+`` Copy the seeds from templates/ — `README.md`, `AGENTS.md` (with a `CLAUDE.md` symlink), a `module-README.md` per module, `loom.toml`, and the `dress.md` override stub (a `docs-README.md` is available but optional, not required). ``
 
 - [ ] **Step 2: Remove the `scaffolding` key from the template config**
 

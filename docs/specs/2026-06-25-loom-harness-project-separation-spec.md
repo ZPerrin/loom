@@ -1,3 +1,8 @@
+---
+kind: spec
+status: superseded
+updated: 2026-06-26
+---
 # loom — harness/project separation & discovery simplification (design)
 
 _Status: draft for review — 2026-06-25_
@@ -163,7 +168,7 @@ Fix — the ethos and nomenclature move **into the plugin**:
 - Net: no repo is required to have a `docs/README.md`; deleting loom's own dangles nothing.
 
 Related, same class but lighter: weave/weft also assume a root-`README.md` `## Module Map`
-navigation structure ([weave:16](skills/weave/SKILL.md), [weft:26](skills/weft/SKILL.md)).
+navigation structure ([weave:16](../../skills/weave/SKILL.md), [weft:26](../../skills/weft/SKILL.md)).
 Left as DEFAULT prose for now — a repo without one simply has nothing to follow — and flagged
 with the §7 example-artifact work rather than fixed here.
 

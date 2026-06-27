@@ -1,6 +1,6 @@
 # loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
 [discovery]
-exclude = ["tests/fixtures", "skills", "docs/superpowers"]
+exclude = ["tests/fixtures", "skills"]
 
 [context]
 recent_commits = 10
@@ -8,5 +8,10 @@ slice_headers = ["## Now"]
 inject_fields = ["updated", "kind", "location"]
 
 [lint]
-kinds = ["readme", "reference", "roadmap", "loom-config"]
+kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
+
+[warp]
+branch_convention = "issue/<number>-<slug> | feature/<slug>"  # issue-backed off main | ad-hoc local
+work_source = "github"        # /warp <issue-ref> fetched from origin; free text/none → ad-hoc feature
+worktree = "always"           # standardized at ../loom-worktrees/<branch> (see warp.md)
