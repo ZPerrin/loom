@@ -151,6 +151,19 @@ check_warp_config() { # the [warp] section is optional, but required-and-valid i
   esac
 }
 
+check_weft_config() { # optional [weft] section; required-and-valid iff present.
+  # Single-knob section: detect the header itself — an empty [weft] yields no parsed
+  # keys, so key-detection (as in check_warp_config) would miss a missing cleanup.
+  [ -f "$CONF" ] && grep -q '^\[weft\]' "$CONF" || return 0
+  local cl
+  cl="$(cfg_get weft.cleanup)"
+  case "$cl" in
+    always|never|ask) ;;
+    "") add "WEFT     .loom/loom.toml: [weft] missing cleanup (always|never|ask)" ;;
+    *)  add "WEFT     .loom/loom.toml: [weft] cleanup=$cl invalid (use always|never|ask)" ;;
+  esac
+}
+
 # --- run ---
 if [ "$MODE" = "links" ]; then
   # Prospective link check: BROKEN/CODELINK/MISSING only, no frontmatter required, so dress
@@ -180,6 +193,7 @@ else
     check_placement "$f" "$(frontmatter_field "$f" kind)"
   done < <(managed_docs "$ROOT")
   check_warp_config
+  check_weft_config
 fi
 
 if [ -z "$FINDINGS" ]; then

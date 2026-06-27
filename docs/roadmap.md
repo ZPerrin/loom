@@ -1,13 +1,13 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-06-25
+updated: 2026-06-26
 ---
 # Roadmap
 
 ## Now
 
-`dress` is the reference skill: **survey → propose → confirm → write** — nothing lands until the operator confirms — with config in `.loom/` and all prose held to the editorial ethos. Immediate focus: bring `weave`, `weft`, and `warp` to that same anti-leap standard, then prove the harness by dressing a range of real external repos.
+`dress` is the reference skill: **survey → propose → confirm → write** — nothing lands until the operator confirms — with config in `.loom/` and all prose held to the editorial ethos. Immediate focus: bring `weave` to that same anti-leap standard (`warp` and `weft` are there now — the session-open/close bookends, each an enforced spine plus a `[warp]`/`[weft]` control plane), then prove the harness by dressing a range of real external repos.
 
 ## Next
 
@@ -21,7 +21,8 @@ updated: 2026-06-25
 - [x] Skill family named and framed; MUST / DEFAULT / REPO-OPINION tiers with per-skill `.loom/` overrides
 - [x] Harness/project separation — no special `docs/README`; ethos + nomenclature harvested into the plugin
 - [x] `dress` restructured (survey → propose → confirm → write); config home → `.loom/`; editorial ethos referenced by every skill
-- [ ] `weave` / `weft` polished to dress's standard; `warp` built (session-open bookend)
+- [x] `warp` + `weft` to dress's standard — session-open/close bookends (enforced spine + `[warp]`/`[weft]` control plane)
+- [ ] `weave` polished to dress's standard
 - [ ] Prove-out across varied external repos
 - [ ] Smoke-test the install on Claude + Codex
 - [ ] Official git repository (final home)
