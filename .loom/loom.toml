@@ -17,4 +17,4 @@ work_source = "github"        # /warp <issue-ref> fetched from origin; free text
 worktree = "always"           # standardized at ../loom-worktrees/<branch> (see warp.md)
 
 [weft]
-cleanup = "ask"               # after merge, weft asks whether to delete the branch + prune its worktree
+cleanup = "ask"               # after merge, weft asks whether to delete the merged branch (not the worktree)
