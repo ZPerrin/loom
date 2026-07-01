@@ -28,6 +28,49 @@ assert_contains "$dout" "outside config_dir" "flags loom-config in the wrong dir
 assert_contains "$dout" "no skill named"     "flags loom-config with a non-skill basename"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
+# --- META: meta-documentation tripwire ---
+# Repo docs whose subject is the doc system (harness references, topology narration) are flagged;
+# loom-config docs are exempt; meta_denylist = ["off"] disables; custom lists replace the defaults.
+MR="$DIR/fixtures/meta-repo"
+rm -rf "$MR"; mkdir -p "$MR/.loom"
+( cd "$MR" && git init -q . )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nThe doc convention ships with the plugin.\nA fine sentence about the actual project.\n' > "$MR/README.md"
+printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-07-01\n---\n# weft\n\nWriter policy may say frontmatter and managed set freely.\n' > "$MR/.loom/weft.md"
+
+# Default denylist -> META finding on the readme, none on the loom-config doc.
+printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\n' > "$MR/.loom/loom.toml"
+mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
+assert_exit "$mrc" "1" "meta prose: exit 1"
+assert_contains "$mo" "META"          "meta prose: META finding"
+assert_contains "$mo" "the plugin"    "META names the tripped term"
+assert_contains "$mo" "README.md:8"   "META carries file:line"
+assert_not_contains "$mo" "weft.md"   "loom-config docs exempt from META"
+
+# Word boundary: 'plugins' does not trip 'the plugin'... but a real term still does.
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nWe ship three editor plugins for the app.\n' > "$MR/README.md"
+mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
+assert_exit "$mrc" "0" "word boundary: 'plugins' alone stays clean"
+
+# Fenced code blocks are not scanned.
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\n```\nthe plugin, frontmatter, managed set\n```\n' > "$MR/README.md"
+mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
+assert_exit "$mrc" "0" "META skips fenced code"
+
+# Opt-out: meta_denylist = ["off"].
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nThe doc convention ships with the plugin.\n' > "$MR/README.md"
+printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\nmeta_denylist = ["off"]\n' > "$MR/.loom/loom.toml"
+mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
+assert_exit "$mrc" "0" "meta_denylist off: clean exit"
+
+# Custom list replaces the defaults.
+printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\nmeta_denylist = ["scaffolding lifecycle"]\n' > "$MR/.loom/loom.toml"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nPer the scaffolding lifecycle, the plugin prunes this.\n' > "$MR/README.md"
+mo="$(cd "$MR" && bash "$LINTER" 2>&1)"
+assert_contains "$mo" "scaffolding lifecycle" "custom term trips"
+assert_not_contains "$mo" '"the plugin"'      "custom list replaces defaults"
+
+rm -rf "$MR"
+
 # --- [warp] section validation (control-plane config enforcement) ---
 # Optional section; when present, the linter requires the core knobs, valid.
 WR="$DIR/fixtures/warp-repo"

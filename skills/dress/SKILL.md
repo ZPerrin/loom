@@ -69,6 +69,7 @@ Propose and write the dependent artifacts as one coherent set so a pivot propaga
 | "Lint flags a stale link in a doc I'm adopting — I'll just fix it." | Did *dress* create that link by moving a doc? If not, it's pre-existing drift: flag it for `/weft`, or loop back to propose the repair. Stamping a doc's frontmatter is not license to edit its body. |
 | "A second `## Module Map` would double-harvest into the slice — I'll rename it." | That's the layering, not a clash. The slicer stacks each managed doc's section under one heading, told apart by its `location` line — a sub-tree README *should* reuse `## Module Map` (or `## Now`) to contribute its level. Renaming drops it from the slice entirely. |
 | "AGENTS.md is harness-loaded root instructions — I'll leave it unmanaged so its frontmatter isn't noise." | No — `AGENTS.md`/`CLAUDE.md` is a managed `readme`, the agent-facing front door (the template ships it that way; loom stamps its own). A 3-line block is the convention, not noise, and leaving it out drops the most important agent-facing doc from the linted set. |
+| "This README is thin — an Overview explaining where things live would help." | Thin is the goal. The topology is the explanation; meta-documentation (harness references, routing narration) is the slop the `meta_denylist` lint trips on. Seed the map, not a legend about maps. |
 
 ## Self-check
 

@@ -48,6 +48,7 @@ doc_universe() { # $1=ROOT -> repo-relative *.md, minus [discovery] exclude pref
   excl="$(doc_excludes "$root")"
   _list_md "$root" | while IFS= read -r rel; do
     [ -n "$rel" ] || continue
+    [ -L "$root/$rel" ] && continue   # symlinked doc (e.g. CLAUDE.md -> AGENTS.md): its target is the doc
     _excluded "$rel" "$excl" || printf '%s\n' "$rel"
   done
 }

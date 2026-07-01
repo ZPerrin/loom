@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-06-25
+updated: 2026-07-01
 ---
 # Doc convention — what loom's docs are, and how they read
 
@@ -22,6 +22,13 @@ in `loom.toml` lists the allowed `kind`/`status` values; their *meaning* lives h
   like it belongs there. No scavenger hunts; no index that goes stale the moment code lands.
 - **Editorial before additive.** Prefer pruning, routing, and deleting over appending. No edit
   without durable signal — if nothing durable changed, write nothing.
+- **No meta-documentation.** A repo doc never takes the doc system as its subject: no harness
+  references ("the convention ships with the plugin"), no topology narration ("the WHY lives one
+  level up"), no lifecycle mechanics in reader-facing prose. If the harness enforces it, don't
+  restate it; if the structure shows it, don't narrate it. Writer-facing policy belongs in
+  `<config_dir>/<skill>.md`, read at the moment it applies. A thin doc is healthy — the reflex to
+  fill it with system orientation is the tell, and the linter's `meta_denylist` trips on the
+  common phrasings.
 
 ## Links are routing
 

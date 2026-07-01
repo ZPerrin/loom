@@ -57,6 +57,7 @@ With `[weft]` present, execute the confirmed flow and prompt only where you genu
 | "Plain `/weft`, but I'll commit to be helpful." | Plain `/weft` stages only. Committing is the operator's opt-in. |
 | "First run, no config — I'll pick a cleanup default and go." | Configure is a propose→confirm pass. weft writes no config until the operator confirms — or declines, and weft just distills and stages. |
 | "Nothing durable changed, but I'll refresh a few docs to be thorough." | No edit without durable signal. If the session changed nothing durable, write nothing and say so. |
+| "This doc reads thin — a line orienting the reader in the doc system would help." | Docs describe the project; the harness stays invisible. If it enforces it, don't restate it; if the structure shows it, don't narrate it. Writer policy goes in `<config_dir>/<skill>.md`, not reader-facing prose. |
 
 ## Output
 

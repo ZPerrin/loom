@@ -21,4 +21,9 @@ inject_fields = ["updated", "kind", "location"]  # frontmatter to prefix each sl
 
 [lint]
 kinds = ["readme", "reference", "spec", "plan", "design", "review", "loom-config"]
+# meta_denylist — the META tripwire: word/phrase tells of meta-documentation (repo docs whose
+# subject is the doc system, not the project). Omit for the shipped defaults ("loom",
+# "the plugin", "managed set", "frontmatter", "doc convention", "doc system", "this tree holds");
+# set your own list to replace them; ["off"] disables (for a repo whose subject IS the doc system).
+# meta_denylist = ["off"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
