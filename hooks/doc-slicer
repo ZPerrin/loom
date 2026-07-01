@@ -4,12 +4,27 @@
 # in context.slice_headers across the discovered managed-doc set, each prefixed with a
 # context.inject_fields annotation (frontmatter values; `location` = the source path).
 # Path-free: slices are found by discovery + header, so moving a file never breaks them.
+# Usage: doc-slicer                                    — SessionStart slice (hook mode).
+#        doc-slicer --header <name> [path-filter…]     — on-demand query: emit just that
+#          section (same provenance annotation) from every managed doc that has it,
+#          optionally narrowed to docs whose path contains a filter. "<name>" may be bare
+#          ("Overview") or exact ("## Overview" / "### Deep"). Exit 1 if nothing matched.
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 PARSE_AWK="$SELF_DIR/../scripts/lib/parse-toml.awk"
 . "$SELF_DIR/../scripts/lib/discover.sh"
 ROOT="$(loom_repo_root)"
+
+MODE="session"
+QUERY_HDR=""
+if [ "${1:-}" = "--header" ]; then
+  MODE="query"; shift
+  QUERY_HDR="${1:-}"
+  [ -n "$QUERY_HDR" ] || { echo "doc-slicer --header: missing header name" >&2; exit 2; }
+  shift
+  case "$QUERY_HDR" in "#"*) ;; *) QUERY_HDR="## $QUERY_HDR" ;; esac   # bare name → H2
+fi
 
 DEFAULT_CFG='context.recent_commits=15
 context.slice_headers=## Now
@@ -56,7 +71,32 @@ EOF
   printf '%s' "$out"
 }
 
-printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. Read the deeper docs when a task goes past a slice._\n\n'
+# --- query mode: one header, on demand — a section instead of a whole-file read ---
+if [ "$MODE" = "query" ]; then
+  found=""
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if [ "$#" -gt 0 ]; then
+      keep=""
+      for flt in "$@"; do case "$rel" in *"$flt"*) keep=1 ;; esac; done
+      [ -n "$keep" ] || continue
+    fi
+    body="$(emit_section "$ROOT/$rel" "$QUERY_HDR")"
+    [ -n "$body" ] || continue
+    found=1
+    ann="$(annotate "$rel")"
+    [ -n "$ann" ] && printf '_%s_\n\n' "$ann"
+    printf '%s\n\n' "$body"
+  done <<EOF
+$(managed_docs "$ROOT")
+EOF
+  [ -n "$found" ] && exit 0
+  echo "doc-slicer --header: no managed doc has a section \"$QUERY_HDR\"${*:+ matching: $*}" >&2
+  exit 1
+fi
+
+# --- session mode: the SessionStart slice ---
+printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. When a task goes past a slice, pull the next section on demand — `bash "%s/doc-slicer" --header "<name>" [path-filter]` — instead of reading whole files._\n\n' "$SELF_DIR"
 
 printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
 git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"
