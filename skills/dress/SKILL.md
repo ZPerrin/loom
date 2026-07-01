@@ -23,7 +23,7 @@ There is no separate "blank repo" path — a fresh repo is just a survey that co
 
 ### 1. Survey — write nothing
 
-Read the lay of the land before forming an opinion:
+Read the lay of the land before forming an opinion — preferring the plugin's executable surface over raw search throughout ([tooling](../../references/tooling.md)):
 
 - The repo's own override, `.loom/dress.md` if present (relocatable via `[skills] config_dir`): it shapes the DEFAULTs below — it never disables a MUST. See [repo-overrides](../../references/repo-overrides.md).
 - Top-level dirs and what each *is*; existing docs and their frontmatter via `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"`; code signals for what a module does.

@@ -39,7 +39,7 @@ First run on a repo (no `[warp]` section), or `/warp configure` to re-tune — t
 
 With `[warp]` present, execute the confirmed flow and prompt only where you genuinely must:
 
-1. **Orient.** Read `.loom/warp.md` and load the context it names (the SessionStart slice is already loaded). Resolve `/warp <arg>` through `work_source`: a ticket ref → fetch it; free text → the work's description; nothing → ask, or orient only.
+1. **Orient.** Read `.loom/warp.md` and load the context it names (the SessionStart slice is already loaded). Orientation is section-shaped: pull named sections on demand — `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer" --header "<name>" [path-filter]` — rather than reading whole docs; the executable surface is catalogued in [tooling](../../references/tooling.md). Resolve `/warp <arg>` through `work_source`: a ticket ref → fetch it; free text → the work's description; nothing → ask, or orient only.
 2. **Open the workspace.** Name the branch per `branch_convention` (prompt iff it's `ask` or the slug is ambiguous); set up the worktree per `worktree`, at whatever path/home `.loom/warp.md` names. `worktree = always|ask` means the session **works inside** the worktree, not merely that one exists on disk — after creating it, switch the session in and verify the working directory before the first edit. If the session can't move in, surface it and stop rather than editing the base branch. Never overwrite uncommitted work to do either without confirming.
 3. **Kick off.** Compose what `.loom/warp.md` names — a brainstorm, a plan, straight to code — or simply hand back an oriented session. Compose by name; if the named tool isn't available, note it and continue.
 
@@ -52,6 +52,7 @@ With `[warp]` present, execute the confirmed flow and prompt only where you genu
 | "The config names a brainstorm skill that isn't installed — I'll substitute my own." | Compose only what's named. If it's absent, say so and continue (hand back oriented); don't silently swap in something the operator didn't choose. |
 | "I'll jot the session's intent into a doc so it's captured." | warp writes no session doc. git is the activity log; `/weft` distills at close. |
 | "There's uncommitted work but the flow says new branch — I'll stash and switch." | Destructive-git safety: never discard or move uncommitted work to open. Surface it and confirm first. |
+| "Orienting means reading the READMEs the nudge points at." | Orientation is section-shaped: pull `## Now` / `## Overview` with `doc-slicer --header` and open a whole file only when the task actually goes deeper ([tooling](../../references/tooling.md)). |
 | "Worktree's created — I'll start editing." | A worktree on disk isn't an entered worktree — the session can still be in the original checkout (the base branch). `worktree` isn't honored until the session works inside it; verify the working directory before the first edit. |
 
 ## Output
