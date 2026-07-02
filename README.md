@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-07-01
+updated: 2026-07-02
 ---
 # loom
 
@@ -80,27 +80,30 @@ The harness is a loom; sessions are woven on it.
 | **doc-slicer** | the per-session context the hook threads in ("Bearings")        | `hooks/doc-slicer` |
 | **doc-linter** | doc hygiene checks (links + frontmatter)                        | `scripts/doc-linter` |
 
-## Try it (local, for iteration)
+## Install
 
-Claude Code — add this checkout as a local marketplace, then install:
-
-```
-/plugin marketplace add /Users/zebulonperrin/IdeaProjects/loom
-/plugin install loom@loom-dev
-```
-
-Codex — add the local marketplace root, then install:
+Install loom in Codex from the GitHub repository:
 
 ```
-codex plugin marketplace add /Users/zebulonperrin/IdeaProjects/loom
-codex plugin install loom
+codex plugin marketplace add ZPerrin/loom --ref main
+codex plugin add loom@loom
 ```
 
-update:
+Then start a new Codex thread in the repository where you want to use loom.
+Codex loads installed plugins when a thread starts.
+
+To pick up a newer pushed version:
 
 ```
-claude plugin marketplace update loom-dev   # re-scan the repo → sees 0.0.2
-claude plugin update loom@loom-dev          # promote: copies 0.0.2 into cache, updates registry
+codex plugin marketplace upgrade loom
+codex plugin add loom@loom
+```
+
+Claude Code can use the same GitHub-backed marketplace from its plugin flow:
+
+```
+/plugin marketplace add https://github.com/ZPerrin/loom.git
+/plugin install loom@loom
 ```
 
 

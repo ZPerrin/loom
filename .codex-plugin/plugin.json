@@ -1,12 +1,32 @@
 {
   "name": "loom",
-  "version": "0.0.1",
-  "description": "A self-maintaining docs & context harness — keeps a repo's documentation, and thus agent context, high-quality almost autonomously. Scratch / experimental, extracted from the jack repo.",
+  "version": "0.0.8",
+  "description": "A self-maintaining docs and context harness for keeping repository documentation lean, routed, and agent-useful.",
+  "author": {
+    "name": "Zebulon Perrin"
+  },
+  "keywords": [
+    "docs",
+    "context",
+    "harness",
+    "skills",
+    "progressive-disclosure"
+  ],
   "skills": "./skills/",
-  "hooks": "./hooks/hooks.json",
   "interface": {
-    "displayName": "Loom (dev)",
+    "displayName": "Loom",
     "shortDescription": "Self-maintaining docs & context harness",
-    "developerName": "Zebulon Perrin"
+    "longDescription": "Loom bundles documentation-focused Codex skills plus a SessionStart context slicer so agents enter a repository with targeted bearings instead of stale or bloated docs.",
+    "developerName": "Zebulon Perrin",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use loom to review this repo's docs",
+      "Run loom's doc linter and fix drift",
+      "Slice the docs for current context"
+    ]
   }
 }
