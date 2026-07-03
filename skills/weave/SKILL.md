@@ -15,7 +15,7 @@ Read `.loom/weave.md` if it exists and let it shape the DEFAULT heuristics below
 
 1. **Enumerate (MUST).** `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` — frontmatter discovery over tracked + uncommitted markdown, never agentic globbing. Then inspect by progressive disclosure: start at `AGENTS.md`, follow the root `README.md` `## Module Map`, scan headings before bodies — `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer" --header "<name>"` reads one section across the whole set without opening files ([tooling](../../references/tooling.md)) — and read only the docs and code the reconciliation touches.
 2. **Surface omissions and uncommitted work.** `doc-scan` prints `# candidates` (markdown with no `kind`). Ask whether each should be adopted as a managed doc or added to `[discovery] exclude`; a candidate keeps surfacing until one or the other. Then run `git status --porcelain -- '*.md'`: surface new/uncommitted (`??`/`A`) and deleted (` D`) managed docs and ask whether to distill/adopt or drop them — don't assume.
-3. Identify stale, duplicated, misplaced, or low-leverage text. Preserve durable guidance; remove ordinary status, history, and task-local state (git holds it).
+3. Identify stale, duplicated, misplaced, or low-leverage text. Preserve durable guidance; remove ordinary status, history, and task-local state (git holds it). Where a behavior has graduated into a `[warp]`/`[weft] hook`, treat the matching `.loom/<skill>.md` prose as the **floor**: trim it to its judgment-residue — the *why/when* a reader still needs — and never re-pad it with the mechanism the hook now owns.
 4. Move each fact to its smallest stable home and collapse duplication to one home plus links. Module `README.md` files own their `## Overview`, setup, and commands; the root README `## Module Map` links to them rather than restating.
 5. Normalize product, module, workflow, command, heading, and concept names unless a local term is intentionally different.
 6. Rewrite survivors as compressed, durable prose (the conventions' craft standard): signal per sentence, no ornament. Apply the brevity gate; verify every surviving line helps a future agent choose a better next action. If no durable update is justified, make none.
@@ -27,6 +27,7 @@ Read `.loom/weave.md` if it exists and let it shape the DEFAULT heuristics below
 |---|---|
 | "Globbing the docs is faster than `doc-scan`." | Membership must be deterministic and discovery-driven; a glob drifts from the managed set. |
 | "I'll adopt this stray markdown to be safe." | Ask once: adopt it (give it `kind:` frontmatter) or `[discovery] exclude` it. Don't silently adopt. |
+| "The hook and the `.loom` prose say the same thing — I'll keep both for completeness." | The prose is the floor beneath the hook, not a copy of it. Trim it to the judgment the hook can't carry; determinism owns the mechanism. |
 
 ## Output
 
