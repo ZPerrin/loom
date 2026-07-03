@@ -1,6 +1,6 @@
 {
   "name": "loom",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A self-maintaining docs and context harness for keeping repository documentation lean, routed, and agent-useful.",
   "author": {
     "name": "Zebulon Perrin"
