@@ -17,45 +17,14 @@ updated: 2026-07-03
 
 ## Ideas
 
-_Unlanded thinking — argued here before it earns a place in Next. The unifying frame, and loom's next guiding star: **if determinism can carry it, prose shouldn't — and prose is where guidance lives only until it earns determinism.** loom is a prose→determinism distillery — docs were the first substrate, the session preamble is the next. (Touchstone bound for the top of the README; surrounding prose to be written by hand.)_
+_Unlanded thinking — argued here before it earns a place in Next. The unifying frame is now a shipped principle — **determinism over prose**, in the editorial ethos: loom is a prose→determinism distillery. Executable hooks (v0.0.9) were the first graduation; what remains here is the loop that keeps filling the ledger._
 
-- **Executable hooks — the graduation target.** Each skill config carries a `hook` key: a
-  command string loom runs at that skill's lifecycle moment, in a shell with `[skills]
-  scripts_dir` (default `.loom/scripts`) on PATH. **No script-vs-shell distinction** — a
-  committed script and an inline `awk`/`git` pipeline are the same kind of value; PATH resolves
-  a script name, a pipeline just runs, one code path. warp's `hook` graduates the whole worktree
-  + branch + env-source preamble into one shot; weft's is stubbed to `echo`, proving the
-  plumbing fires (stubs land even when they do nothing, so the next version can test
-  invocation). Baked as a **pseudo-hook** — skill-instruction-driven until the harness offers
-  real hook points; the config surface won't change, only who fires it. Field root (jack,
-  2026-07-03 warp session): every prose-shaped boot step cost discovery turns (a dep-less server
-  start that failed, a credential-staging denial, a serialized 30s cold-start) where every
-  literal call cost one — and jack's `worktree-boot.sh` caught its own bug loudly (macOS ships
-  no GNU `timeout`) where prose would have shipped it silent. Rails: **fail loud, fall to the
-  prose floor** (a nonzero exit surfaces and drops to the `.loom/*.md` nudge — never silent,
-  never a hard-fail); the linter validates **form, never content** (non-empty; best-effort
-  executability only when the first token is a file under scripts_dir); a **bounded vocabulary**
-  — one hook per skill now, `skill.moment` keys earn themselves later — keeps loom curating
-  entry points, not orchestrating a task-runner. Sketch:
-  ```toml
-  [skills]
-  scripts_dir = ".loom/scripts"        # on PATH when a hook runs
-  [warp]
-  hook = "warp-open.sh"                # script name OR inline pipeline
-  branch_convention = "issue/<number>-<slug> | feature/<slug>"
-  worktree = "always"                 # always | harness | ask | never  ("harness" = defer + slice to the harness's native worktree tool)
-  source_repo   = "."                 # local git path OR github ref; git assumed, wider support deferred
-  source_branch = "master"            # what new work branches from
-  [weft]
-  hook = "weft-gate.sh"               # stubbed echo
-  cleanup = "ask"
-  ```
 - **`perch` + experiment mode — the pump that fills the ledger.** Treat a warp/weft run as an
   experiment: a flag marks the session experimental and arms `perch` — the invoked-never-ambient
   retro whose survey subject is the *session* (failed calls, denials, retries, discovery loops,
   serialized waits), on dress's survey → propose → confirm → write spine. Its preferred output is
   a **graduation**: replace a prose nudge with the `hook` command it observed working (or a
-  config edit for a prose gap), filling the executable-hooks ledger above. Named for the perch,
+  config edit for a prose gap), filling the executable-hooks ledger. Named for the perch,
   the frame woven cloth passes over to spot defects. Rails: **invoked, never ambient** —
   experiment mode is the on-switch, off once a behavior graduates (an every-session pass is the
   snake-eats-tail failure); **friction must bite twice** before it hardens; **mechanism
@@ -69,6 +38,7 @@ _Unlanded thinking — argued here before it earns a place in Next. The unifying
 - [x] Harness/project separation — no special `docs/README`; ethos + nomenclature harvested into the plugin
 - [x] `dress` restructured (survey → propose → confirm → write); config home → `.loom/`; editorial ethos referenced by every skill
 - [x] `warp` + `weft` to dress's standard — session-open/close bookends (enforced spine + `[warp]`/`[weft]` control plane)
+- [x] Executable hooks (v0.0.9) — per-skill `hook` + `[skills] scripts_dir` + the `skill-hook` runner; all four skills speak the paradigm; determinism touchstone in the ethos
 - [ ] `weave` polished to dress's standard
 - [ ] Prove-out across varied external repos
 - [ ] Smoke-test the install on Claude + Codex
