@@ -8,8 +8,8 @@
 #
 # NOTE: a script cannot change its caller's working directory. This sets the worktree up
 # and prints its path; warp (the skill) is what enters it and verifies cwd before editing.
-# When [warp] worktree = "harness", loom defers creation to the harness's native tooling
-# and this script is not run.
+# When [warp] worktree = "harness" the harness creates the worktree, so a hook there does only
+# residual setup (env, deps) — not this script, whose job is to create one.
 set -euo pipefail
 
 slug="${1:?usage: warp-open.sh <slug> [base-branch]}"
