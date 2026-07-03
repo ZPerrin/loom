@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-07-02
+updated: 2026-07-03
 ---
 # loom
 
@@ -20,6 +20,12 @@ LLMs, at least in my estimation as of 2026, suck at writing. They hedge, restate
 That slop is then paid for twice - once by the human that skims past it, and again when an agent spends tokens and attention on context that doesn't meaningfully change what it should do next.
 
 So I've taken a slightly different approach here. Loom doesn't automate the writing, it automates the surrounding **discipline**: pruning, routing, and deleting so the docs stay lean as the code moves underneath them. It's deliberately small (four skills and two scripts), just enough harness to keep documentation honest enough to be worth reading, and configurable enough to conform to your tastes.
+
+<!-- TODO(zeb): v0.0.9 added the executable-hooks paradigm. In your own voice, near the top:
+     lift the touchstone — "if determinism can carry it, prose shouldn't; and prose is where
+     guidance lives only until it earns determinism" (now operational in references/doc-convention.md).
+     Also refresh the stale counts in the WHY above ("four skills and two scripts" — now five scripts)
+     and the "self-maintaining" framing. Prose is yours; this marker is just the reminder. -->
 
 ## Core Principles
 

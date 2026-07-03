@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-06-25
+updated: 2026-07-03
 ---
 # Repo overrides — how a skill bends to a repo
 
@@ -29,3 +29,11 @@ Each override opens with frontmatter `kind: loom-config`, so it is linted and di
 any managed doc — there is no frontmatter-free tier. The linter enforces *placement*: a
 `kind: loom-config` doc must sit at `<config_dir>/<skill>.md`, or it is flagged, because the
 skill would never look anywhere else. TOML locates; frontmatter classifies.
+
+## The prose plane is the floor
+
+A `[<skill>] hook` in `loom.toml` is the graduated, deterministic form of a step; `loom.toml`
+enforces its **form** (the key, the script's executability), never its content. The matching
+`.loom/<skill>.md` prose is the **floor** beneath it — what the skill does by hand when no hook
+is configured or a hook fails. Guidance rises from the floor to the hook as it earns
+determinism: the two planes are two maturity stages of one instruction, not two kinds.
