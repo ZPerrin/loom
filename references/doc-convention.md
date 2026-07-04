@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-07-01
+updated: 2026-07-03
 ---
 # Doc convention — what loom's docs are, and how they read
 
@@ -22,6 +22,10 @@ in `loom.toml` lists the allowed `kind`/`status` values; their *meaning* lives h
   like it belongs there. No scavenger hunts; no index that goes stale the moment code lands.
 - **Editorial before additive.** Prefer pruning, routing, and deleting over appending. No edit
   without durable signal — if nothing durable changed, write nothing.
+- **Determinism over prose.** If determinism can carry it, prose shouldn't — and prose is where
+  guidance lives only until it earns determinism. A step observed working the same way graduates
+  into a `hook` (a script or command named in `loom.toml`); the prose that described it drops to
+  a floor beneath it. Reserve prose for what can't yet execute.
 - **No meta-documentation.** A repo doc never takes the doc system as its subject: no harness
   references ("the convention ships with the plugin"), no topology narration ("the WHY lives one
   level up"), no lifecycle mechanics in reader-facing prose. If the harness enforces it, don't

@@ -1,18 +1,25 @@
 # loom.toml — per-repo harness config. The plugin ships generic code; this drives it.
 # [context] tunes the SessionStart slice; [lint] is the validation vocabulary;
 # [discovery] exclude keeps chosen trees out of the managed set entirely;
-# [skills] locates per-skill REPO OPINION overrides.
+# [skills] locates per-skill REPO OPINION overrides and hook-script homes.
 
 [discovery]
 exclude = []        # path-prefix trees to drop entirely, e.g. ["tests/fixtures", "vendor"]
 
 # [skills]
-# config_dir = ".loom"   # default; relocate the whole set of <skill>.md overrides
+# config_dir  = ".loom"          # default; relocate the whole set of <skill>.md overrides
+# scripts_dir = ".loom/scripts"  # default; home for hook scripts, prepended to PATH when a hook runs
 
 # [warp]   # session-open knobs (control plane); the prose nudge lives in .loom/warp.md.
-# branch_convention = "zeb/<slug>"   # naming pattern, or "ask"
-# worktree          = "ask"          # "always" | "never" | "ask"
-# work_source       = "none"         # how /warp <arg> is read: "github" | "jira" | "none"
+# branch_convention = "zeb/<slug>"     # naming pattern, or "ask"
+# worktree          = "ask"            # "always" | "never" | "ask" | "harness" (defer to the harness's worktree tool)
+# source_repo       = "."              # what new work branches from — a local git path or a github ref
+# source_branch     = "main"           # base branch new work forks from
+# hook              = "warp-open.sh"   # optional; a command run at open (script under scripts_dir, or an inline pipeline)
+
+# [weft]   # session-close knobs (control plane); the prose nudge lives in .loom/weft.md.
+# cleanup = "ask"              # "always" | "never" | "ask" — delete the merged work branch after merge
+# hook    = "weft-gate.sh"     # optional; an extra close-out gate (script under scripts_dir, or an inline pipeline)
 
 [context]
 recent_commits = 15

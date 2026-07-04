@@ -84,31 +84,36 @@ assert_not_contains "$wo" "WARP" "[warp] absent: no warp finding"
 assert_exit "$wrc" "0" "[warp] absent: clean exit"
 
 # Present + valid -> no WARP finding.
-printf '[warp]\nbranch_convention = "zeb/<slug>"\nworktree = "never"\nwork_source = "github"\n' > "$WR/.loom/loom.toml"
+printf '[warp]\nbranch_convention = "zeb/<slug>"\nworktree = "never"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
 assert_not_contains "$wo" "WARP" "valid [warp]: no warp finding"
 
 # Missing worktree knob -> finding naming it, exit 1.
-printf '[warp]\nbranch_convention = "x"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+printf '[warp]\nbranch_convention = "x"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
 assert_exit "$wrc" "1" "[warp] missing knob: exit 1"
 assert_contains "$wo" "WARP"     "[warp] missing worktree: warp finding"
 assert_contains "$wo" "worktree" "[warp] names the missing worktree knob"
 
 # Invalid worktree value -> finding naming the bad value.
-printf '[warp]\nbranch_convention = "x"\nworktree = "sometimes"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+printf '[warp]\nbranch_convention = "x"\nworktree = "sometimes"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
 assert_contains "$wo" "sometimes" "[warp] invalid worktree value flagged"
 
 # Missing branch_convention -> finding.
-printf '[warp]\nworktree = "ask"\nwork_source = "none"\n' > "$WR/.loom/loom.toml"
+printf '[warp]\nworktree = "ask"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
 assert_contains "$wo" "branch_convention" "[warp] missing branch_convention: finding"
 
-# Missing work_source -> finding.
-printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\n' > "$WR/.loom/loom.toml"
+# Missing source_repo -> finding.
+printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
-assert_contains "$wo" "work_source" "[warp] missing work_source: finding"
+assert_contains "$wo" "source_repo" "[warp] missing source_repo: finding"
+
+# Missing source_branch -> finding.
+printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\nsource_repo = "."\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
+assert_contains "$wo" "source_branch" "[warp] missing source_branch: finding"
 
 rm -rf "$WR"
 
@@ -142,5 +147,58 @@ fo="$(cd "$WF" && bash "$LINTER" 2>&1)"
 assert_contains "$fo" "sometimes" "[weft] invalid cleanup value flagged"
 
 rm -rf "$WF"
+
+# --- executable-hooks config validation ---
+HR="$DIR/fixtures/hook-lint"; rm -rf "$HR"; mkdir -p "$HR/.loom/scripts"
+mk_toml() { printf '%s\n' "$1" > "$HR/.loom/loom.toml"; }
+lint_hr() { (cd "$HR" && rm -rf .git && git init -q . && git add -A 2>/dev/null; bash "$LINTER" 2>&1); }
+
+# valid: warp with source_repo/branch + worktree=harness + a hook naming an executable script
+printf '#!/usr/bin/env bash\necho hi\n' > "$HR/.loom/scripts/warp-open.sh"; chmod +x "$HR/.loom/scripts/warp-open.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"
+[warp]
+branch_convention = "feature/<slug>"
+source_repo = "."
+source_branch = "master"
+worktree = "harness"
+hook = "warp-open.sh"'
+o="$(lint_hr)"; assert_not_contains "$o" "WARP" "valid warp+hook config: no WARP finding"
+
+# invalid: worktree=bogus
+mk_toml '[warp]
+branch_convention = "feature/<slug>"
+source_repo = "."
+source_branch = "master"
+worktree = "bogus"'
+o="$(lint_hr)"; assert_contains "$o" "worktree=bogus" "invalid worktree value flagged"
+
+# invalid: [warp] present but missing source_branch
+mk_toml '[warp]
+branch_convention = "feature/<slug>"
+source_repo = "."
+worktree = "always"'
+o="$(lint_hr)"; assert_contains "$o" "missing source_branch" "missing source_branch flagged"
+
+# invalid: hook names a script that exists but is NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/dead.sh"; chmod -x "$HR/.loom/scripts/dead.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"
+[warp]
+branch_convention = "feature/<slug>"
+source_repo = "."
+source_branch = "master"
+worktree = "always"
+hook = "dead.sh"'
+o="$(lint_hr)"; assert_contains "$o" "not executable" "non-executable hook script flagged"
+
+# valid: inline pipeline hook (not a file under scripts_dir) accepted as-is
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"
+[weft]
+cleanup = "ask"
+hook = "git status --porcelain | grep ."'
+o="$(lint_hr)"; assert_not_contains "$o" "HOOK" "inline pipeline hook accepted"
+rm -rf "$HR"
 
 finish

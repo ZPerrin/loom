@@ -12,10 +12,16 @@ kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
 meta_denylist = ["off"]   # this repo's subject IS the doc system; the META tripwire would eat its own tail
 
+[skills]
+scripts_dir = ".loom/scripts"   # home for hook scripts, prepended to PATH when a hook runs
+
 [warp]
-branch_convention = "issue/<number>-<slug> | feature/<slug>"  # issue-backed off main | ad-hoc local
-work_source = "github"        # /warp <issue-ref> fetched from origin; free text/none → ad-hoc feature
+branch_convention = "issue/<number>-<slug> | feature/<slug>"  # issue-backed off master | ad-hoc local
+source_repo = "."             # branch from this local repo (a github ref would make /warp <arg> a fetchable issue)
+source_branch = "master"      # new work forks from master
 worktree = "always"           # standardized at ../loom-worktrees/<branch> (see warp.md)
+hook = "warp-open.sh"          # graduated open preamble: branch + worktree + env-source
 
 [weft]
 cleanup = "ask"               # after merge, weft asks whether to delete the merged branch (not the worktree)
+hook = "weft-gate.sh"          # stubbed echo — an extra close-out gate (real checks TBD)
