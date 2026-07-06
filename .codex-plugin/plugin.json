@@ -1,7 +1,7 @@
 {
   "name": "loom",
-  "version": "0.0.9",
-  "description": "A self-maintaining docs and context harness for keeping repository documentation lean, routed, and agent-useful.",
+  "version": "0.1.0",
+  "description": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
   "author": {
     "name": "Zebulon Perrin"
   },
@@ -15,8 +15,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Loom",
-    "shortDescription": "Self-maintaining docs & context harness",
-    "longDescription": "Loom bundles documentation-focused Codex skills plus a SessionStart context slicer so agents enter a repository with targeted bearings instead of stale or bloated docs.",
+    "shortDescription": "Docs & context harness for lean, routed docs",
+    "longDescription": "loom bundles documentation-focused skills plus a SessionStart context slicer so agents enter a repository with targeted bearings instead of stale or bloated docs.",
     "developerName": "Zebulon Perrin",
     "category": "Productivity",
     "capabilities": [

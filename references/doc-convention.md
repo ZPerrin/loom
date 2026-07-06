@@ -7,7 +7,7 @@ updated: 2026-07-03
 
 loom's skills share one editorial standard, mine.
 
-## Genesys of this ethos - for texture
+## Genesis of this ethos - for texture
 
 LLMs, at least in my estimation as of 2026, suck at writing. They hedge, restate, enumerate and qualify everything into oblivion.  If you're not swimming in emojis, you're drowning in bullet points. This has the net effect of prose that is *technically correct*, each line locally reasonable and coherent, but when taken as a whole reads as slop.
 

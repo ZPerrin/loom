@@ -81,8 +81,8 @@ cat "${CLAUDE_PLUGIN_ROOT}/references/reference-project.md"
 - **Managed set.** For existing Markdown, say adopt, leave unmanaged, exclude, move, or seed. `AGENTS.md` is the default agent-facing `readme`; seed only durable content.
 - **Startup slice.** Propose `context.slice_headers` and `context.inject_fields` from headings that exist or docs you propose to create.
 - **Overrides.** Propose `.loom/<skill>.md` only for repo opinion that changes a skill's DEFAULT behavior.
-- **Hooks/scripts.** Propose scripts only for deterministic behavior. These are usually tuned by users once they have a feel for how to nudge looms processes.
-- **Gaps.** Name what Loom needs but the repo does not yet know. Do not fill unknowns with invented prose.
+- **Hooks/scripts.** Propose scripts only for deterministic behavior. These are usually tuned by users once they have a feel for how to nudge loom's processes.
+- **Gaps.** Name what loom needs but the repo does not yet know. Do not fill unknowns with invented prose.
 
 ### 3. Confirm - approval boundary
 

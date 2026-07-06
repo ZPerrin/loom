@@ -1,7 +1,7 @@
 {
   "name": "loom",
-  "version": "0.0.9",
-  "description": "A self-maintaining docs & context harness — keeps a repo's documentation, and thus agent context, high-quality almost autonomously. Scratch / experimental, extracted from the jack repo.",
+  "version": "0.1.0",
+  "description": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
   "author": { "name": "Zebulon Perrin" },
   "keywords": ["docs", "context", "harness", "skills", "progressive-disclosure"]
 }

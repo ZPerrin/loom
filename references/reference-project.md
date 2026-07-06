@@ -5,7 +5,7 @@ updated: 2026-07-05
 ---
 # Reference Project
 
-Calibration only. Do not copy this shape wholesale, use it to recognize the minimum Loom surface might look like.
+Calibration only. Do not copy this shape wholesale; use it to recognize what a minimal loom surface looks like.
 
 ## Tree
 
@@ -211,7 +211,7 @@ kind: loom-config
 status: living
 updated: 2026-07-05
 ---
-# weave.md
+# weave
 
-Repo opinion for closing work: what to distill, what to prune, and how close-out should hand back.  Notes on how to approach session retrospectives, etc.
+Repo opinion for closing work: what to distill, what to prune, and how close-out should hand back. Notes on how to approach session retrospectives, etc.
 ```

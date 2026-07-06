@@ -2,7 +2,7 @@
 # warp.sh — the graduated warp preamble: branch + worktree + env-source, one shot.
 #
 # Runs at warp's open moment (loom.toml [warp] hook). Fails loud — on any nonzero exit
-# warp surfaces it and falls back to the .loom/warp.md prose floor; nothing fails silent.
+# warp surfaces it and falls back to its prose floor; nothing fails silent.
 #
 #   usage: warp.sh <slug> [base-branch]
 #
@@ -15,7 +15,7 @@ set -euo pipefail
 slug="${1:?usage: warp.sh <slug> [base-branch]}"
 base="${2:-master}"
 
-# Naming + worktree home mirror the branch (see .loom/warp.md).
+# Naming + worktree home mirror the branch convention.
 branch="feature/${slug}"
 repo_root="$(git rev-parse --show-toplevel)"
 wt_home="$(cd "${repo_root}/.." && pwd)/loom-worktrees"

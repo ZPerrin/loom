@@ -9,7 +9,7 @@ loom is a foray into baking my own workflows into a harness.
 
 It currently touches on these areas:
 
-`workflow optimization`, `context engineering`, `documentation editorializing` `rsi`
+`workflow optimization`, `context engineering`, `documentation editorializing`, `rsi`
 
 It's also very much a work in progress.
 
@@ -17,14 +17,14 @@ It's also very much a work in progress.
 
 You get 4 skills and two ways to configure them.
 
-`.loom/loom.toml`  gives you a minimal control surface for more deterministic settings.  
-`.loom/<skill>.md` overrides give a non-deterministic way to further nudge them to your liking
+`.loom/loom.toml` gives you a minimal control surface for more deterministic settings.  
+`.loom/<skill>.md` overrides give a non-deterministic way to further nudge them to your liking.
 
 `dress` onboards loom into your project, loom will help maintain ***.md** documentation.
 
-`warp` starts a working session, handling worktree and branch creation, context gathering, and any other session preamble you configure 
+`warp` starts a working session, handling worktree and branch creation, context gathering, and any other session preamble you configure
 
-`weave` closes it out, sweeping work into a preferred commit/merge pattern, distilling changes into managed documentation, and making self improvements for its next session.
+`weave` closes it out, sweeping work into a preferred commit/merge pattern and distilling changes into your managed documentation.
 
 `weft` editorializes the managed documentation as a one-off to help keep things cohesive and slop free (see [the editorial ethos](references/doc-convention.md)).
 
@@ -72,6 +72,6 @@ codex plugin add loom@loom
 Claude Code can use the same GitHub-backed marketplace from its plugin flow:
 
 ```
-/plugin marketplace add https://github.com/ZPerrin/loom.git
+/plugin marketplace add ZPerrin/loom
 /plugin install loom@loom
 ```
