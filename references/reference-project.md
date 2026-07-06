@@ -21,7 +21,7 @@ example/
   .loom/loom.toml
   .loom/warp.md
   .loom/weave.md
-  .loom/scripts/custom_warp_script.sh
+  .loom/scripts/warp.sh
 ```
 
 ## Example `.loom/loom.toml`
@@ -44,7 +44,7 @@ branch_convention = "feature/<slug>"
 worktree = "always"
 source_repo = "."
 source_branch = "master"
-hook = ".loom/scripts/custom_warp_script.sh"
+hook = ".loom/scripts/warp.sh"
 
 [weave]
 cleanup = "ask"
