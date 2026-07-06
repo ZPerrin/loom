@@ -16,7 +16,7 @@
   "interface": {
     "displayName": "Loom",
     "shortDescription": "Docs & context harness for lean, routed docs",
-    "longDescription": "loom bundles documentation-focused skills plus a SessionStart context slicer so agents enter a repository with targeted bearings instead of stale or bloated docs.",
+    "longDescription": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
     "developerName": "Zebulon Perrin",
     "category": "Productivity",
     "capabilities": [
@@ -24,9 +24,10 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use loom to review this repo's docs",
-      "Run loom's doc linter and fix drift",
-      "Slice the docs for current context"
+      "dress this project",
+      "warp us into jira-12348",
+      "weave us back into master",
+      "weft our project documentation"
     ]
   }
 }

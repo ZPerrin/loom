@@ -1,99 +1,94 @@
 ---
 name: weft
-description: Use when a loom-managed documentation set needs an editorial review pass to prune, condense, reroute, and align durable project docs with the code and doc convention.
+description: Use when a loom-managed documentation set needs an editorial pass to prune, condense, reroute, and realign durable project docs with the code and the editorial ethos.
 ---
 
 ## Weft
 
-Run a project-documentation editorial pass. weft reads the managed docs as one surface, compares them to the project they claim to describe, then cuts, routes, or rewrites until the set is lean, durable, and useful to a future agent or human.
+Run a project-documentation editorial pass. weft reads the managed docs as one surface, holds them against the [editorial ethos](../../references/doc-convention.md) and the project they claim to describe, then cuts, routes, and compresses until the set is lean, durable, and useful.
+
+weft is subtractive by default: it removes slop, dedupes, and moves each fact to its one home before it writes any new prose. It edits docs only — it never commits or closes out (weave owns that), and it describes the *project*, never loom's mechanics.
 
 `weft` handles two operator intents:
 
 - **Review:** report the weak spots and proposed cuts; edit nothing.
-- **Winnow:** make one coherent editorial pass, then validate.
+  - **Winnow:** make one coherent editorial pass, then re-check.
 
 ## Weft Control Surfaces
 
-`weft` has no `.loom/loom.toml` section. It uses loom's discovered managed set and the shared editorial standard.
+weft has no `.loom/loom.toml` section. Its standard is the shared ethos, its checks are the runtime scripts, and its scope is loom's discovered managed set.
 
 | Surface | Weft uses it for |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md` | the editorial standard: durable signal, routing, compression, determinism over prose |
-| `README.md` / `AGENTS.md` | the project's front doors and tone anchors |
-| `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` | the managed docs and unmanaged candidates |
-| `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` | mechanical findings before and after edits |
-| `.loom/weft.md` | optional repo opinion for local voice, known stale areas, or stricter taste |
-| project tree and code signals | evidence that a doc is true, stale, misplaced, or needless |
+| [editorial ethos](../../references/doc-convention.md) | the standard every cut is judged against: durable signal, one home, compression, determinism over prose |
+| `doc-scan` / `doc-linter` | the managed set and the mechanical findings, before and after edits |
+| `README.md` / `AGENTS.md` | the project's front doors and voice anchors |
+| `.loom/weft.md` | optional repo opinion: local voice, known-stale areas, stricter taste |
+| project tree and code | evidence that a doc is true, stale, misplaced, or needless |
 
 ## Workflow Graph
 
 ```mermaid
 flowchart TD
-    standard["Standard - load ethos and repo opinion"] --> map["Map - discover managed docs"]
-    map --> survey["Survey - compare docs to project"]
-    survey --> pressure["Pressure - find cuts, moves, and stale claims"]
-    pressure --> intent{"Winnow requested?"}
+    load["Load - ethos, front doors, repo opinion"] --> survey["Survey - managed set, lint, project shape"]
+    survey --> pressure["Pressure - mark slop, drift, misplacement"]
+    pressure --> intent{"Winnow?"}
     intent -->|no| report["Report - findings and proposed cuts"]
-    intent -->|yes| edit["Edit - prune, route, rewrite"]
-    edit --> check["Check - linter and focused evidence"]
+    intent -->|yes| edit["Edit - cut, route, compress"]
+    edit --> check["Check - re-lint, verify touched claims"]
     check --> report
 ```
 
 ## Workflow
 
-### 1. Standard - load the taste
+### 1. Load - the standard and the voice
 
-- Read `${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md`, root `README.md`, and `AGENTS.md` when present.
-- Read `.loom/weft.md` if present.
-- Hold the pass to the loom standard: docs orient and route; code is the road; thin is often correct.
-- Treat "true" as insufficient. A sentence must be durable, placed well, and change the reader's next action.
+Load the ethos weft enforces, the front doors it must preserve, and any repo opinion:
 
-### 2. Map - find the documentation surface
+```bash
+cat "${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md"
+cat README.md AGENTS.md .loom/weft.md 2>/dev/null
+```
 
-- Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` first.
-- Use the managed set as the review scope. Candidates are not part of the pass unless they explain an omission or should be adopted/excluded.
-- Read every managed doc in the pass. For large repos, batch by role: front doors first, then module docs, then references/specs/plans by kind.
-- Inspect enough project shape to verify the docs: top-level tree, module boundaries, commands, tests, package files, and code areas named by the docs.
+Hold the pass to that standard: docs orient and route, code is the road, thin is often correct. A sentence earns its place only if it is durable, well-placed, and changes the reader's next action — "true" is not enough.
 
-### 3. Pressure - identify editorial debt
+### 2. Survey - see the real doc set
 
-Look for text that fails the project, not text that merely could be prettier.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"
+```
 
-- **Not durable:** session notes, pending chatter, ordinary history, emotional scaffolding, task-local explanations.
-- **Not routed:** duplicate facts, index sprawl, repeated setup, details living in a front door that should link deeper.
-- **Not current:** commands, module names, package facts, architecture claims, or roadmap focus contradicted by the tree.
-- **Not useful:** prose that restates file structure, narrates loom, explains the obvious, hedges, decorates, or summarizes without changing action.
-- **Not prose's job:** deterministic steps that should be scripts, hooks, tests, lint, or config.
+The managed set is the review scope; a candidate enters only if it explains an omission or should be adopted or excluded. Read every managed doc — for large repos, batch by role: front doors, then module docs, then references. Inspect enough project shape (tree, module boundaries, commands, tests) to tell truth from claim.
 
-### 4. Edit - cut before adding
+### 3. Pressure - find what fails the project
 
-If the operator asked for a review, stop with findings and proposed cuts. If they asked to winnow, make the pass.
+Mark text that fails the doc's job, not text that could merely read prettier:
 
-- Prefer deletion, routing, or compression over new explanation.
-- Preserve the operator's voice; reduce the agent's fingerprints.
-- Move facts to the one home a reader would expect, then link rather than repeat.
-- Keep front doors short: purpose, map, validation, and the next useful route.
-- Leave a doc skeletal when the structure is useful; delete or propose deletion when the doc no longer has a job.
-- Stamp changed managed docs with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> kind=... status=... updated=<today>`.
+- **Not durable** — session notes, pending chatter, ordinary history, task-local scaffolding.
+- **Not routed** — a fact duplicated, restated, or held in a front door that should link deeper.
+- **Not current** — commands, names, or architecture the tree contradicts.
+- **Not useful** — prose that restates structure, narrates loom, hedges, decorates, or summarizes without changing action.
+- **Not prose's job** — a deterministic step that should be a script, hook, test, or config line.
 
-### 5. Check - prove the pass did not create drift
+### 4. Edit - cut before you write
 
-- Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`.
-- Re-check any factual claims touched by the edit against the project tree or source named by the doc.
-- Do not commit, merge, or close out. weave owns session close-out.
-- If a needed cut is risky because the fact may matter, report the uncertainty rather than padding around it.
+Review stops here with findings and proposed cuts. Winnow makes the pass — subtractive first:
 
-## Red flags
+- Prefer deletion, routing, and compression over new prose. Delete a doc that no longer has a job; leave it skeletal when the structure still serves.
+- Move each fact to the one home a reader would look, then link rather than repeat.
+- Keep front doors short: purpose, map, validation, next route.
+- Preserve the operator's voice and reduce the agent's fingerprints. When you must write, write less than you cut.
+- Stamp touched docs: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> updated=<today>`.
 
-| Thought | Reality |
-|---|---|
-| "This is true, so keep it." | Truth is table stakes. Keep only durable, placed, action-changing truth. |
-| "The README should explain the whole system." | A front door routes. Details live where work happens. |
-| "The docs feel thin." | Thin is healthy when the map is clear and the code carries detail. |
-| "I'll add a clarifying paragraph." | First try deleting, linking, moving, or naming the actual command. |
-| "This should describe how loom works." | Repo docs describe the project. loom mechanics stay in the plugin or `.loom/<skill>.md`. |
-| "I need to refactor the code to fix the docs." | weft edits docs. Name code follow-up only when needed to resolve a documented lie. |
+### 5. Check - prove the pass added no drift
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"
+```
+
+Re-verify any factual claim you touched against the tree or the source it names. Do not commit, merge, or close out — weave owns that. If a cut is risky because the fact might still matter, report the uncertainty instead of padding around it.
 
 ## Output
 
-Report the managed docs reviewed, the evidence used to check them, the cuts/moves/rewrites made or proposed, validation results, and any remaining stale claims or adoption/exclusion candidates. If no edit survives the standard, say so and leave the docs untouched.
+Report the docs reviewed, the evidence used to check them, the cuts, moves, and compressions made or proposed, the lint result, and any remaining stale claims or adoption/exclusion candidates. If nothing survives the standard, say so and leave the docs untouched.

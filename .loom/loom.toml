@@ -19,3 +19,4 @@ hook = "warp.sh"
 
 [weave]
 cleanup = "always"
+rsi = "always"

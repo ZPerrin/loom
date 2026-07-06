@@ -104,16 +104,6 @@ Write one coherent pass from the approved diff; set stamped `updated` fields to 
 
 Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`. Fix findings caused by the approved dress work. Report unrelated drift separately. If the fix requires an unapproved change, return to Propose.
 
-## Red flags
-
-| Thought | Reality |
-|---|---|
-| "I can see the modules; I'll write now." | Propose first. Nothing lands before confirmation. |
-| "Fresh repo; drop the seed skeleton." | Survey first. A seed is a proposed shape, not a default write. |
-| "This prose would read better rewritten." | Map the operator's words; do not invent voice or detail. |
-| "Lint found old drift; I'll fix it while here." | Loop back and get confirmation, or report it for later. |
-| "It's basically clean; I'll commit." | dress stages confirmed files only. The operator commits. |
-
 ## Output
 
 Report what changed, what was staged, what gaps remain, and the self-check result.

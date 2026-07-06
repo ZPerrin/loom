@@ -186,12 +186,17 @@ check_weave_config() { # optional [weave] section; required-and-valid iff presen
   # Single-knob section: detect the header itself — an empty [weave] yields no parsed
   # keys, so key-detection (as in check_warp_config) would miss a missing cleanup.
   [ -f "$CONF" ] && grep -q '^\[weave\]' "$CONF" || return 0
-  local cl wh
+  local cl rsi wh
   cl="$(cfg_get weave.cleanup)"
   case "$cl" in
     always|never|ask) ;;
     "") add "WEAVE    .loom/loom.toml: [weave] missing cleanup (always|never|ask)" ;;
     *)  add "WEAVE    .loom/loom.toml: [weave] cleanup=$cl invalid (use always|never|ask)" ;;
+  esac
+  rsi="$(cfg_get weave.rsi)"   # optional; on by default when unset
+  case "$rsi" in
+    ""|always|never|ask) ;;
+    *)  add "WEAVE    .loom/loom.toml: [weave] rsi=$rsi invalid (use always|never|ask)" ;;
   esac
   wh="$(cfg_get weave.hook)"
   validate_hook_form "$wh"

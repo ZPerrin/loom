@@ -3,7 +3,7 @@ name: warp
 description: Use when opening a unit of work in a loom managed repo, especially when orientation, branch/worktree setup, ticket context, or kickoff guidance may be needed.
 ---
 
-## Warp 
+## Warp
 
 Open a unit of work. warp orients the session, establishes the branch/worktree when configured, runs an optional open hook, and hands back ready to work. It never commits and never writes session docs; close-out and durable distillation belong to weave.
 
@@ -16,15 +16,15 @@ Open a unit of work. warp orients the session, establishes the branch/worktree w
 
 These are the surfaces `warp` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
 
-| Surface                             | Controls | Used by |
-|-------------------------------------|---|---|
-| `[warp].branch_convention` | session-open branch naming pattern, or `ask` | `warp` |
-| `[warp].worktree`                   | worktree behavior: `always`, `never`, `ask`, or `harness` | `warp` |
-| `[warp].source_repo`                | local path or GitHub ref used to interpret `/warp <arg>` | `warp` |
-| `[warp].source_branch`              | base branch new work forks from | `warp` |
-| `[warp].hook`                       | optional session-open command | `warp`, `skill-hook` |
-| `.loom/warp.md`                     | repo opinion for orientation, workspace setup, and kickoff | `warp` |
-| `.loom/scripts/*`                   | conventional home for hook scripts | configured hooks |
+| Surface | Warp uses it for |
+|---|---|
+| `[warp].branch_convention` | session-open branch naming pattern, or `ask` |
+| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` |
+| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` |
+| `[warp].source_branch` | base branch new work forks from |
+| `[warp].hook` | optional session-open command, run via `skill-hook` |
+| `.loom/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
+| `.loom/scripts/*` | conventional home for hook scripts |
 
 ## Workflow Graph
 
@@ -55,7 +55,7 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 
 ### 2. Orient - load enough context
 
-- Read `.loom/warp.md` if present.
+- Read `.loom/warp.md` if present, including any `## Experiments` a prior weave retro filed for this session to weigh.
 - Treat the SessionStart slice as already loaded; pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`.
 - Resolve `/warp <arg>` through `source_repo`: GitHub ref means fetch the issue/PR; local path means free-text work description; no arg means ask only if needed.
 - Do not mutate the workspace before orientation.
@@ -74,18 +74,6 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 ### 4. Kick off - compose or hand back
 
 Compose only what `.loom/warp.md` names: a brainstorm, plan, code pass, or no tool at all. If a named tool is absent, say so and continue with an oriented workspace.
-
-## Red flags
-
-| Thought | Reality |
-|---|---|
-| "No config; I'll pick sensible defaults and go." | Configure is a propose -> confirm pass, or warp only orients. |
-| "`[warp]` is set; I'll re-confirm everything." | Run-mode is lean. Stop only for session unknowns or git safety. |
-| "The named kickoff tool is missing; I'll substitute another." | Compose only what was named. If absent, report it and continue. |
-| "I'll write down the session intent." | warp writes no session docs. weave handles durable close-out. |
-| "The hook failed, so warp failed." | Hook failure falls back to prose unless workspace safety blocks. |
-| "The worktree exists, so I can edit." | Verify the session is inside the worktree before editing. |
-| "Dirty work can be stashed automatically." | Any move of uncommitted work needs confirmation. |
 
 ## Output
 

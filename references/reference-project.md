@@ -49,6 +49,7 @@ hook = "warp.sh"
 
 [weave]
 cleanup = "ask"
+rsi = "always"
 hook = "weave.sh"
 ```
 
@@ -68,6 +69,7 @@ hook = "weave.sh"
 | `[warp].source_branch` | base branch new work forks from                                     | `warp` |
 | `[warp].hook` | optional session-open command or script                             | `warp`, `skill-hook` |
 | `[weave].cleanup` | session-close branch cleanup preference                             | `weave` |
+| `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) | `weave` |
 | `[weave].hook` | optional session-close command or script                            | `weave`, `skill-hook` |
 | `.loom/<skill>.md` | repo opinion prose floor for that skill                             | named skill |
 | `.loom/scripts/*` | conventional home for hook scripts                                  | configured hooks |

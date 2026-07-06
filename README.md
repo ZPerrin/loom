@@ -28,7 +28,7 @@ You get 4 skills and two ways to configure them.
 
 `weft` editorializes the managed documentation as a one-off to help keep things cohesive and slop free (see [the editorial ethos](references/doc-convention.md)).
 
-A linter/slicer pair that ship with the plugin allow us to both keep the documentation clean, but also query for and slice context based on configuration.
+A linter/slicer pair that ship with the plugin allow for us to both keep the documentation clean, and slice documentation context efficiently.
 
 A SessionStart hook does this by default, injecting the configured settings from `.loom/loom.toml.[context]` directly into the system context. The same slicer answers on-demand queries mid-session (`doc-slicer --header <name>`), so an agent pulls one addressable section instead of reading a whole file.
 

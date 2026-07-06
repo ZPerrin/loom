@@ -16,12 +16,13 @@ Close out a unit of work. weave scopes the session delta, distills durable chang
 
 These are the surfaces `weave` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
 
-| Surface | Controls                                                         | Used by |
-|---|------------------------------------------------------------------|---|
-| `[weave].cleanup` | merged branch cleanup: `always`, `never`, or `ask`               | `weave` |
-| `[weave].hook` | optional session-close command or script                         | `weave`, `skill-hook` |
-| `.loom/weave.md` | repo opinion for distillation, pruning, and close-out convention | `weave` |
-| `.loom/scripts/*` | conventional home for hook scripts                               | configured hooks |
+| Surface | Weave uses it for |
+|---|---|
+| `[weave].cleanup` | merged branch cleanup: `always`, `never`, or `ask` |
+| `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) |
+| `[weave].hook` | optional session-close command, run via `skill-hook` |
+| `.loom/weave.md` | repo opinion for distillation, pruning, and close-out convention |
+| `.loom/scripts/*` | conventional home for hook scripts |
 
 ## Workflow Graph
 
@@ -41,6 +42,9 @@ flowchart TD
     close -->|yes or target named| check["Check - lint, tree, optional hook"]
     check -->|fail| stop["Stop - report blocker"]
     check -->|pass| integrate["Integrate - commit, merge or handoff, cleanup"]
+    integrate --> rsi{"[weave].rsi?"}
+    rsi -->|never| handback["Hand back"]
+    rsi -->|always / ask / unset| retro["RSI retro - distill session -> .loom/warp.md"]
 ```
 
 ## Workflow
@@ -87,17 +91,15 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 - Apply `[weave].cleanup`: delete the merged branch when `always`, keep it when `never`, ask when `ask`.
 - Never remove worktrees; report any cleanup the harness or operator must finish.
 
-## Red flags
+### 6. RSI - session retro (gated by `[weave].rsi`)
 
-| Thought | Reality |
-|---|---|
-| "Nothing durable changed, but I'll refresh docs." | No edit without durable signal. Say nothing changed. |
-| "The hook failed, but lint passed." | The configured close hook failed. Stop and report it. |
-| "This is plain `/weave`; I'll commit to be helpful." | Plain weave stages and hands back. Commit only on close-out opt-in. |
-| "A fast-forward is cleaner." | Local close-out uses a written merge commit unless repo opinion says PR handoff. |
-| "I'll re-read the whole README for one section." | Use `doc-slicer --header`; whole-file reads are for rewrites. |
-| "This old markdown is probably meant to be managed." | Resolve it explicitly: distill, adopt, exclude, or name the follow-up. |
+At close-out, run the retro when `[weave].rsi` is `always` or unset (the default is on), or `ask` (confirm first); skip on `never`.
+
+- Look back over the session: where it snagged (failed calls, retries, denials, serialized waits, discovery loops), what context, hooks, and overrides helped, and what got in the way.
+- Distill that into a handful of concrete, forward-looking experiments to try next session — testable nudges, not a session log.
+- Append them under an `## Experiments` heading in `.loom/warp.md` so the next `/warp` picks them up. Create the file (`kind: loom-config`, stamped today) if it does not exist; never overwrite warp's existing repo opinion.
+- Keep it to signal. If nothing durable surfaced, say so and write nothing.
 
 ## Output
 
-Report the scoped delta, spares resolved, docs/config changed with one-line rationales, hook and check results, staged files, and any close-out action taken. If nothing durable changed, say so and make no edit.
+Report the scoped delta, spares resolved, docs/config changed with one-line rationales, hook and check results, staged files, any close-out action taken, and the retro experiments filed to `.loom/warp.md`, if any. If nothing durable changed, say so and make no edit.
