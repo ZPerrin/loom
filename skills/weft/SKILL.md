@@ -1,66 +1,99 @@
 ---
 name: weft
-description: Use when wrapping up a work session — distill the session's landed changes into the durable docs, then gate, merge, and clean up in a repeated, configurable way. The session-close bookend to /warp. Invoke as "weft into <branch>" to name the merge target up front.
+description: Use when a Loom-managed documentation set needs an editorial review pass to prune, condense, reroute, and align durable project docs with the code and doc convention.
 ---
 
-Close out a unit of work: scope the session's git delta, distill what landed into the durable docs, and — on opt-in — gate, merge, and clean up. weft is the session-*close* bookend to `/warp` (session open) — where warp orients and sets up the workspace, weft **distills and closes**. It is the same close-out moves run the same way every session, with the variable bits in config and prose. Any prose weft writes follows loom's editorial ethos (see [doc-convention](../../references/doc-convention.md)): editorial before additive, compression as craft, no edit without durable signal.
+## Weft
 
-weft is invoked whenever you wrap real work — often, but never automatically; a throwaway edit with nothing durable to distill can skip it. Like warp, the confirmation lives in a one-time **configure** pass, and after that weft **runs** the flow you already approved without re-litigating each step. Two invocations: **`/weft`** distills, stages the doc diff, and asks whether to close out and into which branch; **`/weft into <branch>`** names the target up front and skips that question.
+Run a project-documentation editorial pass. weft reads the managed docs as one surface, compares them to the project they claim to describe, then cuts, routes, or rewrites until the set is lean, durable, and useful to a future agent or human.
 
-weft is **mostly REPO OPINION**, split across loom's two planes:
+`weft` handles two operator intents:
 
-- **`loom.toml [weft]` — the control plane (enforced).** The mechanical knobs the runtime acts on: `cleanup` (`"always"`|`"never"`|`"ask"` — after a successful merge, delete the merged work branch — weft never removes the worktree itself); and one optional `hook` — a command weft runs at the close-out gate, an **extra** gate layered on the built-in lint+tree one (optional even when the section is present, the `.loom/weft.md` prose being the floor). Thin by design: most of close-out is either a universal rail (the gate, `--no-ff`) or a per-branch convention (local merge vs. PR), neither of which is a repo-wide switch. When the section is present the linter **requires** `cleanup` and validates both, so run-mode can trust them without re-asking.
-- **`.loom/weft.md` — the prose plane (the floor).** The freeform nudge — *what* to distill and *where*, what to prune once shipped, and the close-out convention (e.g. `feature/<slug>` merges locally into the default branch; `issue/<n>` pushes and opens an MR). It is the **floor** beneath a graduated `hook`. weft reads and follows it; it never has to exist.
+- **Review:** report the weak spots and proposed cuts; edit nothing.
+- **Winnow:** make one coherent editorial pass, then validate.
 
-**MUST:** the close-out **gate** — lint clean *and* the untracked/missing check both pass before any merge; the merge is always `--no-ff` with a written commit; commit only on close-out opt-in (plain `/weft` stages, never commits); distill editorially — **no edit without durable signal**; in **configure** mode, propose the flow and **write neither config nor docs until the operator confirms** (the symmetric twin of warp's configure rail). Everything the flow *does* between those rails is **DEFAULT / REPO OPINION**, shaped by `[weft]` and `.loom/weft.md`. Assume no specific tools exist: compose only what the config names, and when a named tool is absent, **say so and continue** — never hard-fail a close-out (no PR tool → push and report, don't block).
+## Weft Control Surfaces
 
-## Load the repo's opinion first
+`weft` has no `.loom/loom.toml` section. It uses Loom's discovered managed set and the shared editorial standard.
 
-Read `.loom/weft.md` if it exists (relocatable via `[skills] config_dir`); it shapes *what* you distill and *where*, what to prune, and the close-out convention. It never relaxes the gate. See [repo-overrides](../../references/repo-overrides.md).
+| Surface | Weft uses it for |
+|---|---|
+| `${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md` | the editorial standard: durable signal, routing, compression, no meta-documentation |
+| `README.md` / `AGENTS.md` | the project's front doors and tone anchors |
+| `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` | the managed docs and unmanaged candidates |
+| `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` | mechanical findings before and after edits |
+| `.loom/weft.md` | optional repo opinion for local voice, known stale areas, or stricter taste |
+| project tree and code signals | evidence that a doc is true, stale, misplaced, or needless |
 
-## The spine
+## Workflow Graph
 
 ```mermaid
 flowchart TD
-    inv["/weft  (· into &lt;branch&gt;)"] --> cfg{"[weft] configured?"}
-    cfg -->|no| conf["Configure (once) — survey how work closes here,<br/>propose cleanup + weft.md, confirm, write"]
-    cfg -->|yes| recon["Reconcile — scope delta vs branch base,<br/>sweep spares, resolve each"]
-    conf -->|declines| recon
-    conf -->|confirmed| recon
-    recon --> distill["Distill — refresh durable docs editorially"]
-    distill --> ask{"Close out?<br/>(skip if 'into &lt;branch&gt;')"}
-    ask -->|no| stop["Stage the doc diff, stop — never commit"]
-    ask -->|yes| gate{"Gate: lint + tree clean (+ hook)"}
-    gate -->|fail| stop2["Stop &amp; report — never merge a failing gate"]
-    gate -->|pass| close["Integrate (local --no-ff | push + PR)<br/>· delete branch per cleanup"]
+    standard["Standard - load ethos and repo opinion"] --> map["Map - discover managed docs"]
+    map --> survey["Survey - compare docs to project"]
+    survey --> pressure["Pressure - find cuts, moves, and stale claims"]
+    pressure --> intent{"Winnow requested?"}
+    intent -->|no| report["Report - findings and proposed cuts"]
+    intent -->|yes| edit["Edit - prune, route, rewrite"]
+    edit --> check["Check - linter and focused evidence"]
+    check --> report
 ```
 
-### Configure — the rare setup pass
+## Workflow
 
-First run on a repo (no `[weft]` section), or `/weft configure` to re-tune — the same survey → propose → confirm → write spine `/dress` uses. Survey how the repo already closes work — what merges into the default branch in `git log`, whether branches are deleted after merge, any spec/plan trees that get pruned — then **propose** the `cleanup` knob and the `.loom/weft.md` nudge as a plan the operator edits cell by cell. Write `[weft]` into `.loom/loom.toml` and the nudge into `.loom/weft.md` (`kind: loom-config`) **only past the operator's confirm**. If the operator declines, skip to a plain distill-and-stage and hand back — never write a half-specified flow.
+### 1. Standard - load the taste
 
-### Run — the lean pass
+- Read `${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md`, root `README.md`, and `AGENTS.md` when present.
+- Read `.loom/weft.md` if present.
+- Hold the pass to the Loom standard: docs orient and route; code is the road; thin is often correct.
+- Treat "true" as insufficient. A sentence must be durable, placed well, and change the reader's next action.
 
-With `[weft]` present, execute the confirmed flow and prompt only where you genuinely must:
+### 2. Map - find the documentation surface
 
-1. **Reconcile.** Scope the session against the branch base — where warp opened: `git log` / `git diff <base>..HEAD` names what landed and any direction abandoned. Then sweep the spares: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `git status --porcelain` surface every untracked (`??`/`A`) managed doc and frontmatter-less candidate created this session — resolve each: distill, adopt (give it frontmatter → managed), exclude (`[discovery] exclude`), or drop.
-2. **Distill.** *(DEFAULT)* Refresh the touched durable docs from the **code**, editorially: the module README's frontmatter `updated` and `## Overview`, durable build/infra decisions into its `## Agentic Guidelines`, a new doc under `docs/` only if a result earns one. Move the roadmap only on milestone events (`## Now`/`## Next`, check off `## Milestones`) — no per-session entry; git is the activity log. Read the sections you are refreshing with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]` (whole-file reads are for rewrites), and stamp `updated` with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp"` rather than hand-editing frontmatter — the surface is catalogued in [tooling](../../references/tooling.md). Prune per `.loom/weft.md`. Most sessions stop at a paragraph; **if nothing durable changed, write nothing.** Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`, fix what it flags, and `git add` the doc diff.
-3. **Close out** *(on opt-in; skip the ask when invoked as `/weft into <branch>`)*. The **gate (MUST)** — `doc-linter` exits 0 **and** `git status --porcelain` is resolved (every `??`/` D` staged or explained); never merge through a failing gate, no size exemption. If `[weft] hook` is set, run it as an extra gate — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weft`: exit **0** it passed; exit **3** no extra gate; exit **other** it **failed — stop, do not merge** (a gate is a gate). Then commit the sync on the work branch, and integrate per the close-out convention: a local `git merge --no-ff` into the target with a written merge commit (the last step; re-run the linter on the result), or push and open an MR. In a worktree flow the target is already checked out in the original checkout — it can't be checked out again inside the worktree, so run the merge there (`git worktree list` locates it). **Clean up per `cleanup`:** delete the merged work branch (`git branch -d`), or skip if `never` / the operator wants it kept. weft never removes worktrees — the harness releases the worktree at session exit, and a branch still checked out in a worktree retires only once that worktree is released.
+- Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` first.
+- Use the managed set as the review scope. Candidates are not part of the pass unless they explain an omission or should be adopted/excluded.
+- Read every managed doc in the pass. For large repos, batch by role: front doors first, then module docs, then references/specs/plans by kind.
+- Inspect enough project shape to verify the docs: top-level tree, module boundaries, commands, tests, package files, and code areas named by the docs.
+
+### 3. Pressure - identify editorial debt
+
+Look for text that fails the project, not text that merely could be prettier.
+
+- **Not durable:** session notes, pending chatter, ordinary history, emotional scaffolding, task-local explanations.
+- **Not routed:** duplicate facts, index sprawl, repeated setup, details living in a front door that should link deeper.
+- **Not current:** commands, module names, package facts, architecture claims, or roadmap focus contradicted by the tree.
+- **Not useful:** prose that restates file structure, narrates Loom, explains the obvious, hedges, decorates, or summarizes without changing action.
+- **Not prose's job:** deterministic steps that should be scripts, hooks, tests, lint, or config.
+
+### 4. Edit - cut before adding
+
+If the operator asked for a review, stop with findings and proposed cuts. If they asked to winnow, make the pass.
+
+- Prefer deletion, routing, or compression over new explanation.
+- Preserve the operator's voice; reduce the agent's fingerprints.
+- Move facts to the one home a reader would expect, then link rather than repeat.
+- Keep front doors short: purpose, map, validation, and the next useful route.
+- Leave a doc skeletal when the structure is useful; delete or propose deletion when the doc no longer has a job.
+- Stamp changed managed docs with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> kind=... status=... updated=<today>`.
+
+### 5. Check - prove the pass did not create drift
+
+- Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`.
+- Re-check any factual claims touched by the edit against the project tree or source named by the doc.
+- Do not commit, merge, or close out. weave owns session close-out.
+- If a needed cut is risky because the fact may matter, report the uncertainty rather than padding around it.
 
 ## Red flags
 
 | Thought | Reality |
 |---|---|
-| "Trivial doc change — skip the gate." | The gate has no size exemption: lint clean + tree clean, every close-out. |
-| "Lint's almost clean; I'll merge and fix after." | Never merge through a failing gate. Fix first, then merge. |
-| "A fast-forward is cleaner here." | Always `--no-ff`. weft writes no session journal — the merge commit *is* the record. |
-| "Plain `/weft`, but I'll commit to be helpful." | Plain `/weft` stages only. Committing is the operator's opt-in. |
-| "First run, no config — I'll pick a cleanup default and go." | Configure is a propose→confirm pass. weft writes no config until the operator confirms — or declines, and weft just distills and stages. |
-| "Nothing durable changed, but I'll refresh a few docs to be thorough." | No edit without durable signal. If the session changed nothing durable, write nothing and say so. |
-| "To refresh one `## Overview` I'll re-read the whole README." | The section is addressable: `doc-slicer --header Overview <module>`. Whole-file reads are for rewrites. |
-| "weft's hook failed, but it's 'just' a repo script — I'll merge anyway." | A gate hook is a gate. Nonzero exit blocks the merge exactly like lint+tree. Fix, then merge. |
-| "This doc reads thin — a line orienting the reader in the doc system would help." | Docs describe the project; the harness stays invisible. If it enforces it, don't restate it; if the structure shows it, don't narrate it. Writer policy goes in `<config_dir>/<skill>.md`, not reader-facing prose. |
+| "This is true, so keep it." | Truth is table stakes. Keep only durable, placed, action-changing truth. |
+| "The README should explain the whole system." | A front door routes. Details live where work happens. |
+| "The docs feel thin." | Thin is healthy when the map is clear and the code carries detail. |
+| "I'll add a clarifying paragraph." | First try deleting, linking, moving, or naming the actual command. |
+| "This should describe how Loom works." | Repo docs describe the project. Loom mechanics stay in the plugin or `.loom/<skill>.md`. |
+| "I need to refactor the code to fix the docs." | weft edits docs. Name code follow-up only when needed to resolve a documented lie. |
 
 ## Output
 
-Report the delta scoped and spares resolved, files touched with one-line rationales, what was pruned, and whether the roadmap moved and why; when nothing durable changed, say so and make no edit. In close-out mode, also report the gate result, the sync commit, the merge/MR, and whether the branch/worktree was cleaned up. In configure mode, report the `[weft]` knob and the `.loom/weft.md` written. weft commits only on close-out opt-in.
+Report the managed docs reviewed, the evidence used to check them, the cuts/moves/rewrites made or proposed, validation results, and any remaining stale claims or adoption/exclusion candidates. If no edit survives the standard, say so and leave the docs untouched.

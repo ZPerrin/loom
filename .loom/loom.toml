@@ -15,7 +15,7 @@ branch_convention = "issue/<number>-<slug> | feature/<slug>"
 source_repo = "."
 source_branch = "master"
 worktree = "always"
-hook = ".loom/scripts/warp.sh"
+hook = "warp.sh"
 
 [weave]
 cleanup = "always"

@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-07-03
+updated: 2026-07-06
 ---
 # loom
 
@@ -80,9 +80,9 @@ The harness is a loom; sessions are woven on it.
 |---|-----------------------------------------------------------------|---|
 | **loom** | the system / this repo                                          | here |
 | **dress** | stand up or re-tune the harness                                 | `skills/dress` |
-| **warp** | session-*open* bookend — orient before work                     | `skills/warp` (stub) |
-| **weft** | session-*close* — distill work into docs/ close out the session | `skills/weft` |
-| **weave** | re-weave the whole doc tree                                     | `skills/weave` |
+| **warp** | session-*open* bookend — orient before work                     | `skills/warp` |
+| **weave** | session-*close* bookend — distill, check, and hand off work     | `skills/weave` |
+| **weft** | project-docs editorial pass — prune, route, compress            | `skills/weft` |
 | **doc-slicer** | the per-session context the hook threads in ("Bearings")        | `scripts/doc-slicer` |
 | **doc-linter** | doc hygiene checks (links + frontmatter)                        | `scripts/doc-linter` |
 
@@ -111,4 +111,3 @@ Claude Code can use the same GitHub-backed marketplace from its plugin flow:
 /plugin marketplace add https://github.com/ZPerrin/loom.git
 /plugin install loom@loom
 ```
-

@@ -12,17 +12,19 @@ Open a unit of work. warp orients the session, establishes the branch/worktree w
 - **Unconfigured:** no `[warp]` section exists in `.loom/loom.toml`; configure the flow or orient only.
 - **Configured:** `[warp]` section exists in `.loom/loom.toml`; run the confirmed flow and stop only for real session unknowns or git safety.
 
-## loom.toml Control Surfaces
+## Warp Control Surfaces
 
-| Surface | Controls | Used by |
-|---|---|---|
+These are the surfaces `warp` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
+
+| Surface                             | Controls | Used by |
+|-------------------------------------|---|---|
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask` | `warp` |
-| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` | `warp` |
-| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` | `warp` |
-| `[warp].source_branch` | base branch new work forks from | `warp` |
-| `[warp].hook` | optional session-open command | `warp`, `skill-hook` |
-| `.loom/warp.md` | repo opinion for orientation, workspace setup, and kickoff | `warp` |
-| `.loom/scripts/*` | conventional home for hook scripts | configured hooks |
+| `[warp].worktree`                   | worktree behavior: `always`, `never`, `ask`, or `harness` | `warp` |
+| `[warp].source_repo`                | local path or GitHub ref used to interpret `/warp <arg>` | `warp` |
+| `[warp].source_branch`              | base branch new work forks from | `warp` |
+| `[warp].hook`                       | optional session-open command | `warp`, `skill-hook` |
+| `.loom/warp.md`                     | repo opinion for orientation, workspace setup, and kickoff | `warp` |
+| `.loom/scripts/*`                   | conventional home for hook scripts | configured hooks |
 
 ## Workflow Graph
 

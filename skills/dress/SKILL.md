@@ -15,7 +15,7 @@ Install or retune loom for a repo. dress decides the repo-local control surfaces
 
 ## Dress Control Surfaces
 
-These are the surfaces `dress` reads or writes directly. The full `loom.toml` key map lives in the reference project, which the Propose step loads explicitly.
+These are the surfaces `dress` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project, which the Propose step loads explicitly.
 
 | Surface | Dress uses it for |
 |---|---|
@@ -29,10 +29,10 @@ These are the surfaces `dress` reads or writes directly. The full `loom.toml` ke
 ```mermaid
 flowchart TD
     survey["Survey - explore the repo, write nothing"] --> propose["Propose - reconcile to the minimum harness"]
-    propose --> gate{"Confirm - approval boundary"}
-    gate -->|revise| propose
-    gate -->|approved| write["Write - materialize the approved set"]
-    write --> check["Self-check - run gates, report drift honestly"]
+    propose --> confirm{"Confirm - approval boundary"}
+    confirm -->|revise| propose
+    confirm -->|approved| write["Write - materialize the approved set"]
+    write --> check["Self-check - run checks, report drift honestly"]
     check -->|"needs an unconfirmed edit"| propose
 ```
 
@@ -100,7 +100,7 @@ Write one coherent pass from the approved diff; set stamped `updated` fields to 
 - Write skill overrides like `.loom/warp.md` only for repo opinion that change DEFAULT behavior.
 - Stage only approved files changed by dress.
 
-### 5. Self-check - run gates, report drift honestly
+### 5. Self-check - run checks, report drift honestly
 
 Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`. Fix findings caused by the approved dress work. Report unrelated drift separately. If the fix requires an unapproved change, return to Propose.
 

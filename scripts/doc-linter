@@ -22,6 +22,7 @@ if [ "${1:-}" = "--links" ]; then MODE="links"; shift; fi
 # --- config: normalized "table.key=value" text, from loom.toml or defaults ---
 DEFAULT_CFG='lint.kinds=readme
 lint.kinds=reference
+lint.kinds=roadmap
 lint.kinds=spec
 lint.kinds=plan
 lint.kinds=design
@@ -39,9 +40,14 @@ else
   CFG="$DEFAULT_CFG"
 fi
 cfg_get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
+default_get() { printf '%s\n' "$DEFAULT_CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
 
-KINDS="$(cfg_get lint.kinds)"
-STATUSES="$(cfg_get lint.statuses)"
+RAW_KINDS="$(cfg_get lint.kinds)"
+RAW_STATUSES="$(cfg_get lint.statuses)"
+DEFAULT_KINDS="$(default_get lint.kinds)"
+DEFAULT_STATUSES="$(default_get lint.statuses)"
+KINDS="${RAW_KINDS:-$DEFAULT_KINDS}"
+STATUSES="${RAW_STATUSES:-$DEFAULT_STATUSES}"
 CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-.loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
 SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/scripts}"; SCRIPTS_DIR="${SCRIPTS_DIR%/}"
 
@@ -151,6 +157,12 @@ validate_hook_form() {
   fi
 }
 
+check_lint_config() {
+  [ -f "$CONF" ] || return 0
+  [ -n "$RAW_KINDS" ] || add "LINT     .loom/loom.toml: [lint] missing kinds"
+  [ -n "$RAW_STATUSES" ] || add "LINT     .loom/loom.toml: [lint] missing statuses"
+}
+
 check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
   printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
   local bc sr sb wt wh
@@ -170,18 +182,18 @@ check_warp_config() { # the [warp] section is optional, but required-and-valid i
   validate_hook_form "$wh"
 }
 
-check_weft_config() { # optional [weft] section; required-and-valid iff present.
-  # Single-knob section: detect the header itself — an empty [weft] yields no parsed
+check_weave_config() { # optional [weave] section; required-and-valid iff present.
+  # Single-knob section: detect the header itself — an empty [weave] yields no parsed
   # keys, so key-detection (as in check_warp_config) would miss a missing cleanup.
-  [ -f "$CONF" ] && grep -q '^\[weft\]' "$CONF" || return 0
+  [ -f "$CONF" ] && grep -q '^\[weave\]' "$CONF" || return 0
   local cl wh
-  cl="$(cfg_get weft.cleanup)"
+  cl="$(cfg_get weave.cleanup)"
   case "$cl" in
     always|never|ask) ;;
-    "") add "WEFT     .loom/loom.toml: [weft] missing cleanup (always|never|ask)" ;;
-    *)  add "WEFT     .loom/loom.toml: [weft] cleanup=$cl invalid (use always|never|ask)" ;;
+    "") add "WEAVE    .loom/loom.toml: [weave] missing cleanup (always|never|ask)" ;;
+    *)  add "WEAVE    .loom/loom.toml: [weave] cleanup=$cl invalid (use always|never|ask)" ;;
   esac
-  wh="$(cfg_get weft.hook)"
+  wh="$(cfg_get weave.hook)"
   validate_hook_form "$wh"
 }
 
@@ -214,8 +226,9 @@ else
     check_frontmatter "$f"
     check_placement "$f" "$k"
   done < <(managed_docs "$ROOT")
+  check_lint_config
   check_warp_config
-  check_weft_config
+  check_weave_config
 fi
 
 if [ -z "$FINDINGS" ]; then

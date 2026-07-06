@@ -1,13 +1,13 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-07-03
+updated: 2026-07-06
 ---
 # Roadmap
 
 ## Now
 
-`dress` is the reference skill: **survey → propose → confirm → write** — nothing lands until the operator confirms — with config in `.loom/` and all prose held to the editorial ethos. Immediate focus: bring `weave` to that same anti-leap standard (`warp` and `weft` are there now — the session-open/close bookends, each an enforced spine plus a `[warp]`/`[weft]` control plane), then prove the harness by dressing a range of real external repos.
+`dress` and `warp` set the standard: small control surfaces, explicit probes, and a survey -> propose -> confirm/write rail where edits need operator approval. Immediate focus: finish the rename split: `weave` is the session-close bookend with `[weave]` control plane; `weft` is the managed-docs editorial pass, not ambient automation.
 
 ## Next
 
@@ -19,7 +19,7 @@ updated: 2026-07-03
 
 _Unlanded thinking — argued here before it earns a place in Next. The unifying frame is now a shipped principle — **determinism over prose**, in the editorial ethos: loom is a prose→determinism distillery. Executable hooks (v0.0.9) were the first graduation; what remains here is the loop that keeps filling the ledger._
 
-- **`perch` + experiment mode — the pump that fills the ledger.** Treat a warp/weft run as an
+- **`perch` + experiment mode — the pump that fills the ledger.** Treat a warp/weave run as an
   experiment: a flag marks the session experimental and arms `perch` — the invoked-never-ambient
   retro whose survey subject is the *session* (failed calls, denials, retries, discovery loops,
   serialized waits), on dress's survey → propose → confirm → write spine. Its preferred output is
@@ -37,7 +37,8 @@ _Unlanded thinking — argued here before it earns a place in Next. The unifying
 - [x] Skill family named and framed; MUST / DEFAULT / REPO-OPINION tiers with per-skill `.loom/` overrides
 - [x] Harness/project separation — no special `docs/README`; ethos + nomenclature harvested into the plugin
 - [x] `dress` restructured (survey → propose → confirm → write); config home → `.loom/`; editorial ethos referenced by every skill
-- [x] `warp` + `weft` to dress's standard — session-open/close bookends (enforced spine + `[warp]`/`[weft]` control plane)
+- [x] `warp` to dress's standard — session-open bookend (enforced spine + `[warp]` control plane)
+- [ ] `weave` to dress's standard — session-close bookend (distill, check, handoff, `[weave]` control plane)
 - [x] Executable hooks (v0.0.9) — per-skill `hook` + `[skills] scripts_dir` + the `skill-hook` runner; all four skills speak the paradigm; determinism touchstone in the ethos
 - [ ] `weave` polished to dress's standard
 - [ ] Prove-out across varied external repos
