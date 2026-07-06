@@ -59,3 +59,7 @@ Claude Code can use the same GitHub-backed marketplace from its plugin flow:
 /plugin marketplace add ZPerrin/loom
 /plugin install loom@loom
 ```
+
+## License
+
+[MIT](LICENSE) © Zebulon Perrin
