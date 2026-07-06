@@ -15,40 +15,24 @@ It's also very much a work in progress.
 
 ## Abstract
 
-You get 4 skills and two ways to configure them.
+You get 4 skills, two ways to configure them, and a small docs harness around both.
 
-`.loom/loom.toml` gives you a minimal control surface for more deterministic settings.  
-`.loom/<skill>.md` overrides give a non-deterministic way to further nudge them to your liking.
+| skills | what it does |
+|---|---|
+| [dress](skills/dress/SKILL.md) | onboards loom into a project so loom can help maintain managed `*.md` documentation |
+| [warp](skills/warp/SKILL.md) | starts a working session: worktree and branch creation, context gathering, and any configured preamble |
+| [weave](skills/weave/SKILL.md) | closes a working session: preferred commit/merge pattern, checks, and distillation into managed documentation |
+| [weft](skills/weft/SKILL.md) | editorializes managed documentation as a one-off pass to keep it cohesive and slop free (see [the editorial ethos](references/doc-convention.md)) |
 
-`dress` onboards loom into your project, loom will help maintain ***.md** documentation.
-
-`warp` starts a working session, handling worktree and branch creation, context gathering, and any other session preamble you configure
-
-`weave` closes it out, sweeping work into a preferred commit/merge pattern and distilling changes into your managed documentation.
-
-`weft` editorializes the managed documentation as a one-off to help keep things cohesive and slop free (see [the editorial ethos](references/doc-convention.md)).
-
-A linter/slicer pair that ship with the plugin allow for us to both keep the documentation clean, and slice documentation context efficiently.
-
-A SessionStart hook does this by default, injecting the configured settings from `.loom/loom.toml.[context]` directly into the system context. The same slicer answers on-demand queries mid-session (`doc-slicer --header <name>`), so an agent pulls one addressable section instead of reading a whole file.
-
-Pseudo-hooks can also be configured and placed under `.loom/scripts` to drive more deterministic behavior.
+| control surface | what it does |
+|---|---|
+| `.loom/loom.toml` | gives you a minimal control surface for more deterministic settings |
+| `.loom/<skill>.md` | gives each skill a non-deterministic local override to nudge it to your liking |
+| `doc-linter` | keeps managed documentation mechanically clean |
+| `doc-slicer` | slices documentation context efficiently, including the SessionStart "Bearings" context from `.loom/loom.toml.[context]` |
+| `doc-slicer --header <name>` | answers on-demand context queries mid-session so an agent pulls one addressable section instead of a whole file |
 
 See the [reference project](references/reference-project.md) for a better idea of how this all works.
-
-## Naming (textile ethos)
-
-The harness is a loom; sessions are woven on it.
-
-| term | what it names                                                   | where |
-|---|-----------------------------------------------------------------|---|
-| **loom** | the system / this repo                                          | here |
-| **dress** | stand up or re-tune the harness                                 | `skills/dress` |
-| **warp** | session-*open* bookend — orient before work                     | `skills/warp` |
-| **weave** | session-*close* bookend — distill, check, and hand off work     | `skills/weave` |
-| **weft** | project-docs editorial pass — prune, route, compress            | `skills/weft` |
-| **doc-slicer** | the per-session context the hook threads in ("Bearings")        | `scripts/doc-slicer` |
-| **doc-linter** | doc hygiene checks (links + frontmatter)                        | `scripts/doc-linter` |
 
 ## Install
 
