@@ -14,7 +14,7 @@ enforces — so the query and the gate can never disagree about what a doc is. P
 | the question | the invocation |
 |---|---|
 | What docs are managed here, and what's still a candidate? | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` |
-| What does one section say — without reading the file? | `bash "${CLAUDE_PLUGIN_ROOT}/hooks/doc-slicer" --header "<name>" [path-filter…]` |
+| What does one section say — without reading the file? | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter…]` |
 | Is the doc web sound? (the close-out gate) | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` |
 | What link findings would adopting these files create? | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter" --links [FILE…]` |
 | Set or replace frontmatter keys | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> key=value …` |

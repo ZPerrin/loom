@@ -10,7 +10,6 @@ inject_fields = ["updated", "kind", "location"]
 [lint]
 kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
-meta_denylist = ["off"]   # this repo's subject IS the doc system; the META tripwire would eat its own tail
 
 [skills]
 scripts_dir = ".loom/scripts"   # home for hook scripts, prepended to PATH when a hook runs

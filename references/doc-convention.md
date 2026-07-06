@@ -30,9 +30,8 @@ in `loom.toml` lists the allowed `kind`/`status` values; their *meaning* lives h
   references ("the convention ships with the plugin"), no topology narration ("the WHY lives one
   level up"), no lifecycle mechanics in reader-facing prose. If the harness enforces it, don't
   restate it; if the structure shows it, don't narrate it. Writer-facing policy belongs in
-  `<config_dir>/<skill>.md`, read at the moment it applies. A thin doc is healthy — the reflex to
-  fill it with system orientation is the tell, and the linter's `meta_denylist` trips on the
-  common phrasings.
+  `.loom/<skill>.md`, read at the moment it applies. A thin doc is healthy; the reflex to fill it
+  with system orientation is the tell.
 
 ## Links are routing
 

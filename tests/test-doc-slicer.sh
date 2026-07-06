@@ -2,7 +2,7 @@
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/lib.sh"
-SLICER="$DIR/../hooks/doc-slicer"
+SLICER="$DIR/../scripts/doc-slicer"
 R="$DIR/fixtures/slice-repo"
 
 rm -rf "$R/.git"

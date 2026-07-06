@@ -40,7 +40,7 @@ in Task 11; the template is re-edited in Task 10).
 - `scripts/lib/discover.sh` — remove scaffolding functions; repoint config path.
 - `scripts/doc-scan` — drop the scaffolding partition.
 - `scripts/doc-linter` — repoint config path + `config_dir` default.
-- `hooks/doc-slicer` — repoint config path.
+- `scripts/doc-slicer` — repoint config path.
 
 **Tests/fixtures (edited):**
 - `tests/test-discover.sh`, fixture `loom.toml` locations, `tests/test-doc-slicer.sh` asserts.
@@ -202,7 +202,7 @@ This is a mechanical, repo-wide path move. End state: `grep -rn "docs/config/loo
 - Move: `docs/config/loom.toml` → `docs/loom/loom.toml`
 - Move: `docs/config/loom/dress.md` → `docs/loom/dress.md`
 - Move: `docs/config/roadmap.md` → `docs/roadmap.md`
-- Modify: `scripts/lib/discover.sh:26-28`, `scripts/doc-linter:5,28,38`, `hooks/doc-slicer:19`
+- Modify: `scripts/lib/discover.sh:26-28`, `scripts/doc-linter:5,28,38`, `scripts/doc-slicer:19`
 - Modify: `tests/test-discover.sh:38-41`, fixture configs, `tests/test-doc-slicer.sh:17`
 - Modify: `references/repo-overrides.md:21-22`, `AGENTS.md:13-14`, `NOTES.md:19`, `README.md:67`,
   `skills/dress/SKILL.md` (path literals), `skills/dress/templates/loom.toml:11`
@@ -237,7 +237,7 @@ Line 38: change the default — `CONFIG_DIR="${CONFIG_DIR:-docs/loom}"` (full li
 
 - [ ] **Step 4: Repoint `doc-slicer`**
 
-`hooks/doc-slicer` — line 19: `CONF="$ROOT/docs/loom/loom.toml"`
+`scripts/doc-slicer` — line 19: `CONF="$ROOT/docs/loom/loom.toml"`
 
 - [ ] **Step 5: Move the test fixtures' config files**
 
@@ -659,7 +659,7 @@ doc still links to `docs/README.md` — fix that link (repoint or remove), then 
 
 - [ ] **Step 3: Confirm the slicer still produces bearings without it**
 
-Run: `bash hooks/doc-slicer`
+Run: `bash scripts/doc-slicer`
 Expected: a preamble + `## Bearings` block + the `## Now` slice (from `docs/roadmap.md`); no error.
 
 - [ ] **Step 4: Commit**

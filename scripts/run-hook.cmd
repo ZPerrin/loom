@@ -1,6 +1,6 @@
 : << 'CMDBLOCK'
 @echo off
-REM Cross-platform polyglot wrapper for loom hook scripts.
+REM Cross-platform polyglot wrapper for loom runtime scripts.
 REM Windows: cmd.exe runs this batch portion, finds bash, calls the named script.
 REM Unix: the shell treats ": <<" as a no-op heredoc and runs the bottom portion.
 REM Hook scripts are extensionless so Windows auto-detection (which prepends bash
