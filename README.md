@@ -39,7 +39,7 @@ See the [reference project](references/reference-project.md) for a better idea o
 Install loom in Codex from the GitHub repository:
 
 ```
-codex plugin marketplace add ZPerrin/loom --ref main
+codex plugin marketplace add ZPerrin/loom --ref master
 codex plugin add loom@loom
 ```
 
