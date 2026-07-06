@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # doc-scan — classify a repo's markdown as loom-managed vs. unmanaged candidates.
-# Consumed by weave/weft to surface docs that look like docs but carry no frontmatter.
+# Consumed by dress/weave to surface docs that look like docs but carry no frontmatter.
 # Output: a "# managed" header + paths, then a "# candidates" header + paths (frontmatter-less).
 set -u
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"

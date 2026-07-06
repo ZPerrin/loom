@@ -3,7 +3,7 @@
 #   usage: skill-hook <skill> [args…]
 # exit: 0 hook ran clean · 3 no hook configured · other = hook's own failing code.
 # The runner does not interpret failure — the calling skill does (warp: fall to floor;
-# weft: block the gate). See references/tooling.md.
+# weave: stop close-out). See references/tooling.md.
 set -u
 SELF="$(cd "$(dirname "$0")" && pwd)"
 skill="${1:?usage: skill-hook <skill> [args…]}"; shift || true

@@ -28,48 +28,52 @@ assert_contains "$dout" "outside config_dir" "flags loom-config in the wrong dir
 assert_contains "$dout" "no skill named"     "flags loom-config with a non-skill basename"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
-# --- META: meta-documentation tripwire ---
-# Repo docs whose subject is the doc system (harness references, topology narration) are flagged;
-# loom-config docs are exempt; meta_denylist = ["off"] disables; custom lists replace the defaults.
+# --- Meta prose is editorial judgment, not a linter check ---
 MR="$DIR/fixtures/meta-repo"
 rm -rf "$MR"; mkdir -p "$MR/.loom"
 ( cd "$MR" && git init -q . )
 printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nThe doc convention ships with the plugin.\nA fine sentence about the actual project.\n' > "$MR/README.md"
-printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-07-01\n---\n# weft\n\nWriter policy may say frontmatter and managed set freely.\n' > "$MR/.loom/weft.md"
-
-# Default denylist -> META finding on the readme, none on the loom-config doc.
 printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\n' > "$MR/.loom/loom.toml"
 mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
-assert_exit "$mrc" "1" "meta prose: exit 1"
-assert_contains "$mo" "META"          "meta prose: META finding"
-assert_contains "$mo" "the plugin"    "META names the tripped term"
-assert_contains "$mo" "README.md:8"   "META carries file:line"
-assert_not_contains "$mo" "weft.md"   "loom-config docs exempt from META"
-
-# Word boundary: 'plugins' does not trip 'the plugin'... but a real term still does.
-printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nWe ship three editor plugins for the app.\n' > "$MR/README.md"
-mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
-assert_exit "$mrc" "0" "word boundary: 'plugins' alone stays clean"
-
-# Fenced code blocks are not scanned.
-printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\n```\nthe plugin, frontmatter, managed set\n```\n' > "$MR/README.md"
-mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
-assert_exit "$mrc" "0" "META skips fenced code"
-
-# Opt-out: meta_denylist = ["off"].
-printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nThe doc convention ships with the plugin.\n' > "$MR/README.md"
-printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\nmeta_denylist = ["off"]\n' > "$MR/.loom/loom.toml"
-mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
-assert_exit "$mrc" "0" "meta_denylist off: clean exit"
-
-# Custom list replaces the defaults.
-printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\nmeta_denylist = ["scaffolding lifecycle"]\n' > "$MR/.loom/loom.toml"
-printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nPer the scaffolding lifecycle, the plugin prunes this.\n' > "$MR/README.md"
-mo="$(cd "$MR" && bash "$LINTER" 2>&1)"
-assert_contains "$mo" "scaffolding lifecycle" "custom term trips"
-assert_not_contains "$mo" '"the plugin"'      "custom list replaces defaults"
+assert_exit "$mrc" "0" "meta-like prose is not linted"
+assert_contains "$mo" "doc-linter: clean" "meta-like prose reports clean"
 
 rm -rf "$MR"
+
+# --- lint vocab and discovery exclusions are config-driven ---
+LR="$DIR/fixtures/lint-config-repo"
+rm -rf "$LR"; mkdir -p "$LR/.loom" "$LR/docs/archive"
+( cd "$LR" && git init -q . )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Home\n' > "$LR/README.md"
+printf -- '---\nkind: playbook\nstatus: frozen\nupdated: 2026-07-01\n---\n# Runbook\n' > "$LR/docs/playbook.md"
+printf -- '---\nkind: nope\nstatus: bogus\nupdated: nope\n---\n# Ignored\n' > "$LR/docs/archive/ignored.md"
+
+printf '[discovery]\nexclude = ["docs/archive"]\n[lint]\nkinds = ["readme", "playbook"]\nstatuses = ["living", "frozen"]\n' > "$LR/.loom/loom.toml"
+lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
+assert_exit "$lrc" "0" "configured lint vocab and discovery exclude: clean exit"
+assert_contains "$lo" "doc-linter: clean" "configured lint vocab reports clean"
+
+printf '[discovery]\nexclude = ["docs/archive"]\n[lint]\nkinds = ["readme"]\nstatuses = ["living", "frozen"]\n' > "$LR/.loom/loom.toml"
+lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
+assert_exit "$lrc" "1" "kind outside configured vocab: exit 1"
+assert_contains "$lo" "kind=playbook not allowed" "configured kinds are enforced"
+assert_not_contains "$lo" "ignored.md" "discovery exclude removes docs from lint findings"
+
+printf '[discovery]\nexclude = ["docs/archive"]\n[lint]\nkinds = ["readme", "playbook"]\nstatuses = ["living"]\n' > "$LR/.loom/loom.toml"
+lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
+assert_exit "$lrc" "1" "status outside configured vocab: exit 1"
+assert_contains "$lo" "status=frozen not allowed" "configured statuses are enforced"
+
+rm -f "$LR/docs/playbook.md"
+printf '[discovery]\nexclude = ["docs/archive"]\n' > "$LR/.loom/loom.toml"
+lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
+assert_exit "$lrc" "1" "loom.toml without lint vocab: exit 1"
+assert_contains "$lo" "[lint] missing kinds" "missing lint kinds is explicit"
+assert_contains "$lo" "[lint] missing statuses" "missing lint statuses is explicit"
+assert_not_contains "$lo" "kind=readme not allowed" "missing lint vocab falls back to shipped kind defaults"
+assert_not_contains "$lo" "status=living not allowed" "missing lint vocab falls back to shipped status defaults"
+
+rm -rf "$LR"
 
 # --- [warp] section validation (control-plane config enforcement) ---
 # Optional section; when present, the linter requires the core knobs, valid.
@@ -117,36 +121,36 @@ assert_contains "$wo" "source_branch" "[warp] missing source_branch: finding"
 
 rm -rf "$WR"
 
-# --- [weft] section validation (control-plane config enforcement) ---
-# Single optional knob; when [weft] is present, the linter requires cleanup, valid.
-WF="$DIR/fixtures/weft-repo"
-rm -rf "$WF"; mkdir -p "$WF/.loom"
-( cd "$WF" && git init -q . )
+# --- [weave] section validation (control-plane config enforcement) ---
+# Single optional knob; when [weave] is present, the linter requires cleanup, valid.
+WV="$DIR/fixtures/weave-repo"
+rm -rf "$WV"; mkdir -p "$WV/.loom"
+( cd "$WV" && git init -q . )
 
-# Absent -> no WEFT finding, clean exit.
-printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WF/.loom/loom.toml"
-fo="$(cd "$WF" && bash "$LINTER" 2>&1)"; frc=$?
-assert_not_contains "$fo" "WEFT" "[weft] absent: no weft finding"
-assert_exit "$frc" "0" "[weft] absent: clean exit"
+# Absent -> no WEAVE finding, clean exit.
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"; frc=$?
+assert_not_contains "$fo" "WEAVE" "[weave] absent: no weave finding"
+assert_exit "$frc" "0" "[weave] absent: clean exit"
 
-# Present + valid -> no WEFT finding.
-printf '[weft]\ncleanup = "always"\n' > "$WF/.loom/loom.toml"
-fo="$(cd "$WF" && bash "$LINTER" 2>&1)"
-assert_not_contains "$fo" "WEFT" "valid [weft]: no weft finding"
+# Present + valid -> no WEAVE finding.
+printf '[weave]\ncleanup = "always"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
+assert_not_contains "$fo" "WEAVE" "valid [weave]: no weave finding"
 
 # Present but empty (cleanup missing) -> finding naming it, exit 1.
-printf '[weft]\n' > "$WF/.loom/loom.toml"
-fo="$(cd "$WF" && bash "$LINTER" 2>&1)"; frc=$?
-assert_exit "$frc" "1" "[weft] missing knob: exit 1"
-assert_contains "$fo" "WEFT"    "[weft] missing cleanup: weft finding"
-assert_contains "$fo" "cleanup" "[weft] names the missing cleanup knob"
+printf '[weave]\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"; frc=$?
+assert_exit "$frc" "1" "[weave] missing knob: exit 1"
+assert_contains "$fo" "WEAVE"   "[weave] missing cleanup: weave finding"
+assert_contains "$fo" "cleanup" "[weave] names the missing cleanup knob"
 
 # Invalid cleanup value -> finding naming the bad value.
-printf '[weft]\ncleanup = "sometimes"\n' > "$WF/.loom/loom.toml"
-fo="$(cd "$WF" && bash "$LINTER" 2>&1)"
-assert_contains "$fo" "sometimes" "[weft] invalid cleanup value flagged"
+printf '[weave]\ncleanup = "sometimes"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
+assert_contains "$fo" "sometimes" "[weave] invalid cleanup value flagged"
 
-rm -rf "$WF"
+rm -rf "$WV"
 
 # --- executable-hooks config validation ---
 HR="$DIR/fixtures/hook-lint"; rm -rf "$HR"; mkdir -p "$HR/.loom/scripts"
@@ -154,7 +158,7 @@ mk_toml() { printf '%s\n' "$1" > "$HR/.loom/loom.toml"; }
 lint_hr() { (cd "$HR" && rm -rf .git && git init -q . && git add -A 2>/dev/null; bash "$LINTER" 2>&1); }
 
 # valid: warp with source_repo/branch + worktree=harness + a hook naming an executable script
-printf '#!/usr/bin/env bash\necho hi\n' > "$HR/.loom/scripts/warp-open.sh"; chmod +x "$HR/.loom/scripts/warp-open.sh"
+printf '#!/usr/bin/env bash\necho hi\n' > "$HR/.loom/scripts/warp.sh"; chmod +x "$HR/.loom/scripts/warp.sh"
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
 [warp]
@@ -162,7 +166,7 @@ branch_convention = "feature/<slug>"
 source_repo = "."
 source_branch = "master"
 worktree = "harness"
-hook = "warp-open.sh"'
+hook = "warp.sh"'
 o="$(lint_hr)"; assert_not_contains "$o" "WARP" "valid warp+hook config: no WARP finding"
 
 # invalid: worktree=bogus
@@ -181,7 +185,7 @@ worktree = "always"'
 o="$(lint_hr)"; assert_contains "$o" "missing source_branch" "missing source_branch flagged"
 
 # invalid: hook names a script that exists but is NOT executable
-printf 'echo hi\n' > "$HR/.loom/scripts/dead.sh"; chmod -x "$HR/.loom/scripts/dead.sh"
+printf 'echo hi\n' > "$HR/.loom/scripts/warp.sh"; chmod -x "$HR/.loom/scripts/warp.sh"
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
 [warp]
@@ -189,13 +193,13 @@ branch_convention = "feature/<slug>"
 source_repo = "."
 source_branch = "master"
 worktree = "always"
-hook = "dead.sh"'
+hook = "warp.sh"'
 o="$(lint_hr)"; assert_contains "$o" "not executable" "non-executable hook script flagged"
 
 # valid: inline pipeline hook (not a file under scripts_dir) accepted as-is
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
-[weft]
+[weave]
 cleanup = "ask"
 hook = "git status --porcelain | grep ."'
 o="$(lint_hr)"; assert_not_contains "$o" "HOOK" "inline pipeline hook accepted"

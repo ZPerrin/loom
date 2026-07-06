@@ -5,7 +5,7 @@
 #   - Has frontmatter: sets/replaces the named top-level keys in place (order preserved),
 #     appending any new ones before the closing `---`. Nested/indented keys are left alone.
 # Runs under bash, so shell-reserved names (e.g. zsh's `status`) never bite. Idempotent:
-# the same args twice produce the same file. dress's Write step and /weft both call this.
+# the same args twice produce the same file. dress's Write step and weave both call this.
 set -u
 
 die() { printf 'doc-stamp: %s\n' "$1" >&2; exit 1; }

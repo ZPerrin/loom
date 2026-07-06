@@ -1,4 +1,3 @@
-# loom.toml — loom's own harness config (loom dogfoods its linter/slicer).
 [discovery]
 exclude = ["tests/fixtures", "skills"]
 
@@ -10,18 +9,14 @@ inject_fields = ["updated", "kind", "location"]
 [lint]
 kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
 statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
-meta_denylist = ["off"]   # this repo's subject IS the doc system; the META tripwire would eat its own tail
-
-[skills]
-scripts_dir = ".loom/scripts"   # home for hook scripts, prepended to PATH when a hook runs
 
 [warp]
-branch_convention = "issue/<number>-<slug> | feature/<slug>"  # issue-backed off master | ad-hoc local
-source_repo = "."             # branch from this local repo (a github ref would make /warp <arg> a fetchable issue)
-source_branch = "master"      # new work forks from master
-worktree = "always"           # standardized at ../loom-worktrees/<branch> (see warp.md)
-hook = "warp-open.sh"          # graduated open preamble: branch + worktree + env-source
+branch_convention = "issue/<number>-<slug> | feature/<slug>"
+source_repo = "."
+source_branch = "master"
+worktree = "always"
+hook = "warp.sh"
 
-[weft]
-cleanup = "ask"               # after merge, weft asks whether to delete the merged branch (not the worktree)
-hook = "weft-gate.sh"          # stubbed echo — an extra close-out gate (real checks TBD)
+[weave]
+cleanup = "always"
+rsi = "always"

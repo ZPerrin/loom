@@ -12,8 +12,8 @@
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
-PARSE_AWK="$SELF_DIR/../scripts/lib/parse-toml.awk"
-. "$SELF_DIR/../scripts/lib/discover.sh"
+PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
+. "$SELF_DIR/lib/discover.sh"
 ROOT="$(loom_repo_root)"
 
 MODE="session"
