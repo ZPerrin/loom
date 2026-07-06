@@ -6,14 +6,14 @@ LINTER="$DIR/../scripts/doc-linter"
 
 # Clean fixture: unified frontmatter, no links -> exit 0, reports clean.
 rm -rf "$DIR/fixtures/repo-clean/.git"
-out="$(cd "$DIR/fixtures/repo-clean" && git init -q . && git add -A && bash "$LINTER" 2>&1)"; rc=$?
+out="$(cd "$DIR/fixtures/repo-clean" && test_git_init && git add -A && bash "$LINTER" 2>&1)"; rc=$?
 assert_exit "$rc" "0" "clean fixture exits 0"
 assert_contains "$out" "doc-linter: clean" "clean fixture reports clean"
 rm -rf "$DIR/fixtures/repo-clean/.git"
 
 # Dirty fixture: link + frontmatter findings, NO stamp tier.
 rm -rf "$DIR/fixtures/repo-dirty/.git"
-(cd "$DIR/fixtures/repo-dirty" && git init -q . && git add -A)
+(cd "$DIR/fixtures/repo-dirty" && test_git_init && git add -A)
 dout="$(cd "$DIR/fixtures/repo-dirty" && bash "$LINTER" 2>&1)"; drc=$?
 assert_exit "$drc" "1" "dirty fixture exits 1"
 assert_contains "$dout" "BROKEN"            "reports BROKEN link"
@@ -31,7 +31,7 @@ rm -rf "$DIR/fixtures/repo-dirty/.git"
 # --- Meta prose is editorial judgment, not a linter check ---
 MR="$DIR/fixtures/meta-repo"
 rm -rf "$MR"; mkdir -p "$MR/.loom"
-( cd "$MR" && git init -q . )
+( cd "$MR" && test_git_init )
 printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Docs\n\nThe doc convention ships with the plugin.\nA fine sentence about the actual project.\n' > "$MR/README.md"
 printf '[lint]\nkinds = ["readme", "loom-config"]\nstatuses = ["living"]\n' > "$MR/.loom/loom.toml"
 mo="$(cd "$MR" && bash "$LINTER" 2>&1)"; mrc=$?
@@ -43,7 +43,7 @@ rm -rf "$MR"
 # --- lint vocab and discovery exclusions are config-driven ---
 LR="$DIR/fixtures/lint-config-repo"
 rm -rf "$LR"; mkdir -p "$LR/.loom" "$LR/docs/archive"
-( cd "$LR" && git init -q . )
+( cd "$LR" && test_git_init )
 printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-07-01\n---\n# Home\n' > "$LR/README.md"
 printf -- '---\nkind: playbook\nstatus: frozen\nupdated: 2026-07-01\n---\n# Runbook\n' > "$LR/docs/playbook.md"
 printf -- '---\nkind: nope\nstatus: bogus\nupdated: nope\n---\n# Ignored\n' > "$LR/docs/archive/ignored.md"
@@ -79,7 +79,7 @@ rm -rf "$LR"
 # Optional section; when present, the linter requires the core knobs, valid.
 WR="$DIR/fixtures/warp-repo"
 rm -rf "$WR"; mkdir -p "$WR/.loom"
-( cd "$WR" && git init -q . )
+( cd "$WR" && test_git_init )
 
 # Absent -> no WARP finding, clean exit.
 printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WR/.loom/loom.toml"
@@ -125,7 +125,7 @@ rm -rf "$WR"
 # Single optional knob; when [weave] is present, the linter requires cleanup, valid.
 WV="$DIR/fixtures/weave-repo"
 rm -rf "$WV"; mkdir -p "$WV/.loom"
-( cd "$WV" && git init -q . )
+( cd "$WV" && test_git_init )
 
 # Absent -> no WEAVE finding, clean exit.
 printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$WV/.loom/loom.toml"
@@ -155,7 +155,7 @@ rm -rf "$WV"
 # --- executable-hooks config validation ---
 HR="$DIR/fixtures/hook-lint"; rm -rf "$HR"; mkdir -p "$HR/.loom/scripts"
 mk_toml() { printf '%s\n' "$1" > "$HR/.loom/loom.toml"; }
-lint_hr() { (cd "$HR" && rm -rf .git && git init -q . && git add -A 2>/dev/null; bash "$LINTER" 2>&1); }
+lint_hr() { (cd "$HR" && rm -rf .git && test_git_init && git add -A 2>/dev/null; bash "$LINTER" 2>&1); }
 
 # valid: warp with source_repo/branch + worktree=harness + a hook naming an executable script
 printf '#!/usr/bin/env bash\necho hi\n' > "$HR/.loom/scripts/warp.sh"; chmod +x "$HR/.loom/scripts/warp.sh"
@@ -194,7 +194,13 @@ source_repo = "."
 source_branch = "master"
 worktree = "always"
 hook = "warp.sh"'
-o="$(lint_hr)"; assert_contains "$o" "not executable" "non-executable hook script flagged"
+if [ -x "$HR/.loom/scripts/warp.sh" ]; then
+  o="$(lint_hr)"
+  assert_not_contains "$o" "not executable" "non-executable hook skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"
+  assert_contains "$o" "not executable" "non-executable hook script flagged"
+fi
 
 # valid: inline pipeline hook (not a file under scripts_dir) accepted as-is
 mk_toml '[skills]

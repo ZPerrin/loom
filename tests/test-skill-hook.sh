@@ -10,7 +10,7 @@ printf '#!/usr/bin/env bash\nhelper\n' > "$R/.loom/scripts/warp.sh"
 printf '#!/usr/bin/env bash\necho HELPER_RAN\n' > "$R/.loom/scripts/helper"
 printf '#!/usr/bin/env bash\nexit 7\n' > "$R/.loom/scripts/weave.sh"
 chmod +x "$R/.loom/scripts/warp.sh" "$R/.loom/scripts/helper" "$R/.loom/scripts/weave.sh"
-( cd "$R" && git init -q . )   # standalone repo so git rev-parse resolves here, not loom
+( cd "$R" && test_git_init )   # standalone repo so git rev-parse resolves here, not loom
 
 printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nhook = "warp.sh"\n[weave]\ncleanup = "ask"\nhook = "weave.sh"\n' > "$R/.loom/loom.toml"
 

@@ -6,7 +6,7 @@ SLICER="$DIR/../scripts/doc-slicer"
 R="$DIR/fixtures/slice-repo"
 
 rm -rf "$R/.git"
-( cd "$R" && git init -q . && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: slice repo" )
+( cd "$R" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: slice repo" )
 out="$(cd "$R" && bash "$SLICER" 2>&1)"; rc=$?
 assert_exit "$rc" "0" "slicer exits 0"
 assert_contains "$out" "Bearings"              "emits Bearings heading"
@@ -21,7 +21,7 @@ rm -rf "$R/.git"
 
 # --- query mode: --header pulls one addressable section on demand ---
 rm -rf "$R/.git"
-( cd "$R" && git init -q . && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: slice repo" )
+( cd "$R" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: slice repo" )
 
 # Exact header: section body + provenance, none of the session dressing.
 qo="$(cd "$R" && bash "$SLICER" --header "## Overview" 2>&1)"; qrc=$?
@@ -58,7 +58,7 @@ rm -rf "$R/.git"
 NC="$DIR/fixtures/slice-noconf"
 rm -rf "$NC"; mkdir -p "$NC"
 printf 'plain text, no docs\n' > "$NC/notes.txt"
-( cd "$NC" && git init -q . && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: no conf" )
+( cd "$NC" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: no conf" )
 nout="$(cd "$NC" && bash "$SLICER" 2>&1)"; nrc=$?
 assert_exit "$nrc" "0" "no-config slicer exits 0"
 assert_contains "$nout" "Bearings"      "no-config still emits Bearings"

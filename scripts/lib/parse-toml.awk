@@ -2,7 +2,7 @@
 # One line per scalar; one line per array element (repeated key). Exit 2 on any
 # unsupported construct (array-of-tables, inline table, multiline, unparseable).
 # Subset limits: single-line arrays only; array elements must not contain commas.
-function strip(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+function strip(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
 function dequote(s) {
   s = strip(s)
   if (s ~ /^".*"$/) s = substr(s, 2, length(s) - 2)
@@ -16,10 +16,10 @@ function strip_comment(s,   i, c, inq, out) {
     if (c == "#" && !inq) break
     out = out c
   }
-  sub(/[ \t]+$/, "", out)
+  sub(/[ \t\r]+$/, "", out)
   return out
 }
-{ $0 = strip_comment($0) }
+{ sub(/\r$/, "", $0); $0 = strip_comment($0) }
 /^[ \t]*#/   { next }   # full-line comment
 /^[ \t]*$/   { next }   # blank
 /^[ \t]*\[\[/ { print "parse-toml: unsupported array-of-tables: " $0 > "/dev/stderr"; exit 2 }

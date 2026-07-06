@@ -9,7 +9,7 @@ R="$DIR/fixtures/discover-repo"
 # and a gitignored managed doc at runtime to exercise --others / --exclude-standard,
 # plus a CLAUDE.md-style symlink whose target is already in the universe.
 rm -rf "$R/.git" "$R/untracked.md" "$R/ignored.md" "$R/link.md"
-( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore )
+( cd "$R" && test_git_init && git add a.md b.md sub/c.md .gitignore )
 printf -- '---\nkind: guide\nstatus: living\nupdated: 2026-06-23\n---\n# u\n\nNew, uncommitted.\n' > "$R/untracked.md"
 printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-06-23\n---\n# i\n\nGitignored.\n' > "$R/ignored.md"
 ln -s a.md "$R/link.md"
@@ -41,7 +41,7 @@ rm -rf "$R/.git" "$R/untracked.md" "$R/ignored.md" "$R/link.md"
 rm -rf "$R/.git" "$R/.loom"
 mkdir -p "$R/.loom"
 printf '[discovery]\nexclude = ["sub"]\n' > "$R/.loom/loom.toml"
-( cd "$R" && git init -q . && git add a.md b.md sub/c.md .gitignore .loom/loom.toml )
+( cd "$R" && test_git_init && git add a.md b.md sub/c.md .gitignore .loom/loom.toml )
 xman="$(managed_docs "$R")"
 assert_not_contains "$xman" "sub/c.md" "excluded prefix drops sub/c.md from managed set"
 assert_contains    "$xman" "a.md"     "non-excluded managed doc still present"

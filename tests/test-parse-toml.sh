@@ -27,4 +27,12 @@ assert_contains "$cout" "lint.kinds=readme"              "trailing-comment: read
 assert_contains "$cout" "lint.kinds=guide"               "trailing-comment: guide kind"
 assert_contains "$cout" "context.sections=docs/config/roadmap.md > ## Now" "trailing-comment: ## inside quotes preserved"
 
+CRLF="$F/crlf.toml"
+printf '[discovery]\r\nexclude = ["tests/fixtures", "skills"]\r\n' > "$CRLF"
+crlf_out="$(awk -f "$AWK" "$CRLF" 2>&1)"; crlf_rc=$?
+assert_exit "$crlf_rc" "0" "crlf toml exits 0"
+assert_contains "$crlf_out" "discovery.exclude=tests/fixtures" "crlf toml array element 1"
+assert_contains "$crlf_out" "discovery.exclude=skills" "crlf toml array element 2"
+rm -f "$CRLF"
+
 finish

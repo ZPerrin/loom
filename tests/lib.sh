@@ -26,6 +26,11 @@ assert_exit() { # $1=actual_code $2=expected_code $3=label
   else printf '  FAIL %s (exit %s, expected %s)\n' "$3" "$1" "$2"; FAILS=$((FAILS+1)); fi
 }
 
+test_git_init() {
+  git init -q .
+  git config core.autocrlf false
+}
+
 finish() { # call at end of a test file
   if [ "$FAILS" -ne 0 ]; then printf '%s FAILED\n' "${0##*/}"; exit 1; fi
   printf '%s passed\n' "${0##*/}"

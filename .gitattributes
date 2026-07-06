@@ -1,0 +1,10 @@
+* text=auto
+
+# Bash entrypoints, sourced shell libraries, and test fixtures must stay LF on
+# Windows checkouts. The run-hook wrapper is a bash/cmd polyglot; bash needs LF.
+.gitattributes text eol=lf
+*.sh text eol=lf
+*.toml text eol=lf
+scripts/** text eol=lf
+tests/** text eol=lf
+.loom/scripts/** text eol=lf
