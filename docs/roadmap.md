@@ -24,9 +24,13 @@ updated: 2026-07-12
   nothing, and `doc-linter` reports a vacuous "clean". Fix in the plugin, not per-repo: strip `\r`
   in the frontmatter/section parsers (and audit the other awk/grep comparisons in `scripts/` for
   the same trap), so loom behaves identically on Windows and OS X checkouts regardless of a repo's
-  eol config. Related stumble from the same session: a bare-command `[warp].hook`
-  (`worktree-boot.sh`) didn't resolve via `skill-hook` on Windows git-bash — verify the
-  `.loom/scripts` PATH convention holds there too.
+  eol config. Second Windows breakage, root-caused: `skill-hook`'s
+  `PATH="$ROOT/$scripts_dir:$PATH"` uses `git rev-parse --show-toplevel`, which returns `C:/…` on
+  Git Bash — the drive colon splits the PATH entry, so a bare-command hook never resolves.
+  Normalize with `cygpath -u` (or invoke the hook by path). Also worth absorbing: repos there
+  work around it with `hook = "bash .loom/scripts/<script>"`, and `ln -s` on Git Bash silently
+  copies — boot-style scripts need NTFS junctions/hardlinks (see jack's `worktree-boot.sh
+  link_dir`/`link_file` for a working pattern).
 
 - (post-0.1.0) hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
 
