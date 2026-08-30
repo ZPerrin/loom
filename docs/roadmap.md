@@ -1,7 +1,7 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-07-15
+updated: 2026-08-29
 ---
 # Roadmap
 
@@ -15,6 +15,14 @@ updated: 2026-07-15
 - 0.1.0 Release
 
 ## Next
+
+- **Composable agent context for orchestration.** Explore Loom as a general context-loading
+  workflow rather than a project-session launcher: assemble a compact project baseline that any
+  fresh agent can load quickly, then layer task-, role-, or delegate-specific instructions on top.
+  Keep branch/worktree/team startup optional, and keep RSI as a separate feedback loop rather than
+  coupling it to context assembly. The first design question is the smallest portable context
+  contract a voice coordinator can hand to many short-lived subagents without replaying its own
+  conversation history.
 
 - **Cross-platform line-ending robustness (Windows + OS X) in the plugin itself.** Field finding
   from jack (2026-07-12, Windows 11): a checkout with `core.autocrlf=true` and no `.gitattributes`
