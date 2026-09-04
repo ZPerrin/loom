@@ -1,46 +1,67 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-08-29
+updated: 2026-08-30
 ---
 # Roadmap
 
-## Now
+## 0.2.0 — living specs
 
-- RSI baked into weave as a configuration control surface -> review session and find points of friction -> what helped more than hurt from the provided context, hooks, overrides, documentation etc.  What did any agent stumble on that we could automate or make more streamlined / clear etc.
-- additions are added to the override skills for the next turn -> goal is slowly move prose into deterministic rails if we can, or better context if we cant.
+Temporary capture until the spec skills exist and can hold this themselves. Distilled from the
+2026-08-30 living-specs design session. The bundle's linter and references port; both skills are
+authored fresh — the prototype narrowed scope, it is not the draft.
 
-- final plugin cohesion pass.
+Frame: loom is the portable harness — one plugin, installed into any harness, no external
+dependencies, carrying the daily workflow and context tooling onto whatever repo it is dressed
+onto. `.loom/` is its on-disk home: the config plane it already is (`loom.toml`, per-skill
+overrides) plus a data plane for work state that the repo owner chooses to commit or ignore.
+dress covers the data plane through its existing Propose step and the reference project's control
+surfaces — defaults, or with the operator — not a new flow. Everything ships to Claude Code and
+Codex alike; no harness-specific mechanism on the critical path.
 
-- 0.1.0 Release
+Two spec modalities share one grammar and one authoring skill. Repo specs describe what the code
+does: capability-keyed, committed, at `docs/specs/` or wherever the repo says. Keeping them in
+sync with the codebase is reconciliation's main job, so orchestration can review work against the
+spec separately from reviewing it against a plan. Work specs and plans are orchestration state:
+dated `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/`, listings sorted by
+age, usually uncommitted. A loom.toml key overrides either location; discovery stays kind-based so
+placement never breaks hygiene.
 
-## Next
+Specs are single living documents iterated in place — no draft state, no changes queue; git and
+a change-log section carry history, and frontmatter status carries a spec's life (living,
+hardened, superseded). Ids are the join key across files, so reconciliation targets ids, never
+filenames. Review is ordinary session and commit review; the machine appends to the change log
+and never rewrites Invariants. No index file: the managed set is the index. The grammar is the
+anti-slop device — EARS sentence shapes, RFC-2119 modals, permanent `R-<TOKEN>-<NNN>` ids as
+join keys, scenarios naming their verifying tests, Non-goals fencing scope. Budgets and word-list
+severities are linter config under `[lint.specs]`, defaults shipped, never hardcoded.
+`doc-linter` stays the single entry point and delegates to capability-gated genre checkers — the
+rail.
 
-- **Composable agent context for orchestration.** Explore Loom as a general context-loading
-  workflow rather than a project-session launcher: assemble a compact project baseline that any
-  fresh agent can load quickly, then layer task-, role-, or delegate-specific instructions on top.
-  Keep branch/worktree/team startup optional, and keep RSI as a separate feedback loop rather than
-  coupling it to context assembly. The first design question is the smallest portable context
-  contract a voice coordinator can hand to many short-lived subagents without replaying its own
-  conversation history.
+- [ ] `speclint` behind the `doc-linter` rail: python3-gated, one merged lint stream, budgets and
+      severities from `[lint.specs]`, JSON findings keyed by rule + requirement id.
+- [ ] Spec grammar and writing rules as `references/`, re-ratified for the single-document model;
+      wrong/right/why form kept.
+- [ ] Skill: spec authoring — draft or extend a capability spec against the grammar, lint-clean
+      before presenting. References load on invoke by the most deterministic mechanism the harness
+      allows; a prose read-trigger is the floor, not the plan.
+- [ ] Skill: spec reconciliation — the descendant of `refine-docs`, sibling to weft (weft fights
+      slop, reconciliation fights drift). Evidence order tests > code > sampled runtime; brownfield
+      is reconciliation against an empty spec; findings land as change-log lines plus proposed
+      edits, never silent rewrites (drifted behavior may be the bug).
+- [ ] Example spec as `tests/fixtures/` lint fixtures, conforming and violating.
+- [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all
+      slicing; whoever dispatches pushes, whoever works pulls.
+- [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
+      few hard constraints, output contract, graph only where topology demands it) with
+      constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled in.
+      Ground the format in the ablation runs under Ideas before it hardens.
+- [ ] Review the orchestrator repo piece by piece for what ports — work-handoff and working-note
+      templates, the pull-first stance, a `.loom/` data-plane layout. Nothing absorbed wholesale;
+      the repo likely retires into the bare `.loom` + `.git` workspace pattern.
 
-- **Cross-platform line-ending robustness (Windows + OS X) in the plugin itself.** Field finding
-  from jack (2026-07-12, Windows 11): a checkout with `core.autocrlf=true` and no `.gitattributes`
-  puts `\r` on every line, and the awk frontmatter parser in `scripts/lib/discover.sh` compares
-  `$0 != "---"` literally — so *every* doc reads as unmanaged. The failure is silent and total:
-  SessionStart injects only git bearings (no configured slices), `doc-slicer --header` finds
-  nothing, and `doc-linter` reports a vacuous "clean". Fix in the plugin, not per-repo: strip `\r`
-  in the frontmatter/section parsers (and audit the other awk/grep comparisons in `scripts/` for
-  the same trap), so loom behaves identically on Windows and OS X checkouts regardless of a repo's
-  eol config. Second Windows breakage, root-caused: `skill-hook`'s
-  `PATH="$ROOT/$scripts_dir:$PATH"` uses `git rev-parse --show-toplevel`, which returns `C:/…` on
-  Git Bash — the drive colon splits the PATH entry, so a bare-command hook never resolves.
-  Normalize with `cygpath -u` (or invoke the hook by path). Also worth absorbing: repos there
-  work around it with `hook = "bash .loom/scripts/<script>"`, and `ln -s` on Git Bash silently
-  copies — boot-style scripts need NTFS junctions/hardlinks (see jack's `worktree-boot.sh
-  link_dir`/`link_file` for a working pattern).
-
-- (post-0.1.0) hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
+Deferred: any dispatch mechanism beyond hand-authored handoffs, the RSI grading signal for slice
+recipes, and the vendoring build that emits standalone skill directories from the one source.
 
 ## Ideas
 
@@ -53,9 +74,16 @@ updated: 2026-08-29
   - **RSI retro as the grader.** Each retro that records "pass missed X, operator caught X" is a labeled datum; the exemplar gallery grows from real misses, the only place taste data comes from. The shuttle ledger miss is datum #1.
 - taxonomy + rsi = powerful enough to codify into harness?
 
-## Milestones
+- skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
+  element present or absent, two or three objective tasks, `speclint` pass rate as the
+  deterministic grader plus one judge rubric — to learn which scaffolding earns its lines before
+  the meta-reference hardens. Then keep ablating as maintenance: delete a step or block from a
+  skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
+  compensations only older models needed.
 
-- [x] Prove-out across varied external repos
-- [ ] Smoke-test the install on Claude + Codex
-- [ ] Official git repository (final home)
-- [ ] Codify marketplace publishing
+- hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
+
+- the rail loosens the shell-only constraint: a genre checker behind `doc-linter` may use python
+  or anything present, since the entry point degrades cleanly when it is absent. Decide whether
+  the bash 3.2 + awk core stays pure, or whether the rail is now the portability guarantee. The
+  Windows field findings in history (`ed9f30b`, `a33fe3e`) are evidence for that decision.
