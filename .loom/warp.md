@@ -52,3 +52,7 @@ updated: 2026-09-05
 - 2026-09-05 (s2): `[warp] worktree = "harness"` leaves `hook = "warp.sh"` pointing at a script
   whose job is to create the worktree. Next warp decides: retire warp.sh, or cut it to env-source
   only. The 2026-08-29 slug experiment is moot under harness.
+- 2026-09-05 (s2 weave): One mutation per command in landing chains. `git merge -F -` does not
+  read a heredoc, the tool shell ignored `set -e`, and the chain went on to delete the merged
+  branch on a merge that never happened. Recoverable only because the worktree's detached HEAD
+  was the commit. Merge with `-m`; check the merge landed before any cleanup.
