@@ -71,7 +71,8 @@ oracle_tuples() { # $1=blanked file -> sorted "rule<TAB>line<TAB>id" lines
   python3 "$ORACLE" lint "$1" --json 2>/dev/null | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-rows = sorted(set((f["rule"], f["line"], f.get("id") or "") for f in d["findings"]))
+WHOLE = {"G005", "G006", "R009"}  # whole-document findings: line is nominal (oracle pins 1, awk the first content line)
+rows = sorted(set((f["rule"], 0 if f["rule"] in WHOLE else f["line"], f.get("id") or "") for f in d["findings"]))
 for r in rows:
     print(str(r[0]) + "\t" + str(r[1]) + "\t" + str(r[2]))
 '
@@ -88,7 +89,7 @@ for line in sys.stdin:
     if not line:
         continue
     f = json.loads(line)
-    rows.add((f["rule"], f["line"], f.get("id") or ""))
+    rows.add((f["rule"], 0 if f["rule"] in {"G005", "G006", "R009"} else f["line"], f.get("id") or ""))
 for r in sorted(rows):
     print(str(r[0]) + "\t" + str(r[1]) + "\t" + str(r[2]))
 '
