@@ -91,8 +91,9 @@ hook = "weave.sh"
 | `[context].inject_fields` | frontmatter fields prefixed onto slices; `location` is path-derived | `doc-slicer` |
 | `[lint].kinds` | allowed `kind` frontmatter values                                   | `doc-linter` |
 | `[lint].statuses` | allowed `status` frontmatter values                                 | `doc-linter` |
-| `[lint.specs].max_norm_words`, `.max_line_words`, `.max_purpose_sentences`, `.max_scenarios`, `.max_file_lines` | spec-check budgets; shipped defaults 30, 30, 3, 8, 400 | `doc-linter` |
+| `[lint.specs].max_norm_words`, `.max_purpose_sentences`, `.max_scenarios`, `.max_file_lines` | spec-check budgets; shipped defaults 30, 3, 8, 400 | `doc-linter` |
 | `[lint.specs].banned`, `.flagged` | words appended to the checker's built-in lists; banned fails, flagged warns | `doc-linter` |
+| `[lint.specs].ears` | EARS shape check: `strict` (default) fails, `warn` warns, `off` skips; the one-modal rule holds regardless | `doc-linter` |
 | `[specs].repo_dir` | home of capability-keyed repo specs (default `docs/specs`)          | `doc-linter`, spec skills |
 | `[specs].work_dir` | home of dated work specs (default `.loom/specs`)                    | `doc-linter`, spec skills |
 | `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter`, spec skills |
