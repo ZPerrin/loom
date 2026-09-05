@@ -1,7 +1,7 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-08-30
+updated: 2026-09-05
 ---
 # Roadmap
 
@@ -35,11 +35,12 @@ and never rewrites Invariants. No index file: the managed set is the index. The 
 anti-slop device — EARS sentence shapes, RFC-2119 modals, permanent `R-<TOKEN>-<NNN>` ids as
 join keys, scenarios naming their verifying tests, Non-goals fencing scope. Budgets and word-list
 severities are linter config under `[lint.specs]`, defaults shipped, never hardcoded.
-`doc-linter` stays the single entry point and delegates to capability-gated genre checkers — the
-rail.
+`doc-linter` stays the single entry point and grows per-kind checks in its own bash + awk; the
+spec parser is shared with the slicer when slicing lands.
 
-- [ ] `speclint` behind the `doc-linter` rail: python3-gated, one merged lint stream, budgets and
-      severities from `[lint.specs]`, JSON findings keyed by rule + requirement id.
+- [x] spec checks in `doc-linter` (2026-09-05): `lib/lint-spec.awk` ports the bundle's linter
+      rule-for-rule, budgets and word lists from `[lint.specs]`, SPEC fails and SPECWARN warns,
+      `json=1` findings keyed by rule + id. The python original survives only as a test oracle.
 - [ ] Spec grammar and writing rules as `references/`, re-ratified for the single-document model;
       wrong/right/why form kept.
 - [ ] Skill: spec authoring — draft or extend a capability spec against the grammar, lint-clean
@@ -83,7 +84,6 @@ recipes, and the vendoring build that emits standalone skill directories from th
 
 - hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
 
-- the rail loosens the shell-only constraint: a genre checker behind `doc-linter` may use python
-  or anything present, since the entry point degrades cleanly when it is absent. Decide whether
-  the bash 3.2 + awk core stays pure, or whether the rail is now the portability guarantee. The
-  Windows field findings in history (`ed9f30b`, `a33fe3e`) are evidence for that decision.
+- shell-only constraint reaffirmed 2026-09-05 (spec checks ported to awk rather than shelling
+  out to python). The Windows field findings in history (`ed9f30b`, `a33fe3e`) remain the open
+  portability debt of that choice.
