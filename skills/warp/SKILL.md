@@ -21,7 +21,6 @@ These are the surfaces `warp` reads or writes directly. The full `.loom/loom.tom
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` |
-| `[warp].source_branch` | base branch new work forks from |
 | `[warp].hook` | optional session-open command, run via `skill-hook` |
 | `.loom/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
 | `.loom/scripts/*` | conventional home for hook scripts |
@@ -66,7 +65,7 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 - Hook exit `0`: verify the working directory and continue.
 - Hook exit `3`: no hook; open by hand.
 - Other hook exit: surface the failure, then fall back to the prose floor unless git safety blocks.
-- Manual open: name the branch from `branch_convention`, branch from `source_repo` / `source_branch`, and apply `worktree`.
+- Manual open: name the branch from `branch_convention`, fork from the checkout warp was invoked on unless the invocation names a base, and apply `worktree`.
 - `worktree = always|ask` means the session works inside the worktree; verify `pwd` before the first edit.
 - `worktree = harness` delegates worktree creation to the host harness; a hook there handles only residual setup.
 - Never discard, stash, switch away from, or move uncommitted work without confirmation.

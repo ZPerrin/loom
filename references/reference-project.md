@@ -73,7 +73,6 @@ dir = ".loom/plans"
 branch_convention = "feature/<slug>"
 worktree = "harness"
 source_repo = "."
-source_branch = "master"
 hook = "warp.sh"
 
 [weave]
@@ -102,7 +101,6 @@ hook = "weave.sh"
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>`            | `warp` |
-| `[warp].source_branch` | base branch new work forks from                                     | `warp` |
 | `[warp].hook` | optional session-open command or script                             | `warp`, `skill-hook` |
 | `[weave].cleanup` | session-close branch cleanup preference                             | `weave` |
 | `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) | `weave` |

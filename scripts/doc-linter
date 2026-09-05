@@ -228,15 +228,13 @@ check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a
 
 check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
   printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
-  local bc sr sb wt wh
+  local bc sr wt wh
   bc="$(cfg_get warp.branch_convention)"
   sr="$(cfg_get warp.source_repo)"
-  sb="$(cfg_get warp.source_branch)"
   wt="$(cfg_get warp.worktree)"
   wh="$(cfg_get warp.hook)"
   [ -n "$bc" ] || add "WARP     .loom/loom.toml: [warp] missing branch_convention"
   [ -n "$sr" ] || add "WARP     .loom/loom.toml: [warp] missing source_repo"
-  [ -n "$sb" ] || add "WARP     .loom/loom.toml: [warp] missing source_branch"
   case "$wt" in
     always|never|ask|harness) ;;
     "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask|harness)" ;;
