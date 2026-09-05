@@ -1,5 +1,5 @@
 # lint-spec.awk — grammar + writing-rule checks for one loom spec doc (bash 3.2 + awk, no deps).
-# Port of the living-specs oracle (speclint.py lint) for ratified specs: G/P/R/S/L/W rule families,
+# Port of the living-specs bundle's speclint.py (lint) for ratified specs: G/P/R/S/L/W rule families,
 # same (rule, line, id) per finding. Delta files (# Delta:) are not linted and produce no output.
 # Leading YAML frontmatter (--- … ---) is skipped; reported line numbers are the file's own.
 # Usage: awk -v rel=<repo-relative path> [-v json=1] \
@@ -17,13 +17,13 @@
 
 BEGIN {
   if (max_norm_words == "") max_norm_words = 30
-  if (max_line_words == "") max_line_words = 30   # accepted per contract; the oracle defines but never applies it
+  if (max_line_words == "") max_line_words = 30   # accepted for symmetry; speclint.py defined but never applied it it
   if (max_purpose_sentences == "") max_purpose_sentences = 3
   if (max_scenarios == "") max_scenarios = 8
   if (max_file_lines == "") max_file_lines = 400
   doc_start = 1                                   # first line after frontmatter: where whole-doc findings land
 
-  # Word lists, verbatim from the oracle. W001 errors = vague/unverifiable terms; W002 warnings =
+  # Word lists, verbatim from speclint.py. W001 errors = vague/unverifiable terms; W002 warnings =
   # weak verbs. Matched longest-first, case-insensitive, not inside a larger word or hyphenation.
   nban = words("appropriate|adequate|robust|seamless|seamlessly|user-friendly|intuitive|flexible" \
                "|efficient|efficiently|easy|easily|simple|simply|quick|quickly|timely|comprehensive" \
@@ -40,7 +40,7 @@ BEGIN {
   ORDER["Non-goals"] = 3; ORDER["Drift log"] = 4
   last_idx = -1
   # Sections whose ### blocks parse as requirements. The delta ones are unknown in a spec (G002),
-  # but the oracle still parses their blocks, so mirror it.
+  # but speclint.py still parsed their blocks, so mirror it.
   REQSEC["Requirements"] = 1; REQSEC["ADDED Requirements"] = 1
   REQSEC["MODIFIED Requirements"] = 1; REQSEC["REMOVED Requirements"] = 1
   for (i = 1; i < 32; i++) CTL[sprintf("%c", i)] = sprintf("\\u%04x", i)
@@ -147,7 +147,7 @@ END {
 
     for (r = 1; r <= nreq; r++) {
       id = R_id[r]
-      if (R_sec[r] == "REMOVED Requirements") {                           # R007: never legit in a spec, but the oracle checks it wherever parsed
+      if (R_sec[r] == "REMOVED Requirements") {                           # R007: never legit in a spec, but speclint.py checks it wherever parsed
         if (R_nline[r] || R_ns[r]) add("error", "R007", R_line[r], id, "REMOVED block is the header line only")
         continue
       }
@@ -196,7 +196,7 @@ function lower(s,   i, n, c, o) {                    # ASCII case fold; other by
   for (i = 1; i <= n; i++) { c = substr(s, i, 1); o = o ((c in LOW) ? LOW[c] : c) }
   return o
 }
-function sort_len(A, n,   i, j, t) {                 # stable, longest first — the oracle's alternation order
+function sort_len(A, n,   i, j, t) {                 # stable, longest first — speclint.py's alternation order
   for (i = 2; i <= n; i++) {
     t = A[i]; j = i - 1
     while (j >= 1 && length(A[j]) < length(t)) { A[j + 1] = A[j]; j-- }
@@ -280,7 +280,7 @@ function jstr(s,   i, c, o, n) {                     # JSON string literal
   }
   return "\"" o "\""
 }
-function emit(   i, j, k, idx) {                     # stable order by line, as the oracle sorts
+function emit(   i, j, k, idx) {                     # stable order by line, as speclint.py sorts
   for (i = 1; i <= nf; i++) idx[i] = i
   for (i = 2; i <= nf; i++) {
     k = idx[i]; j = i - 1

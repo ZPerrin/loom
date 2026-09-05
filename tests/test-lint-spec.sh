@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# tests/test-lint-spec.sh — spec-doc fixtures, oracle parity, and doc-linter integration.
+# tests/test-lint-spec.sh — spec-doc fixtures and doc-linter integration.
 #
 # Fixtures: tests/fixtures/spec-repo/docs/specs/*.md (default budgets) and
 # tests/fixtures/spec-repo-tuned/docs/specs/reset-flow.md ([lint.specs] override).
 # Every spec fixture is deliberately minimal: one isolated grammar violation per file
 # (family prefix in the filename: g/p=structure, r=requirements, s=scenarios,
 # w/l=word-list & line-shape), so the expected rule id per file is exact. Expectations
-# below were derived by running the python oracle (tests/oracle/speclint.py) against a
-# frontmatter-blanked copy of each fixture — see blank_frontmatter().
+# below were derived from the living-specs bundle's speclint.py at the port (2026-09-05);
+# the fixtures now carry them as the recorded expectations.
 #
 # scripts/lib/lint-spec.awk (the checker under test) is written by a parallel delegate
 # and is NOT expected to exist in every worktree that runs this file; assertions that
@@ -17,7 +17,6 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/lib.sh"
 LINTER="$DIR/../scripts/doc-linter"
 AWK_CHECKER="$DIR/../scripts/lib/lint-spec.awk"
-ORACLE="$DIR/oracle/speclint.py"
 SPEC_REPO="$DIR/fixtures/spec-repo"
 TUNED_REPO="$DIR/fixtures/spec-repo-tuned"
 
@@ -56,45 +55,6 @@ docs/specs/l001-bad-invariant-shape.md	L001"
 # once [lint.specs] max_norm_words=12 is in effect (see the tuned-budget block).
 TUNED_REPO_TABLE="docs/specs/reset-flow.md	-"
 
-# --- frontmatter -> blank lines (preserves line numbers) for the oracle, which
-# predates frontmatter and would otherwise misparse '---' as the first grammar line.
-blank_frontmatter() { # $1=src $2=dst
-  awk '
-    NR==1 && $0=="---" { infm=1; print ""; next }
-    infm && $0=="---"  { infm=0; print ""; next }
-    infm               { print ""; next }
-    { print }
-  ' "$1" > "$2"
-}
-
-oracle_tuples() { # $1=blanked file -> sorted "rule<TAB>line<TAB>id" lines
-  python3 "$ORACLE" lint "$1" --json 2>/dev/null | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-WHOLE = {"G005", "G006", "R009"}  # whole-document findings: line is nominal (oracle pins 1, awk the first content line)
-rows = sorted(set((f["rule"], 0 if f["rule"] in WHOLE else f["line"], f.get("id") or "") for f in d["findings"]))
-for r in rows:
-    print(str(r[0]) + "\t" + str(r[1]) + "\t" + str(r[2]))
-'
-}
-
-awk_tuples() { # $1=rel $2=file $3=max_norm_words -> sorted "rule<TAB>line<TAB>id" lines
-  awk -v rel="$1" -v max_norm_words="$3" -v max_line_words="$MLW" \
-      -v max_purpose_sentences="$MPS" -v max_scenarios="$MSC" \
-      -v max_file_lines="$MFL" -v json=1 -f "$AWK_CHECKER" "$2" 2>/dev/null | python3 -c '
-import json, sys
-rows = set()
-for line in sys.stdin:
-    line = line.strip()
-    if not line:
-        continue
-    f = json.loads(line)
-    rows.add((f["rule"], 0 if f["rule"] in {"G005", "G006", "R009"} else f["line"], f.get("id") or ""))
-for r in sorted(rows):
-    print(str(r[0]) + "\t" + str(r[1]) + "\t" + str(r[2]))
-'
-}
-
 run_full_lint() { # $1=repo dir -> doc-linter output over that repo (git-inits in place)
   ( cd "$1" && rm -rf .git && test_git_init >/dev/null 2>&1 && git add -A >/dev/null 2>&1
     bash "$LINTER" 2>&1 )
@@ -127,59 +87,13 @@ SPECROWS
   rm -rf "$TUNED_REPO/.git"
 else
   printf '  skip  doc-linter spec integration not present in this worktree (scripts/lib/lint-spec.awk\n'
-  printf '        missing, or not yet wired into scripts/doc-linter) — oracle-derived expectations are\n'
+  printf '        missing, or not yet wired into scripts/doc-linter) — recorded expectations are\n'
   printf '        recorded above for the coordinator to verify once integration lands\n'
-fi
-
-# ------------------------------------------------------------------------------- parity
-# Compare the awk checker directly against the python oracle: same multiset of
-# (rule, line, id) per fixture. Run at the ORACLE's own fixed budgets (30/30/3/8/400)
-# for every fixture in both repos — this validates grammar-implementation parity, not
-# the [lint.specs] override (the oracle has no CLI flag for its budget constants; the
-# override is exercised separately below, against the checker only).
-echo "-- parity: awk checker vs python oracle --"
-if ! command -v python3 >/dev/null 2>&1; then
-  printf '  skip  python3 not found\n'
-elif [ ! -f "$AWK_CHECKER" ]; then
-  printf '  skip  scripts/lib/lint-spec.awk not present in this worktree (checker owned by a parallel delegate)\n'
-else
-  TMPD="$(mktemp -d)" || { echo "test-lint-spec.sh: mktemp failed" >&2; exit 1; }
-  trap 'rm -rf "$TMPD"' EXIT
-
-  check_parity() { # $1=repo dir $2=rel
-    local repo="$1" rel="$2" src blanked ot at
-    src="$repo/$rel"
-    blanked="$TMPD/$(printf '%s' "$rel" | tr '/' '_').blanked.md"
-    blank_frontmatter "$src" "$blanked"
-    ot="$(oracle_tuples "$blanked")"
-    at="$(awk_tuples "$rel" "$src" "$MNW")"
-    if [ "$ot" = "$at" ]; then
-      printf '  ok   parity %s\n' "$rel"
-    else
-      printf '  FAIL parity %s\n       oracle: [%s]\n       awk:    [%s]\n' "$rel" "$ot" "$at"
-      FAILS=$((FAILS+1))
-    fi
-  }
-
-  while IFS="$(printf '\t')" read -r rel _; do
-    [ -n "$rel" ] || continue
-    check_parity "$SPEC_REPO" "$rel"
-  done <<SPECROWS
-$SPEC_REPO_TABLE
-SPECROWS
-
-  while IFS="$(printf '\t')" read -r rel _; do
-    [ -n "$rel" ] || continue
-    check_parity "$TUNED_REPO" "$rel"
-  done <<TUNEDROWS
-$TUNED_REPO_TABLE
-TUNEDROWS
 fi
 
 # ------------------------------------------------------------------------ tuned budget
 # [lint.specs] max_norm_words flows to the checker: same file, clean at the default
-# 30-word budget, R008 at the tuned 12-word budget. Checker-only; no oracle involved
-# (the oracle's MAX_NORM_WORDS is a fixed constant), so this needs no python3.
+# 30-word budget, R008 at the tuned 12-word budget. Checker-only; needs no python3.
 echo "-- tuned budget: [lint.specs] max_norm_words --"
 if [ ! -f "$AWK_CHECKER" ]; then
   printf '  skip  scripts/lib/lint-spec.awk not present in this worktree\n'

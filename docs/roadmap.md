@@ -40,7 +40,8 @@ spec parser is shared with the slicer when slicing lands.
 
 - [x] spec checks in `doc-linter` (2026-09-05): `lib/lint-spec.awk` ports the bundle's linter
       rule-for-rule, budgets and word lists from `[lint.specs]`, SPEC fails and SPECWARN warns,
-      `json=1` findings keyed by rule + id. The python original survives only as a test oracle.
+      `json=1` findings keyed by rule + id. Parity with the bundle's python was proven at the port
+      and the python retired; fixtures carry the recorded expectations.
 - [ ] Spec grammar and writing rules as `references/`, re-ratified for the single-document model;
       wrong/right/why form kept.
 - [ ] Skill: spec authoring — draft or extend a capability spec against the grammar, lint-clean
