@@ -5,54 +5,48 @@ updated: 2026-09-05
 ---
 # Warp
 
+## Opening
+
+The harness bases the session worktree on the checkout it is launched from; release work is
+launched from the release worktree.
+
+## Delegation
+
+Three sessions of one shape, zero mid-run questions:
+
+- A shared contract file (invocation, output shape, portability floor) plus one handoff per
+  delegate — Objective, Scope in and out, Constraints, Acceptance, Return — with every path pushed
+  into the prompt. Handoffs cite behavior by reference (file, section, rule, fixture) and never
+  restate it; a delegate trusts the reference over the brief.
+- The brief names the base commit and the delegate verifies it before its first edit. The
+  coordinator makes the delegate's worktree off the session commit (`git worktree add -b <branch>
+  <path> <sha>`); harness worktree isolation bases on the main checkout, which under a release
+  branch is every commit behind.
+- Acceptance lines are the delegate's own actions ("you ran `bash tests/run` and it printed ALL
+  TESTS PASSED"), never a repo state. Forbidden git verbs are spelled out: stash, checkout, switch,
+  reset, clean, rebase, merge, worktree, push. The coordinator is the single writer and merges
+  `--no-ff`.
+- Sonnet by default; Haiku only where a deterministic grader scores the output.
+
+## Discourse
+
+Options plus a recommendation, depth on request. Three sessions in, the operator still catches
+substantive misses, so brevity is not hiding signal; the gate summary carries the remaining detail.
+
 ## Experiments
 
-- 2026-08-29: Exercise configured hooks through `skill-hook` with required positional arguments before relying on them. The current bare `hook = "warp.sh"` invocation drops Warp's slug, forcing the prose-floor fallback even though the repository hook itself works.
-- 2026-09-05: Scaffold sweep before the human gate. Session 1 shipped a python "oracle" under
-  `tests/` that had finished its job the moment the awk port was proven; the operator caught it by
-  diffing in the IDE. Before presenting a gate, list every file the session added with its job
-  going forward — no job, no file — and carry a "kept as scaffolding, because…" line in the gate
-  summary. Candidate to graduate into weave's Check step.
-- 2026-09-05: Delegation shape that worked — a shared contract file plus per-delegate work
-  handoffs (Objective / Scope in-out / Constraints / Acceptance / Return), paths pushed into the
-  prompt, delegates in worktree isolation committing on their own branch, coordinator as single
-  writer merging `--no-ff`. Zero mid-run questions across two delegates. Reuse it for session 3
-  and measure whether that holds when the task is prose rather than code.
-- 2026-09-05: State precedence in handoffs. My brief named the wrong rule id; the delegate trusted
-  the reference implementation over my prose and was right. Handoffs should cite behavior by
-  reference (file, rule, fixture), never restate it.
-- 2026-09-05: Model choice per delegate. The Sonnet delegate (fixtures) used the most tool calls;
-  the Fable delegate (awk port) found a real portability bug. Next well-specified delegate: run the
-  same handoff on Haiku and Sonnet, compare tool calls and correctness against the suite.
-- 2026-09-05: Verify, then mutate. A landing script ran `git rm` before a python step that failed
-  to parse, leaving the tree briefly inconsistent. Landing edits assert first; destructive commands
-  last.
-- 2026-09-05: Discourse experiment — options plus a recommendation, depth on request — held for a
-  full build session and the operator still caught a substantive miss, so brevity did not hide
-  signal. Keep it; the gate summary is where the remaining detail must live.
-- 2026-09-05: `Skill loom:weave` resolved as unknown in a Cowork-spawned session although listed
-  at startup; the fallback was reading `skills/weave/SKILL.md` directly. Check plugin skill
-  namespacing in this harness before relying on skill invocation in delegates.
-- 2026-09-05 (s2): Acceptance lines describe the delegate's own actions, never a repo state. "git
-  status shows no changes from you" led a Haiku delegate to `git stash` the coordinator's worktree
-  to make it true; the shared stash stack carried the session's edits until recovered by SHA.
-- 2026-09-05 (s2): Read-only delegates get the forbidden verbs spelled out (stash, checkout, reset,
-  clean, add, commit) and the fact that the tree holds uncommitted operator edits. Scope-out prose
-  ("do not write") did not cover state changes.
-- 2026-09-05 (s2): Model datum, same handoff five times. Haiku 13 and 11 calls, Sonnet 8, 7, 5.
-  Haiku copied the reference wholesale (every section, every doc restamped); Sonnet held the
-  minimum and under-proposed. Sonnet is the default for judgment delegates; Haiku only where a
-  deterministic grader scores the output.
 - 2026-09-05 (s2): An exit line that reads "skill X proposes Y" needs the fixture, the model, and
   the run count fixed in the plan. A dressed fixture reads as a retune and pulls every model toward
-  the minimum; test greenfield adoption on an undressed one.
-- 2026-09-05 (s2): dress's Survey prose describes doc-scan sections (top-level dirs, exclusions,
-  code signals) doc-scan no longer emits; Sonnet read the script source to resolve it. Fix on the
-  next dress touch; candidate tripwire for weft: skill prose naming a script's output.
-- 2026-09-05 (s2): `[warp] worktree = "harness"` leaves `hook = "warp.sh"` pointing at a script
-  whose job is to create the worktree. Next warp decides: retire warp.sh, or cut it to env-source
-  only. The 2026-08-29 slug experiment is moot under harness.
-- 2026-09-05 (s2 weave): One mutation per command in landing chains. `git merge -F -` does not
-  read a heredoc, the tool shell ignored `set -e`, and the chain went on to delete the merged
-  branch on a merge that never happened. Recoverable only because the worktree's detached HEAD
-  was the commit. Merge with `-m`; check the merge landed before any cleanup.
+  the minimum; test greenfield adoption on an undressed one. Apply at the next plan edit.
+- 2026-09-05 (s2): dress's Survey prose describes doc-scan sections doc-scan no longer emits;
+  Sonnet read the script source to resolve it. Fix on the next dress touch; candidate tripwire for
+  weft: skill prose naming a script's output.
+- 2026-09-05 (s3): Prose delegation is still unmeasured; the coordinator wrote both references.
+  Next prose task: hand one document to a Sonnet delegate from a brief that cites the doc
+  convention, and compare it against the coordinator's own draft.
+- 2026-09-05 (s3): An input the plan depends on gets a durable path the moment it exists. The
+  research survey lived only in a prior session's scratchpad and had to be hunted. Test: session 4
+  opens without a hunt.
+- 2026-09-05 (s3): A delegate scoped to "conform to X" does not see scaffolding as its job; the
+  session-1 guards survived γ's pass and the coordinator swept them after merge. Try naming the
+  sweep in the brief's Acceptance and see whether the coordinator's own sweep then finds nothing.
