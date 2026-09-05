@@ -51,10 +51,12 @@ spec parser is shared with the slicer when slicing lands.
       and no graph; references load by skill-time injection with a prose floor beneath it, so a
       harness that renders the line literally still loads both. Its first run wrote
       `docs/specs/spec-lint.md`: 28 requirements, lint-clean, nine scenarios still without a test.
-- [ ] Skill: spec reconciliation — the descendant of `refine-docs`, sibling to weft (weft fights
-      slop, reconciliation fights drift). Evidence order tests > code > sampled runtime; brownfield
-      is reconciliation against an empty spec; findings land as change-log lines plus proposed
-      edits, never silent rewrites (drifted behavior may be the bug).
+- [x] Skill: spec reconciliation (2026-09-05): `skills/refine-spec`, the descendant of
+      `refine-docs`, sibling to weft (weft fights slop, refine-spec fights drift). Evidence order
+      tests > code > a sampled run, findings keyed by id, confirm before anything is written;
+      brownfield is the same pass against no spec, and every block is written by `spec`. Findings
+      land as `-> open` change-log lines and a work spec, never a silent rewrite. Its first run
+      reconciled `docs/specs/spec-lint.md`: nine untested scenarios, no drift.
 - [x] Example spec as `tests/fixtures/` lint fixtures, conforming and violating (2026-09-05): one
       conforming capability, one violation per file named by rule, knob repos for `[lint.specs]`.
 - [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all

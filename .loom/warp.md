@@ -31,11 +31,15 @@ Four sessions of one shape, zero mid-run questions:
   the coordinator's sweep after merge then finds content, not scaffolding.
 - An exit line that names a model's behavior fixes the fixture, the model, and the run count.
 - Sonnet by default; Haiku only where a deterministic grader scores the output.
-- Prose delegation, measured (s4): a Sonnet draft of a skill from a brief citing the doc
+- Prose delegation, measured (s4, s5): a Sonnet draft of a skill from a brief citing the doc
   convention is a usable skeleton and a second reviewer; the lines that carry judgment (what the
-  evidence must be, what is never written, the confirm boundary) came from the coordinator. Use a
-  delegate for the second draft or the review, not the first draft. A spec authored by Sonnet
-  through the skill's prose floor came back lint-clean in one pass.
+  evidence must be, what is never written, the confirm boundary) came from the coordinator. The
+  coordinator drafts, checks the draft against the last gate's misses, then a Sonnet reviewer
+  briefed with those misses and the nearest sibling reads it: four real defects in six minutes
+  (s5), and the gate raised none. A spec authored or reconciled by Sonnet through a skill's
+  prose floor comes back lint-clean in one pass.
+- Repo opinion follows the first run: `.loom/spec.md` written before its run carried a rule the
+  grammar forbade; `.loom/refine-spec.md` written from the run's report held (s5).
 
 ## Discourse
 
@@ -48,15 +52,19 @@ remaining detail.
 - 2026-09-05 (s2): dress's Survey prose describes doc-scan sections doc-scan no longer emits;
   Sonnet read the script source to resolve it. Fix on the next dress touch; candidate tripwire for
   weft: skill prose naming a script's output.
-- 2026-09-05 (s4): The reference-load injection line in `skills/spec` is docs-verified only:
-  project skills enumerate at session start and a nested `claude -p` cannot log in. Test: a fresh
-  session with `claude --plugin-dir <checkout>` invoking `/loom:spec` shows the grammar in the
-  loaded skill. If the `!` shell lacks `CLAUDE_PLUGIN_ROOT`, try `${CLAUDE_SKILL_DIR}/../../`
-  before settling on the prose floor.
-- 2026-09-05 (s4): The operator's gate caught three skill-prose misses the coordinator's review
-  passed: a contract narrating the skill about itself with a roadmap note in it, a sibling
-  skill's rule leaking in, and no propose-confirm boundary before durable text is written. Check
-  the next skill draft (5) against those three before the gate; test: the gate finds none.
-- 2026-09-05 (s4): Repo opinion written before its first run is a hypothesis: `.loom/spec.md`'s
-  test-ref rule allowed spaces the grammar forbids, and the delegate caught it. Write the opinion
-  after the first run, or stamp it provisional; test: 5's opinion survives its first run unchanged.
+- 2026-09-05 (s4): The reference-load injection line in `skills/spec` and `skills/refine-spec`
+  is docs-verified only: project skills enumerate at session start and a nested `claude -p`
+  cannot log in. Test: a fresh session with `claude --plugin-dir <checkout>` invoking
+  `/loom:spec` shows the grammar in the loaded skill. If the `!` shell lacks
+  `CLAUDE_PLUGIN_ROOT`, try `${CLAUDE_SKILL_DIR}/../../` before settling on the prose floor.
+- 2026-09-05 (s5): An acceptance line named a file count ("the two files in scope") where the
+  skill permits writing nothing; the delegate argued with the brief and was right. Acceptance
+  names the outcome set the skill allows, never a file count. Test: 6's briefs need no such
+  argument in a Return.
+- 2026-09-05 (s5): A Sonnet run read a test's clean expectation (a conforming fixture reports
+  nothing) as no assertion and missed the one undocumented behavior with a test; refine-spec's
+  Compare step now names clean expectations. Test: the next run on a repo with a conforming
+  fixture reports it, or the sentence goes.
+- 2026-09-05 (s5): Test-ref resolution is prose (refine-spec's Read step, `.loom/spec.md`'s
+  broken-ref rule with no enforcer); the delegate did it by hand with `grep -F`. Candidate for
+  determinism when 7 touches the parser: a rule that resolves every `-> ref` against the tree.

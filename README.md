@@ -15,7 +15,7 @@ It's also very much a work in progress.
 
 ## Abstract
 
-You get 5 skills, two ways to configure them, and a small docs harness around both.
+You get 6 skills, two ways to configure them, and a small docs harness around both.
 
 | skills | what it does |
 |---|---|
@@ -24,6 +24,7 @@ You get 5 skills, two ways to configure them, and a small docs harness around bo
 | [weave](skills/weave/SKILL.md) | closes a working session: preferred commit/merge pattern, checks, and distillation into managed documentation |
 | [weft](skills/weft/SKILL.md) | editorializes managed documentation as a one-off pass to keep it cohesive and slop free (see [the editorial ethos](references/doc-convention.md)) |
 | [spec](skills/spec/SKILL.md) | authors or extends one capability's living spec under the [spec grammar](references/spec-grammar.md), lint-clean before it is presented |
+| [refine-spec](skills/refine-spec/SKILL.md) | reconciles one capability's spec against its tests and code and reports drift by requirement id; the writing goes back through spec |
 
 | control surface | what it does |
 |---|---|
