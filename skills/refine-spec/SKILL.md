@@ -44,14 +44,14 @@ The repo spec if one exists, `.loom/spec.md`, the tests the scenarios name and t
 
 ### 2. Compare
 
-Walk the spec by id: for each requirement and scenario, what the evidence says. Then walk the evidence for what the spec does not say. Classify each divergence:
+Walk the spec by id: for each requirement and scenario, what the evidence says. Then walk the evidence for what the spec does not say: every assertion a test makes, a clean expectation included, and every branch the code takes. Classify each divergence:
 
 - **Undocumented:** behavior the evidence asserts and no id covers.
 - **Drift:** the evidence contradicts a requirement or scenario; either side may be the bug.
 - **Unverified:** a scenario without a test ref, a ref that resolves to nothing, or a requirement without a scenario.
 - **Dead:** no test and no code path exercises the requirement.
 
-An existing change-log line that already records the observation under the id is a finding already open: cite it, do not log it again.
+An existing change-log line that already records the observation under the id is a finding already open: cite it, do not log it again. A finding `doc-linter` already reports by id is carried in the report from the lint output, not logged; the change log holds what only this pass observed.
 
 ### 3. Confirm
 
