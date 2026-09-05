@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Use when a capability needs a living spec written or extended under the loom spec grammar, as a repo spec of what the code does or a work spec of what one unit of work will make true. Fits "spec this", "write the requirements", or "capture what this does before we change it".
+description: Use when the user asks to spec a capability, write its requirements, or capture what the code does before changing it. Produces a repo spec of what the code does or a work spec of what one unit of work will make true, under the loom spec grammar.
 ---
 
 ## Spec
