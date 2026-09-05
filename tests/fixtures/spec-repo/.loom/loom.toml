@@ -1,0 +1,3 @@
+[lint]
+kinds = ["readme", "spec"]
+statuses = ["living"]
