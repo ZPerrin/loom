@@ -38,5 +38,6 @@ IF token validation fails, THEN the system SHALL return HTTP 401 within 200 ms.
 ## Non-goals
 - N-1: SSO federation is owned by capability sso.
 
-## Drift log
-- 2026-08-28 R-AUTH-003: production config sets a 30-minute idle timeout -> proposal align-idle-timeout
+## Change log
+- 2026-08-28 R-AUTH-003: production config sets a 30-minute idle timeout -> open
+- 2026-09-05 N-1: sso capability confirmed as owner; non-goal stands as written -> kept
