@@ -4,8 +4,8 @@
 # Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs);
 #         SPEC / SPECWARN (kind: spec docs, via lib/lint-spec.awk — warnings print but do not fail).
 #         LINT / LAYOUT / WARP / WEAVE / HOOK (loom.toml sections valid iff present).
-# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + word lists,
-#         [specs]/[plans] locations) or embedded defaults.
+# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + ears + word
+#         lists, [specs]/[plans] locations) or embedded defaults.
 # Usage: doc-linter                 — full lint of the managed set.
 #        doc-linter --links [FILE…] — link checks only (BROKEN/CODELINK/MISSING) over the given
 #                                      files, or the whole non-excluded doc universe if none given;
@@ -54,16 +54,17 @@ STATUSES="${RAW_STATUSES:-$DEFAULT_STATUSES}"
 CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-.loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
 SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/scripts}"; SCRIPTS_DIR="${SCRIPTS_DIR%/}"
 
-# [lint.specs]: budgets and word lists for the spec checker. Defaults here mirror lib/lint-spec.awk;
-# the toml overrides them, and banned/flagged arrays append to the checker's built-in lists.
+# [lint.specs]: budgets, the ears knob, and word lists for the spec checker. Defaults here mirror
+# lib/lint-spec.awk; the toml overrides them, and banned/flagged arrays append to the checker's
+# built-in lists.
 SPEC_AWK="$SELF_DIR/lib/lint-spec.awk"
-SPEC_BUDGET_KEYS="max_norm_words max_line_words max_purpose_sentences max_scenarios max_file_lines"
+SPEC_BUDGET_KEYS="max_norm_words max_purpose_sentences max_scenarios max_file_lines"
 spec_cfg() { local v; v="$(cfg_get "lint.specs.$1")"; printf '%s' "${v:-$2}"; }
 SPEC_MAX_NORM="$(spec_cfg max_norm_words 30)"
-SPEC_MAX_LINE="$(spec_cfg max_line_words 30)"
 SPEC_MAX_PURPOSE="$(spec_cfg max_purpose_sentences 3)"
 SPEC_MAX_SCEN="$(spec_cfg max_scenarios 8)"
 SPEC_MAX_LINES="$(spec_cfg max_file_lines 400)"
+SPEC_EARS="$(spec_cfg ears strict)"
 SPEC_BANNED="$(cfg_get lint.specs.banned | paste -s -d '|' -)"
 SPEC_FLAGGED="$(cfg_get lint.specs.flagged | paste -s -d '|' -)"
 
@@ -166,9 +167,9 @@ check_spec() { # $1=file — kind: spec docs run through the awk checker; tab-se
       *)     warn "SPECWARN $rel:$ln: $msg${rid:+ [$rid]} ($rule)" ;;
     esac
   done < <(LC_ALL=C awk -v rel="$rel" \
-               -v max_norm_words="$SPEC_MAX_NORM" -v max_line_words="$SPEC_MAX_LINE" \
+               -v max_norm_words="$SPEC_MAX_NORM" \
                -v max_purpose_sentences="$SPEC_MAX_PURPOSE" -v max_scenarios="$SPEC_MAX_SCEN" \
-               -v max_file_lines="$SPEC_MAX_LINES" \
+               -v max_file_lines="$SPEC_MAX_LINES" -v ears="$SPEC_EARS" \
                -v extra_banned="$SPEC_BANNED" -v extra_flagged="$SPEC_FLAGGED" \
                -f "$SPEC_AWK" "$f")
 }
@@ -212,6 +213,11 @@ check_lint_config() {
       0*|*[!0-9]*) add "LINT     .loom/loom.toml: [lint.specs] $key=$v not a positive integer" ;;
     esac
   done
+  v="$(cfg_get lint.specs.ears)"       # [lint.specs].ears is optional; strict|warn|off iff set
+  case "$v" in
+    ""|strict|warn|off) ;;
+    *) add "LINT     .loom/loom.toml: [lint.specs] ears=$v not strict|warn|off" ;;
+  esac
 }
 
 check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a relative in-repo path
@@ -228,15 +234,13 @@ check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a
 
 check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
   printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
-  local bc sr sb wt wh
+  local bc sr wt wh
   bc="$(cfg_get warp.branch_convention)"
   sr="$(cfg_get warp.source_repo)"
-  sb="$(cfg_get warp.source_branch)"
   wt="$(cfg_get warp.worktree)"
   wh="$(cfg_get warp.hook)"
   [ -n "$bc" ] || add "WARP     .loom/loom.toml: [warp] missing branch_convention"
   [ -n "$sr" ] || add "WARP     .loom/loom.toml: [warp] missing source_repo"
-  [ -n "$sb" ] || add "WARP     .loom/loom.toml: [warp] missing source_branch"
   case "$wt" in
     always|never|ask|harness) ;;
     "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask|harness)" ;;

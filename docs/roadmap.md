@@ -42,8 +42,11 @@ spec parser is shared with the slicer when slicing lands.
       rule-for-rule, budgets and word lists from `[lint.specs]`, SPEC fails and SPECWARN warns,
       `json=1` findings keyed by rule + id. Parity with the bundle's python was proven at the port
       and the python retired; fixtures carry the recorded expectations.
-- [ ] Spec grammar and writing rules as `references/`, re-ratified for the single-document model;
-      wrong/right/why form kept.
+- [x] Spec grammar and writing rules as `references/` (2026-09-05): `spec-grammar.md` and
+      `spec-writing-rules.md`, re-ratified for the single-document model — two modalities on one
+      grammar, a change log in place of the drift log, status lifecycle, OpenSpec's diffability
+      answered, `[lint.specs].ears = strict|warn|off`. Wrong/right/why form kept; three rules folded
+      from the survey (no placeholders, cut words never the shape, scenarios cover the failure path).
 - [ ] Skill: spec authoring — draft or extend a capability spec against the grammar, lint-clean
       before presenting. References load on invoke by the most deterministic mechanism the harness
       allows; a prose read-trigger is the floor, not the plan.
@@ -51,7 +54,8 @@ spec parser is shared with the slicer when slicing lands.
       slop, reconciliation fights drift). Evidence order tests > code > sampled runtime; brownfield
       is reconciliation against an empty spec; findings land as change-log lines plus proposed
       edits, never silent rewrites (drifted behavior may be the bug).
-- [ ] Example spec as `tests/fixtures/` lint fixtures, conforming and violating.
+- [x] Example spec as `tests/fixtures/` lint fixtures, conforming and violating (2026-09-05): one
+      conforming capability, one violation per file named by rule, knob repos for `[lint.specs]`.
 - [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all
       slicing; whoever dispatches pushes, whoever works pulls.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
@@ -60,7 +64,9 @@ spec parser is shared with the slicer when slicing lands.
       Ground the format in the ablation runs under Ideas before it hardens.
 - [ ] Review the orchestrator repo piece by piece for what ports — work-handoff and working-note
       templates, the pull-first stance, a `.loom/` data-plane layout. Nothing absorbed wholesale;
-      the repo likely retires into the bare `.loom` + `.git` workspace pattern.
+      the repo likely retires into the bare `.loom` + `.git` workspace pattern. Delegate handoffs and
+      their returns are the first candidate for a third data-plane directory; the session 1–3
+      instances are filed with the plan's inputs.
 
 Deferred: any dispatch mechanism beyond hand-authored handoffs, the RSI grading signal for slice
 recipes, and the vendoring build that emits standalone skill directories from the one source.
@@ -83,7 +89,10 @@ recipes, and the vendoring build that emits standalone skill directories from th
   skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
   compensations only older models needed.
 
-- hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
+- hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction. warp.sh retired
+  2026-09-05: under `worktree = "harness"` the open hook's job was done before it could run, and its
+  env-source died with skill-hook's child shell. Before adding a hook, name what survives the child
+  process — effects on disk do, environment does not.
 
 - shell-only constraint reaffirmed 2026-09-05 (spec checks ported to awk rather than shelling
   out to python). The Windows field findings in history (`ed9f30b`, `a33fe3e`) remain the open

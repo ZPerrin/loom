@@ -73,7 +73,6 @@ dir = ".loom/plans"
 branch_convention = "feature/<slug>"
 worktree = "harness"
 source_repo = "."
-source_branch = "master"
 hook = "warp.sh"
 
 [weave]
@@ -92,8 +91,9 @@ hook = "weave.sh"
 | `[context].inject_fields` | frontmatter fields prefixed onto slices; `location` is path-derived | `doc-slicer` |
 | `[lint].kinds` | allowed `kind` frontmatter values                                   | `doc-linter` |
 | `[lint].statuses` | allowed `status` frontmatter values                                 | `doc-linter` |
-| `[lint.specs].max_norm_words`, `.max_line_words`, `.max_purpose_sentences`, `.max_scenarios`, `.max_file_lines` | spec-check budgets; shipped defaults 30, 30, 3, 8, 400 | `doc-linter` |
+| `[lint.specs].max_norm_words`, `.max_purpose_sentences`, `.max_scenarios`, `.max_file_lines` | spec-check budgets; shipped defaults 30, 3, 8, 400 | `doc-linter` |
 | `[lint.specs].banned`, `.flagged` | words appended to the checker's built-in lists; banned fails, flagged warns | `doc-linter` |
+| `[lint.specs].ears` | EARS shape check: `strict` (default) fails, `warn` warns, `off` skips; the one-modal rule holds regardless | `doc-linter` |
 | `[specs].repo_dir` | home of capability-keyed repo specs (default `docs/specs`)          | `doc-linter`, spec skills |
 | `[specs].work_dir` | home of dated work specs (default `.loom/specs`)                    | `doc-linter`, spec skills |
 | `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter`, spec skills |
@@ -102,7 +102,6 @@ hook = "weave.sh"
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>`            | `warp` |
-| `[warp].source_branch` | base branch new work forks from                                     | `warp` |
 | `[warp].hook` | optional session-open command or script                             | `warp`, `skill-hook` |
 | `[weave].cleanup` | session-close branch cleanup preference                             | `weave` |
 | `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) | `weave` |

@@ -1,11 +1,13 @@
 # lint-spec.awk — grammar + writing-rule checks for one loom spec doc (bash 3.2 + awk, no deps).
-# Port of the living-specs bundle's speclint.py (lint) for ratified specs: G/P/R/S/L/W rule families,
-# same (rule, line, id) per finding. Delta files (# Delta:) are not linted and produce no output.
-# Leading YAML frontmatter (--- … ---) is skipped; reported line numbers are the file's own.
+# Rooted in the living-specs bundle's speclint.py: G/P/R/S/L/W rule families, same
+# (rule, line, id) per finding. There is no change-queue or delta file; any first line
+# other than '# Capability: <slug>' is G001, with no special case for the retired delta
+# form. Leading YAML frontmatter (--- … ---) is skipped; reported line numbers are the
+# file's own.
 # Usage: awk -v rel=<repo-relative path> [-v json=1] \
-#            [-v max_norm_words=30 -v max_line_words=30 -v max_purpose_sentences=3] \
-#            [-v max_scenarios=8 -v max_file_lines=400] \
-#            [-v extra_banned='p1|p2' -v extra_flagged='w1|w2'] -f lint-spec.awk FILE
+#            [-v max_norm_words=30 -v max_purpose_sentences=3 -v max_scenarios=8 -v max_file_lines=400] \
+#            [-v ears=strict|warn|off] [-v extra_banned='p1|p2' -v extra_flagged='w1|w2'] \
+#            -f lint-spec.awk FILE
 # Output: text  <sev>\t<rule>\t<line>\t<rid>\t<message>       sev error|warn; rid may be empty
 #         json  {"file":…,"severity":…,"rule":…,"line":N,"id":…,"message":…}   one per line
 # Exit 0 always; the caller decides pass/fail. Portable awk (BSD + gawk): no interval quantifiers,
@@ -17,10 +19,10 @@
 
 BEGIN {
   if (max_norm_words == "") max_norm_words = 30
-  if (max_line_words == "") max_line_words = 30   # accepted for symmetry; speclint.py defined but never applied it it
   if (max_purpose_sentences == "") max_purpose_sentences = 3
   if (max_scenarios == "") max_scenarios = 8
   if (max_file_lines == "") max_file_lines = 400
+  if (ears == "") ears = "strict"                 # strict|warn|off; governs R003 only (see below)
   doc_start = 1                                   # first line after frontmatter: where whole-doc findings land
 
   # Word lists, verbatim from speclint.py. W001 errors = vague/unverifiable terms; W002 warnings =
@@ -37,12 +39,9 @@ BEGIN {
   sort_len(BAN, nban); sort_len(FLG, nflg)
 
   ORDER["Purpose"] = 0; ORDER["Invariants"] = 1; ORDER["Requirements"] = 2
-  ORDER["Non-goals"] = 3; ORDER["Drift log"] = 4
+  ORDER["Non-goals"] = 3; ORDER["Change log"] = 4
   last_idx = -1
-  # Sections whose ### blocks parse as requirements. The delta ones are unknown in a spec (G002),
-  # but speclint.py still parsed their blocks, so mirror it.
-  REQSEC["Requirements"] = 1; REQSEC["ADDED Requirements"] = 1
-  REQSEC["MODIFIED Requirements"] = 1; REQSEC["REMOVED Requirements"] = 1
+  REQSEC["Requirements"] = 1                      # only section whose ### blocks parse as requirements
   for (i = 1; i < 32; i++) CTL[sprintf("%c", i)] = sprintf("\\u%04x", i)
   for (i = 1; i <= 26; i++) LOW[substr("ABCDEFGHIJKLMNOPQRSTUVWXYZ", i, 1)] = substr("abcdefghijklmnopqrstuvwxyz", i, 1)
   alnum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"   # \w, ASCII
@@ -57,7 +56,6 @@ BEGIN {
   if ($0 == "" || $0 ~ /^[ \t]*<!--/) next
   if (kind == "") {                                                       # first content line names the doc
     if ($0 ~ /^# Capability: [a-z0-9][a-z0-9-]*$/) kind = "spec"
-    else if ($0 ~ /^# Delta: [a-z0-9][a-z0-9-]*$/) { delta = 1; exit }
     else { add("error", "G001", NR, "", "first line must be '# Capability: <slug>'"); kind = "spec" }   # G001
     next
   }
@@ -85,7 +83,7 @@ BEGIN {
       req = 0; scen = 0; next
     }
     req = ++nreq; scen = 0
-    R_id[req] = id; R_line[req] = NR; R_sec[req] = sec; R_nline[req] = 0; R_ns[req] = 0
+    R_id[req] = id; R_line[req] = NR; R_nline[req] = 0; R_ns[req] = 0
     TOK[tok] = 1
     title = $0; sub(/^### R-[A-Z0-9]+-[0-9][0-9][0-9]: /, "", title)
     check_words(NR, title, id, 0)                                         # W001 on the title
@@ -127,7 +125,6 @@ BEGIN {
 }
 
 END {
-  if (delta) exit 0
   if (NR > max_file_lines) add("warn", "G005", NR, "", "file exceeds " max_file_lines " lines; split the capability")   # G005: wc -l count
   if (kind == "spec") {
     if (!("Purpose" in seen_sec)) add("error", "G006", doc_start, "", "missing section '## Purpose'")             # G006
@@ -143,19 +140,15 @@ END {
 
     shape_check("Invariants", "^- INV-[0-9]+: [^ \t].*\\.$", "'- INV-<n>: <sentence>.'")   # L001
     shape_check("Non-goals", "^- N-[0-9]+: [^ \t].*\\.$", "'- N-<n>: <sentence>.'")
-    drift_check()
+    changelog_check()
 
     for (r = 1; r <= nreq; r++) {
       id = R_id[r]
-      if (R_sec[r] == "REMOVED Requirements") {                           # R007: never legit in a spec, but speclint.py checks it wherever parsed
-        if (R_nline[r] || R_ns[r]) add("error", "R007", R_line[r], id, "REMOVED block is the header line only")
-        continue
-      }
       if (R_nline[r] == 0) add("error", "R002", R_line[r], id, "missing normative sentence")   # R002
       else {
         n = R_norm[r]; ln = R_nline[r]
-        if (n !~ /^(WHERE [^,]+, )?(WHILE [^,]+, )?(WHEN [^,]+, |IF [^,]+, THEN )?[Tt]he system (SHALL|MUST) .+\.$/)   # R003: EARS shape
-          add("error", "R003", ln, id, "normative sentence must fit an EARS shape (WHERE/WHILE/WHEN/IF …, the system SHALL …)")
+        if (ears != "off" && n !~ /^(WHERE [^,]+, )?(WHILE [^,]+, )?(WHEN [^,]+, |IF [^,]+, THEN )?[Tt]he system (SHALL|MUST) .+\.$/)   # R003: EARS shape
+          add((ears == "warn" ? "warn" : "error"), "R003", ln, id, "normative sentence must fit an EARS shape (WHERE/WHILE/WHEN/IF …, the system SHALL …)")
         if (nword(n, "SHALL|MUST") != 1) add("error", "R004", ln, id, "exactly one SHALL/MUST per requirement")   # R004
         if (nword(n, "SHOULD|MAY") > 0)                                                                            # R005
           add("warn", "R005", ln, id, "SHOULD/MAY is non-binding — ratified requirements use SHALL/MUST")
@@ -177,7 +170,6 @@ END {
     for (t in TOK) ntok++
     if (ntok > 1) add("error", "R009", doc_start, "", "mixed ID tokens in one capability: " tok_list())   # R009: one TOKEN per capability
     for (r = 1; r <= nreq; r++) {                                                                        # R010: IDs are permanent and unique
-      if (R_sec[r] == "REMOVED Requirements") continue
       id = R_id[r]
       if (id in first) add("error", "R010", R_line[r], id, "duplicate id " id " (first at line " first[id] ")")
       else first[id] = R_line[r]
@@ -223,14 +215,14 @@ function shape_check(name, re, shape,   i) {         # L001 for Invariants / Non
     else check_words(BL[name, i], BT[name, i], "", 1)
   }
 }
-function drift_check(   i, t, ok, tok) {             # L001 for Drift log: '- YYYY-MM-DD <R-ID|INV-n>: <finding>' (no word checks)
-  for (i = 1; i <= nb["Drift log"]; i++) {
-    t = BT["Drift log", i]; ok = 0
-    if (t ~ /^- [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] (R-[A-Z0-9]+-[0-9][0-9][0-9]|INV-[0-9]+): [^ \t]/) {
+function changelog_check(   i, t, ok, tok) {         # L001 for Change log: '- YYYY-MM-DD <R-ID|INV-n|N-n>: <text>' (no word checks)
+  for (i = 1; i <= nb["Change log"]; i++) {
+    t = BT["Change log", i]; ok = 0
+    if (t ~ /^- [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] (R-[A-Z0-9]+-[0-9][0-9][0-9]|INV-[0-9]+|N-[0-9]+): [^ \t]/) {
       ok = 1
       if (substr(t, 14, 2) == "R-") { tok = substr(t, 16); sub(/-.*$/, "", tok); ok = (length(tok) >= 2 && length(tok) <= 8) }
     }
-    if (!ok) add("error", "L001", BL["Drift log", i], "", "line must match '- YYYY-MM-DD <ID>: <finding>'")
+    if (!ok) add("error", "L001", BL["Change log", i], "", "line must match '- YYYY-MM-DD <ID>: <text>'")
   }
 }
 function check_words(ln, text, rid, flagged,   lt) { # W001 always, W002 when flagged; each phrase once per line
