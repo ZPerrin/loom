@@ -47,9 +47,10 @@ spec parser is shared with the slicer when slicing lands.
       grammar, a change log in place of the drift log, status lifecycle, OpenSpec's diffability
       answered, `[lint.specs].ears = strict|warn|off`. Wrong/right/why form kept; three rules folded
       from the survey (no placeholders, cut words never the shape, scenarios cover the failure path).
-- [ ] Skill: spec authoring — draft or extend a capability spec against the grammar, lint-clean
-      before presenting. References load on invoke by the most deterministic mechanism the harness
-      allows; a prose read-trigger is the floor, not the plan.
+- [x] Skill: spec authoring (2026-09-05): `skills/spec`, house format with six hard constraints
+      and no graph; references load by skill-time injection with a prose floor beneath it, so a
+      harness that renders the line literally still loads both. Its first run wrote
+      `docs/specs/spec-lint.md`: 28 requirements, lint-clean, nine scenarios still without a test.
 - [ ] Skill: spec reconciliation — the descendant of `refine-docs`, sibling to weft (weft fights
       slop, reconciliation fights drift). Evidence order tests > code > sampled runtime; brownfield
       is reconciliation against an empty spec; findings land as change-log lines plus proposed

@@ -14,5 +14,5 @@ without the hyphen.
 ## Test refs
 
 Tests are bash scripts with assertion labels and table-driven fixtures. A test ref is
-`tests/<file>#<fragment>`, where the fragment is a fixture stem or a run of label words that
+`tests/<file>#<fragment>`, where the fragment is a fixture stem or another whitespace-free string that
 `grep -F` finds in that file. A ref that greps to nothing is a broken ref.

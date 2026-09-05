@@ -33,7 +33,7 @@ These are the surfaces `spec` reads or writes directly. The full `.loom/loom.tom
 - **Evidence first.** A normative sentence and its scenarios come from a test, then from code, then from a run you sampled, and a scenario names the test it came from. What no evidence shows is a change-log line ending `-> open`, not a block.
 - **One file.** spec writes the spec and nothing else: no code, test, or config edit to make a scenario true. Drift you notice while reading is an `-> open` line, whichever side is wrong.
 - **Never an invariant.** Propose one in your report; never write or edit a line under `## Invariants`.
-- **Mint from the sequence.** Read the highest number in the repo spec and any open work spec before adding an id.
+- **Mint from the sequence.** Read the highest number in the repo spec and any open work spec before adding an id; a new spec starts at 001.
 - **Status is the owner's.** A new spec is `living`; an existing spec keeps the status it has.
 
 ## Workflow
@@ -60,4 +60,4 @@ The grammar and the writing rules spec obeys:
 
 !`cat "${CLAUDE_PLUGIN_ROOT}/references/spec-grammar.md" "${CLAUDE_PLUGIN_ROOT}/references/spec-writing-rules.md" 2>/dev/null || true`
 
-If they are not above this line, read [spec-grammar.md](../../references/spec-grammar.md) and [spec-writing-rules.md](../../references/spec-writing-rules.md) before drafting.
+If the line above shows a command instead of the grammar, read [spec-grammar.md](../../references/spec-grammar.md) and [spec-writing-rules.md](../../references/spec-writing-rules.md) before drafting.

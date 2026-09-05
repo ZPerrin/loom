@@ -6,12 +6,11 @@ updated: 2026-09-05
 # Capability: spec-lint
 
 ## Purpose
-spec-lint is the set of checks doc-linter runs against any document whose frontmatter names
-kind: spec, wherever in the repo that document lives. It grades the document's structure, its
-requirements' shape, its scenarios' shape, and its word choice against the spec grammar, and it
-reports each violation as a failing SPEC error or a printed, non-failing SPECWARN. The repo_dir
-and work_dir keys under [specs] tell the spec skill where to write a document, not where
-spec-lint looks; spec-lint checks a kind: spec document at any path.
+spec-lint is the set of checks doc-linter runs against every managed document whose frontmatter
+names kind: spec. It grades the document's structure, its requirements' shape, its scenarios'
+shape, and its word choice against the spec grammar, and it reports each violation as a failing
+SPEC error or a printed, non-failing SPECWARN. The [specs] keys tell the spec skill where to
+write a document, not where spec-lint looks.
 
 ## Requirements
 ### R-SPECLINT-001: First line names the capability (G001)
@@ -261,4 +260,5 @@ WHEN a kind: spec finding has warn severity, the system SHALL classify it as SPE
 - N-1: BROKEN/CODELINK/MISSING link checks, FRONTMATTER and PLACEMENT checks, and the non-spec loom.toml section checks (LINT's own [lint] kinds and statuses, LAYOUT, WARP, WEAVE, HOOK) belong to doc-linter's other capabilities.
 
 ## Change log
-- 2026-09-05 R-SPECLINT-024: an invalid [lint.specs] budget value reports a LINT finding but still reaches the awk checker unchanged, so that budget's own check silently never fires -> open
+- 2026-09-05 R-SPECLINT-024: an invalid [lint.specs] budget reports a LINT finding yet still reaches the checker, where a non-numeric value disables that budget's check and a zero, negative, or partly numeric one trips it on every sentence -> open
+- 2026-09-05 R-SPECLINT-016: the grammar says INV-n and N-n ids follow the same uniqueness law; the checker tests only R ids -> open
