@@ -1,7 +1,7 @@
 {
   "name": "loom",
   "version": "0.1.0",
-  "description": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
+  "description": "A docs & context harness for Claude Code and Codex — five skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
   "author": {
     "name": "Zebulon Perrin"
   },
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Loom",
     "shortDescription": "Docs & context harness for lean, routed docs",
-    "longDescription": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
+    "longDescription": "A docs & context harness for Claude Code and Codex — five skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
     "developerName": "Zebulon Perrin",
     "category": "Productivity",
     "capabilities": [
@@ -28,7 +28,8 @@
       "dress this project",
       "warp us into jira-12348",
       "weave us back into master",
-      "weft our project documentation"
+      "weft our project documentation",
+      "spec the auth-session capability"
     ]
   }
 }

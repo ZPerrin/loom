@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-07-06
+updated: 2026-09-05
 ---
 # loom
 
@@ -15,7 +15,7 @@ It's also very much a work in progress.
 
 ## Abstract
 
-You get 4 skills, two ways to configure them, and a small docs harness around both.
+You get 5 skills, two ways to configure them, and a small docs harness around both.
 
 | skills | what it does |
 |---|---|
@@ -23,6 +23,7 @@ You get 4 skills, two ways to configure them, and a small docs harness around bo
 | [warp](skills/warp/SKILL.md) | starts a working session: worktree and branch creation, context gathering, and any configured preamble |
 | [weave](skills/weave/SKILL.md) | closes a working session: preferred commit/merge pattern, checks, and distillation into managed documentation |
 | [weft](skills/weft/SKILL.md) | editorializes managed documentation as a one-off pass to keep it cohesive and slop free (see [the editorial ethos](references/doc-convention.md)) |
+| [spec](skills/spec/SKILL.md) | authors or extends one capability's living spec under the [spec grammar](references/spec-grammar.md), lint-clean before it is presented |
 
 | control surface | what it does |
 |---|---|

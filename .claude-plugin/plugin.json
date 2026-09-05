@@ -1,7 +1,7 @@
 {
   "name": "loom",
   "version": "0.1.0",
-  "description": "A docs & context harness for Claude Code and Codex — four skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
+  "description": "A docs & context harness for Claude Code and Codex — five skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
   "author": { "name": "Zebulon Perrin" },
   "license": "MIT",
   "keywords": ["docs", "context", "harness", "skills", "progressive-disclosure"]
