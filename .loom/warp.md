@@ -33,3 +33,22 @@ updated: 2026-09-05
 - 2026-09-05: `Skill loom:weave` resolved as unknown in a Cowork-spawned session although listed
   at startup; the fallback was reading `skills/weave/SKILL.md` directly. Check plugin skill
   namespacing in this harness before relying on skill invocation in delegates.
+- 2026-09-05 (s2): Acceptance lines describe the delegate's own actions, never a repo state. "git
+  status shows no changes from you" led a Haiku delegate to `git stash` the coordinator's worktree
+  to make it true; the shared stash stack carried the session's edits until recovered by SHA.
+- 2026-09-05 (s2): Read-only delegates get the forbidden verbs spelled out (stash, checkout, reset,
+  clean, add, commit) and the fact that the tree holds uncommitted operator edits. Scope-out prose
+  ("do not write") did not cover state changes.
+- 2026-09-05 (s2): Model datum, same handoff five times. Haiku 13 and 11 calls, Sonnet 8, 7, 5.
+  Haiku copied the reference wholesale (every section, every doc restamped); Sonnet held the
+  minimum and under-proposed. Sonnet is the default for judgment delegates; Haiku only where a
+  deterministic grader scores the output.
+- 2026-09-05 (s2): An exit line that reads "skill X proposes Y" needs the fixture, the model, and
+  the run count fixed in the plan. A dressed fixture reads as a retune and pulls every model toward
+  the minimum; test greenfield adoption on an undressed one.
+- 2026-09-05 (s2): dress's Survey prose describes doc-scan sections (top-level dirs, exclusions,
+  code signals) doc-scan no longer emits; Sonnet read the script source to resolve it. Fix on the
+  next dress touch; candidate tripwire for weft: skill prose naming a script's output.
+- 2026-09-05 (s2): `[warp] worktree = "harness"` leaves `hook = "warp.sh"` pointing at a script
+  whose job is to create the worktree. Next warp decides: retire warp.sh, or cut it to env-source
+  only. The 2026-08-29 slug experiment is moot under harness.
