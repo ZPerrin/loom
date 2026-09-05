@@ -3,7 +3,9 @@
 # Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
 # Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs);
 #         SPEC / SPECWARN (kind: spec docs, via lib/lint-spec.awk — warnings print but do not fail).
-# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + word lists) or embedded defaults.
+#         LINT / LAYOUT / WARP / WEAVE / HOOK (loom.toml sections valid iff present).
+# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + word lists,
+#         [specs]/[plans] locations) or embedded defaults.
 # Usage: doc-linter                 — full lint of the managed set.
 #        doc-linter --links [FILE…] — link checks only (BROKEN/CODELINK/MISSING) over the given
 #                                      files, or the whole non-excluded doc universe if none given;
@@ -212,6 +214,18 @@ check_lint_config() {
   done
 }
 
+check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a relative in-repo path
+  [ -f "$CONF" ] || return 0
+  local key v
+  for key in specs.repo_dir specs.work_dir plans.dir; do
+    v="$(cfg_get "$key")"
+    case "$v" in
+      "") ;;
+      /*|../*|*/../*|*/..|..) add "LAYOUT   .loom/loom.toml: [${key%%.*}] ${key#*.}=$v must be a relative path inside the repo" ;;
+    esac
+  done
+}
+
 check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
   printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
   local bc sr sb wt wh
@@ -282,6 +296,7 @@ else
     [ "$k" = "spec" ] && check_spec "$f"
   done < <(managed_docs "$ROOT")
   check_lint_config
+  check_layout_config
   check_warp_config
   check_weave_config
 fi

@@ -14,7 +14,7 @@ statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
 branch_convention = "issue/<number>-<slug> | feature/<slug>"
 source_repo = "."
 source_branch = "master"
-worktree = "always"
+worktree = "harness"
 hook = "warp.sh"
 
 [weave]

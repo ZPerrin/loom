@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-07-05
+updated: 2026-09-05
 ---
 # Reference Project
 
@@ -11,6 +11,7 @@ Calibration only. Do not copy this shape wholesale; use it to recognize what a m
 
 ```text
 example/
+  .gitignore
   AGENTS.md
   README.md
   frontend/README.md
@@ -18,11 +19,28 @@ example/
   infra/README.md
   docs/README.md
   docs/roadmap.md
+  docs/specs/<capability>.md
   .loom/loom.toml
   .loom/warp.md
   .loom/weave.md
   .loom/scripts/warp.sh
   .loom/scripts/weave.sh
+  .loom/specs/yyyy-mm-dd-<slug-or-issue>.md
+  .loom/plans/yyyy-mm-dd-<slug-or-issue>.md
+```
+
+`.loom/` is two planes. The config plane is `loom.toml`, the per-skill overrides, and `scripts/`.
+The data plane is `specs/` and `plans/`: dated work state, listed by age. Whether that state is
+committed is the owner's one adoption decision; a dressed repo has answered it, in `.gitignore` or
+by committing the directories. The example ignores them. Repo specs are not work state; they are
+capability-keyed, committed, and live under `docs/specs/`. Every location has a `loom.toml`
+override; discovery is kind-based, so moving a doc never breaks hygiene.
+
+## Example `.gitignore`
+
+```text
+.loom/specs/
+.loom/plans/
 ```
 
 ## Example `.loom/loom.toml`
@@ -40,9 +58,20 @@ inject_fields = ["updated", "kind", "location"]
 kinds = ["readme", "reference", "roadmap", "spec", "plan", "design", "review", "loom-config"]
 statuses = ["living", "hardened", "superseded", "ideation"]
 
+[lint.specs]            # spec-check budgets and word lists; omit a key to take its shipped default
+max_norm_words = 24
+flagged = ["robust"]
+
+[specs]                 # defaults shown; set only to move a location
+repo_dir = "docs/specs"
+work_dir = ".loom/specs"
+
+[plans]
+dir = ".loom/plans"
+
 [warp]
 branch_convention = "feature/<slug>"
-worktree = "always"
+worktree = "harness"
 source_repo = "."
 source_branch = "master"
 hook = "warp.sh"
@@ -63,6 +92,13 @@ hook = "weave.sh"
 | `[context].inject_fields` | frontmatter fields prefixed onto slices; `location` is path-derived | `doc-slicer` |
 | `[lint].kinds` | allowed `kind` frontmatter values                                   | `doc-linter` |
 | `[lint].statuses` | allowed `status` frontmatter values                                 | `doc-linter` |
+| `[lint.specs].max_norm_words`, `.max_line_words`, `.max_purpose_sentences`, `.max_scenarios`, `.max_file_lines` | spec-check budgets; shipped defaults 30, 30, 3, 8, 400 | `doc-linter` |
+| `[lint.specs].banned`, `.flagged` | words appended to the checker's built-in lists; banned fails, flagged warns | `doc-linter` |
+| `[specs].repo_dir` | home of capability-keyed repo specs (default `docs/specs`)          | `doc-linter`, spec skills |
+| `[specs].work_dir` | home of dated work specs (default `.loom/specs`)                    | `doc-linter`, spec skills |
+| `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter`, spec skills |
+| `[skills].config_dir` | home of loom config and overrides (default `.loom`)                 | `doc-linter` |
+| `[skills].scripts_dir` | home of hook scripts (default `.loom/scripts`)                      | `doc-linter`, `skill-hook` |
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>`            | `warp` |
@@ -95,7 +131,7 @@ One paragraph of project purpose.
 - [infra](./infra/):
     - deployment and cloud resources
 - [docs](./docs/):
-    - durable design notes, roadmap, specs, and plans
+    - durable design notes, roadmap, and capability specs
 ```
 
 ## Example `AGENTS.md`
@@ -157,16 +193,14 @@ updated: 2026-07-05
 ---
 # Docs
 
-Durable project memory and dated working docs.
+Durable project memory.
 
 ## Module Map
 
 - [design](./design/):
     - settled architecture and product decisions
 - [specs](./specs/):
-    - dated working specs, pruned after distillation
-- [plans](./plans/): 
-    - dated implementation plans, pruned after close-out
+    - what the code does, one living spec per capability
 ```
 
 ## Example `docs/roadmap.md`
