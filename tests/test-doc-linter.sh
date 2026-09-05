@@ -209,6 +209,26 @@ scripts_dir = ".loom/scripts"
 cleanup = "ask"
 hook = "git status --porcelain | grep ."'
 o="$(lint_hr)"; assert_not_contains "$o" "HOOK" "inline pipeline hook accepted"
+
+# valid: [specs]/[plans] location overrides as relative in-repo paths (need not exist yet)
+mk_toml '[specs]
+repo_dir = "documentation/specs"
+work_dir = ".loom/work"
+[plans]
+dir = ".loom/plans"'
+o="$(lint_hr)"; assert_not_contains "$o" "LAYOUT" "relative location overrides accepted"
+
+# invalid: absolute or parent-escaping locations
+mk_toml '[specs]
+repo_dir = "/srv/specs"
+work_dir = "../shared/specs"
+[plans]
+dir = ".loom/../../plans"'
+o="$(lint_hr)"; orc=$?
+assert_exit "$orc" "1" "bad location overrides fail the lint"
+assert_contains "$o" "LAYOUT   .loom/loom.toml: [specs] repo_dir=/srv/specs" "absolute repo_dir flagged"
+assert_contains "$o" "[specs] work_dir=../shared/specs"                      "parent-escaping work_dir flagged"
+assert_contains "$o" "[plans] dir=.loom/../../plans"                         "embedded .. in plans dir flagged"
 rm -rf "$HR"
 
 finish

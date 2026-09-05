@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-07-03
+updated: 2026-09-05
 ---
 # Doc convention
 
@@ -42,3 +42,16 @@ The editorial ethos below is my working attempt at combating this. The jury is s
     guidance lives only until it earns determinism. A step observed working the same way graduates
     into a `hook` (a script or command named in `loom.toml`); the prose that described it drops to
     a floor beneath it. Reserve prose for what can't yet execute.
+
+## Kinds and homes
+
+- **Repo specs** (`kind: spec`) say what the code does: one living document per capability,
+  committed under `docs/specs/` or the `[specs].repo_dir` override. Ids are the join key across
+  files; filenames never are.
+- **Work specs and plans** (`kind: spec`, `kind: plan`) are orchestration state: dated
+  `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/` or their overrides,
+  listed by age, committed or ignored as the owner chooses.
+- **Status carries a doc's life**: `living` while iterated in place, `hardened` once settled,
+  `superseded` when replaced. No draft state, no changes queue; git and a change-log section hold
+  history.
+- **Discovery is kind-based**, so placement never breaks hygiene. The managed set is its own index.

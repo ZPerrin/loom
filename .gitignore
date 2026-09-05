@@ -2,5 +2,3 @@ __pycache__/
 *.pyc
 .DS_Store
 .idea/
-docs/plans
-docs/specs
