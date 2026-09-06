@@ -30,7 +30,7 @@ These are the surfaces `spec` reads or writes directly. The full `.loom/loom.tom
 
 - **The fence comes first.** Write nothing until the frontier is empty: every decision put to the owner is answered or written down as an `-> open` line, and the owner has said the understanding is shared.
 - **Facts are yours; decisions are the owner's.** What the tests, code, and existing spec say, you look up; ask the owner for none of it. Whether a behavior is intended, where the boundary falls, what is refused, and what is invariant, the owner decides; put each to them with your recommended answer.
-- **Write what the code does.** A requirement comes from a test or the code it exercises, and its scenario names that test. Where the owner rules the code wrong, write the ruling and log the code as the bug. An assertion nobody found or ruled on is a defect, not a requirement.
+- **Write what the code does.** A requirement comes from a test or the code it exercises, and its scenario names that test. Write it at the altitude of the promise: the how stays in code, and a test that pins the how gets no scenario. Where the owner rules the code wrong, write the ruling and log the code as the bug. An assertion nobody found or ruled on is a defect, not a requirement.
 - **The linter is the authority.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` before presenting. A SPEC finding sends you back to the draft: fix the sentence, split the requirement, or drop the block; `[lint.specs]` stands as configured. A SPECWARN reaches the report by id.
 - **One file.** Write the spec and nothing else: no code, test, or config edit to make a scenario true. Drift you notice while reading is an `-> open` line, whichever side is wrong.
 - **Invariants are the owner's.** Ask for them in the fence and carry them in the report; a line under `## Invariants` is typed by the owner.
@@ -40,7 +40,9 @@ These are the surfaces `spec` reads or writes directly. The full `.loom/loom.tom
 
 ### 1. Fence
 
-Read the repo spec if one exists, the tests that cover the capability, the code they exercise, and the ids already in use. Open the first round with what you found: the behaviors, as candidate requirement titles each naming its test, and the neighbors the evidence touched. Then the decisions, in rounds: every question whose prerequisites are settled, numbered, each with your recommended answer; a question that depends on an open one waits for the next round. Wait for the owner between rounds. Write no spec text yet.
+A capability is a product feature named by what the owner gets, never a script or a module; when the request names one of those, map the features from the front doors and put the cut to the owner before reading a test.
+
+Read the repo spec if one exists, the tests that cover the capability, the code they exercise, and the ids already in use. Open the first round with what you found: the behaviors, as candidate requirement titles at the altitude of the promise, each naming its test, and the neighbors the evidence touched. Then the decisions, in rounds: every question whose prerequisites are settled, numbered, each with your recommended answer; a question that depends on an open one waits for the next round. Wait for the owner between rounds. Write no spec text yet.
 
 ### 2. Confirm
 

@@ -24,7 +24,7 @@ EARS_REPO="$DIR/fixtures/spec-repo-ears"
 MNW=30; MPS=3; MSC=8; MFL=400
 TUNED_MNW=12
 
-# relpath<TAB>expected rule id, "-" meaning clean (no spec finding expected).
+# relpath<TAB>expected rule id, "-" meaning clean (asserted: no lint line names the file).
 # One row per fixture; every violating fixture triggers exactly this one rule.
 SPEC_REPO_TABLE="docs/specs/auth-session.md	-
 docs/specs/g001-bad-first-line.md	G001
@@ -49,7 +49,8 @@ docs/specs/s004-too-many-scenarios.md	S004
 docs/specs/w001-banned-word.md	W001
 docs/specs/w002-flagged-word.md	W002
 docs/specs/l001-bad-invariant-shape.md	L001
-docs/specs/l001-bad-changelog-line.md	L001"
+docs/specs/l001-bad-changelog-line.md	L001
+docs/specs/r010-duplicate-inv-id.md	R010"
 
 # reset-flow.md's normative sentence is 23 words: clean under the default 30-word
 # budget (see the doc-linter integration loop below, run at defaults for both repos);
@@ -68,8 +69,11 @@ out="$(run_full_lint "$SPEC_REPO")"; rc=$?
 assert_exit "$rc" "1" "spec-repo: violating specs make doc-linter exit 1"
 while IFS="$(printf '\t')" read -r rel rule; do
   [ -n "$rel" ] || continue
-  [ "$rule" = "-" ] && continue
-  assert_contains "$out" "$rule" "spec-repo $rel: doc-linter output mentions $rule"
+  if [ "$rule" = "-" ]; then
+    assert_not_contains "$out" "$rel" "spec-repo $rel: conforming fixture yields no finding"
+  else
+    assert_contains "$out" "$rule" "spec-repo $rel: doc-linter output mentions $rule"
+  fi
 done <<SPECROWS
 $SPEC_REPO_TABLE
 SPECROWS
@@ -132,5 +136,21 @@ assert_exit "$brc" "1" "invalid [lint.specs] ears value fails the lint"
 assert_contains "$bout" "LINT" "invalid ears value reports a LINT finding"
 assert_contains "$bout" "ears=loud not strict|warn|off" "invalid ears value names the bad value and the allowed set"
 rm -rf "$BADEARS"
+
+# --------------------------------------------------------- [lint.specs] budget fallback
+# An invalid budget reports LINT and the checker runs at the shipped default: the 26-word
+# sentence is clean at 30 and would trip R008 under a budget of 0.
+echo "-- doc-linter: [lint.specs] invalid budget falls back to the default --"
+BADBUDGET="$DIR/fixtures/spec-repo-badbudget"
+rm -rf "$BADBUDGET"; mkdir -p "$BADBUDGET/.loom" "$BADBUDGET/docs/specs"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-05\n---\n# Home\n' > "$BADBUDGET/README.md"
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-05\n---\n# Capability: demo\n\n## Purpose\nDemonstrates minimal valid spec structure for isolated lint fixtures.\n\n## Requirements\n### R-DEMO-001: Example behavior\nWHEN a user performs the action, the system SHALL record the result within 1 second and keep the record for 30 days after the action completes.\n#### Scenario: basic -> test_example_basic\n- GIVEN a ready system\n- WHEN the user performs the action\n- THEN the result is recorded\n' > "$BADBUDGET/docs/specs/demo.md"
+printf '[lint]\nkinds = ["readme", "spec"]\nstatuses = ["living"]\n\n[lint.specs]\nmax_norm_words = 0\n' > "$BADBUDGET/.loom/loom.toml"
+( cd "$BADBUDGET" && test_git_init >/dev/null 2>&1 && git add -A >/dev/null 2>&1 )
+bbout="$(cd "$BADBUDGET" && bash "$LINTER" 2>&1)"; bbrc=$?
+assert_exit "$bbrc" "1" "invalid [lint.specs] budget fails the lint"
+assert_contains "$bbout" "max_norm_words=0 not a positive integer" "invalid budget names the key and the value"
+assert_not_contains "$bbout" "R008" "invalid budget falls back to the shipped default: no R008 at 26 words"
+rm -rf "$BADBUDGET"
 
 finish

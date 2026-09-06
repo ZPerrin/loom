@@ -209,10 +209,15 @@ function nword(s, re,   n, i, c, p, before, after) { # whole-word (\b…\b) occu
   }
   return c
 }
-function shape_check(name, re, shape,   i) {         # L001 for Invariants / Non-goals; well-shaped lines get word checks
+function shape_check(name, re, shape,   i, id) {     # L001 for Invariants / Non-goals; well-shaped lines get word checks and R010
   for (i = 1; i <= nb[name]; i++) {
     if (BT[name, i] !~ re) add("error", "L001", BL[name, i], "", "line must match " shape)
-    else check_words(BL[name, i], BT[name, i], "", 1)
+    else {
+      check_words(BL[name, i], BT[name, i], "", 1)
+      id = BT[name, i]; sub(/^- /, "", id); sub(/:.*$/, "", id)          # INV-<n> / N-<n>: the same uniqueness law as R ids
+      if (id in first) add("error", "R010", BL[name, i], id, "duplicate id " id " (first at line " first[id] ")")
+      else first[id] = BL[name, i]
+    }
   }
 }
 function changelog_check(   i, t, ok, tok) {         # L001 for Change log: '- YYYY-MM-DD <R-ID|INV-n|N-n>: <text>' (no word checks)

@@ -7,6 +7,6 @@ updated: 2026-09-05
 
 ## Sampled runs
 
-A run is `bash scripts/doc-linter` over the repo itself, or the awk checker on one fixture file
-with its `-v` knobs set as `tests/test-lint-spec.sh` sets them. Both are named in the report by
-the question they answered. A sweep of every fixture is the test suite's job, not a sample.
+A run is one loom script on one fixture or a scratch repo, with its knobs set as the test sets
+them, named in the report by the question it answered. A sweep of every fixture is the test
+suite's job, not a sample.

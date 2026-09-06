@@ -97,7 +97,6 @@ hook = "weave.sh"
 | `[specs].repo_dir` | home of capability-keyed repo specs (default `docs/specs`)          | `doc-linter`, spec skills |
 | `[specs].work_dir` | home of dated work specs (default `.loom/specs`)                    | `doc-linter`, spec skills |
 | `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter`, spec skills |
-| `[skills].config_dir` | home of loom config and overrides (default `.loom`)                 | `doc-linter` |
 | `[skills].scripts_dir` | home of hook scripts (default `.loom/scripts`)                      | `doc-linter`, `skill-hook` |
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |

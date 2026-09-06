@@ -24,7 +24,7 @@ assert_contains "$dout" "FRONTMATTER"       "reports bad frontmatter kind"
 assert_contains "$dout" "my mod/README.md"  "spaced-dir managed doc is checked (no word-split)"
 assert_not_contains "$dout" "STAMP"         "STAMP tier removed"
 assert_contains "$dout" "PLACEMENT"          "reports misplaced loom-config doc"
-assert_contains "$dout" "outside config_dir" "flags loom-config in the wrong directory"
+assert_contains "$dout" "outside .loom/" "flags loom-config in the wrong directory"
 assert_contains "$dout" "no skill named"     "flags loom-config with a non-skill basename"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
