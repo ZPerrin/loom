@@ -4,3 +4,4 @@ __pycache__/
 .idea/
 docs/plans
 docs/specs
+.obsidian
