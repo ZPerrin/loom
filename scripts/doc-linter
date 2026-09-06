@@ -33,9 +33,7 @@ lint.kinds=review
 lint.kinds=loom-config
 lint.statuses=living
 lint.statuses=hardened
-lint.statuses=superseded
-lint.statuses=scaffolding
-lint.statuses=ideation'
+lint.statuses=superseded'
 CONF="$ROOT/.loom/loom.toml"
 if [ -f "$CONF" ]; then
   CFG="$(awk -f "$PARSE_AWK" "$CONF")" || { echo "doc-linter: bad loom.toml" >&2; exit 2; }

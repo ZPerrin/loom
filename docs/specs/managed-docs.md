@@ -393,3 +393,4 @@ WHERE the spec checker runs with json set, the system SHALL emit each finding as
 - 2026-09-06 R-DOCS-020: the Non-goals half of the line-shape rule had no fixture -> asserted
 - 2026-09-06 R-DOCS-025: the checker's json output had no requirement and no test -> edited
 - 2026-09-06 N-2: the neighbors are named context and hooks, as their specs are; N-3 the same -> edited
+- 2026-09-06 R-DOCS-009: the shipped status list carried scaffolding and ideation, two draft states the doc convention rules out; the list is now the convention's three, and loom's own config matches -> fixed
