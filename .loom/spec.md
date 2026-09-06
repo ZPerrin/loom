@@ -27,5 +27,6 @@ owner typing it, and the report says which lines were transcribed.
 
 Tests are bash scripts with assertion labels and table-driven fixtures. A test ref is
 `tests/<file>#<fragment>`, where the fragment is a fixture stem or another whitespace-free string that
-`grep -F` finds in that file. A ref that greps to nothing is a broken ref; a ref that greps to a
-table row is resolved only if a loop asserts that row.
+`grep -F` finds in that file. A ref that greps to nothing is a broken ref; a ref that greps to a table row is resolved only if
+a loop asserts the rule on a line naming that fixture. A scenario asserted in more than one file
+names one file and reuses its fragment as the label in the others.

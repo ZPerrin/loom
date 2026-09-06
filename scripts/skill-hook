@@ -4,7 +4,7 @@
 # exit: 0 hook ran clean · 2 loom.toml unparseable · 3 no hook configured ·
 #       other = hook's own failing code.
 # The runner does not interpret failure — the calling skill does (warp: fall to floor;
-# weave: stop close-out). See references/tooling.md.
+# weave: stop close-out).
 set -u
 SELF="$(cd "$(dirname "$0")" && pwd)"
 skill="${1:?usage: skill-hook <skill> [args…]}"; shift || true

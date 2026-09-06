@@ -1,7 +1,7 @@
 ---
 kind: spec
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Capability: control-plane
 
@@ -128,3 +128,4 @@ WHEN a [weave] section is present, the system SHALL require a cleanup value from
 ## Change log
 - 2026-09-05 R-CONFIG-005: the hook runner and discovery act on the lines parsed before the failing line, so a hook ran and an exclude applied from a refused file in a sampled run -> kept
 - 2026-09-05 INV-3: the config_dir key was retired; it moved the placement check and nothing else, and could never move the file it lived in -> edited
+- 2026-09-06 R-CONFIG-005: the hook runner refuses and discovery ignores a refused config whole, so the promise now holds in code -> kept

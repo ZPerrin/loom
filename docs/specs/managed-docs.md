@@ -1,7 +1,7 @@
 ---
 kind: spec
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Capability: managed-docs
 
@@ -90,7 +90,7 @@ WHEN a managed document links to a relative path that does not exist, the system
 - WHEN doc-linter runs
 - THEN it reports BROKEN naming nope/missing.md
 #### Scenario: skipped-links -> tests/test-doc-linter.sh#skipped-links
-- GIVEN an external link, a link with a fragment, and a link inside a fenced code block
+- GIVEN an external link, a link that is only a fragment, and a link inside a fenced code block
 - WHEN doc-linter runs
 - THEN none of them is reported
 
