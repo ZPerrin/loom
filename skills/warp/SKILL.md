@@ -55,7 +55,7 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 ### 2. Orient - load enough context
 
 - Read `.loom/warp.md` if present, including any `## Experiments` a prior weave retro filed for this session to weigh.
-- Treat the SessionStart slice as already loaded; pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`.
+- Treat the SessionStart slice as already loaded; if the opening context shows no slice, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` first. Pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`.
 - Resolve `/warp <arg>` through `source_repo`: GitHub ref means fetch the issue/PR; local path means free-text work description; no arg means ask only if needed.
 - Do not mutate the workspace before orientation.
 
