@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Reference Project
 
@@ -56,7 +56,7 @@ inject_fields = ["updated", "kind", "location"]
 
 [lint]
 kinds = ["readme", "reference", "roadmap", "spec", "plan", "design", "review", "loom-config"]
-statuses = ["living", "hardened", "superseded", "ideation"]
+statuses = ["living", "hardened", "superseded"]
 
 [lint.specs]            # spec-check budgets and word lists; omit a key to take its shipped default
 max_norm_words = 24
@@ -96,7 +96,7 @@ hook = "weave.sh"
 | `[lint.specs].ears` | EARS shape check: `strict` (default) fails, `warn` warns, `off` skips; the one-modal rule holds regardless | `doc-linter` |
 | `[specs].repo_dir` | home of capability-keyed repo specs (default `docs/specs`)          | `doc-linter`, spec skills |
 | `[specs].work_dir` | home of dated work specs (default `.loom/specs`)                    | `doc-linter`, spec skills |
-| `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter`, spec skills |
+| `[plans].dir` | home of dated plans (default `.loom/plans`)                          | `doc-linter` |
 | `[skills].scripts_dir` | home of hook scripts (default `.loom/scripts`)                      | `doc-linter`, `skill-hook` |
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |
@@ -195,8 +195,6 @@ Durable project memory.
 
 ## Module Map
 
-- [design](./design/):
-    - settled architecture and product decisions
 - [specs](./specs/):
     - what the code does, one living spec per capability
 ```
