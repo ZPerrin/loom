@@ -34,7 +34,7 @@ Two files configure them, and five scripts do the deterministic work:
 | `.loom/<skill>.md` | one opinion file per skill, for guidance that hasn't earned determinism yet |
 | `doc-scan` | lists the managed docs and the markdown that could join them |
 | `doc-linter` | keeps managed docs mechanically clean; specs are graded against the grammar |
-| `doc-slicer` | the SessionStart bearings, and one section of one doc on demand |
+| `doc-slicer` | the SessionStart slice, and one section on demand |
 | `doc-stamp` | sets frontmatter fields |
 | `skill-hook` | runs a skill's configured hook |
 

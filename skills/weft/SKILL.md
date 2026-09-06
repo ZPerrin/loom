@@ -12,7 +12,7 @@ weft is subtractive by default: it removes slop, dedupes, and moves each fact to
 `weft` handles two operator intents:
 
 - **Review:** report the weak spots and proposed cuts; edit nothing.
-  - **Winnow:** make one coherent editorial pass, then re-check.
+- **Winnow:** make one coherent editorial pass, then re-check.
 
 ## Weft Control Surfaces
 

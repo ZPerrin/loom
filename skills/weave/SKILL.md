@@ -5,7 +5,7 @@ description: Use when wrapping up a loom work session, especially when durable d
 
 ## Weave
 
-Close out a unit of work. weave scopes the session delta, distills durable change into the managed docs, runs the close-out checks and optional close hook, then hands back or integrates when explicitly requested. It is the session-close bookend to warp.
+Close out a unit of work. weave scopes the session delta, distills durable change into the managed docs, runs the close-out checks and optional close hook, then hands back or integrates when explicitly requested.
 
 `weave` handles two repo states:
 
@@ -77,7 +77,7 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 ### 4. Check - before integration
 
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`.
-- Ensure `git status --porcelain` is resolved: every untracked, modified, or deleted file is staged or explicitly explained.
+- Resolve `git status --porcelain`: every untracked, modified, or deleted file is staged or explained.
 - If `[weave] hook` is set, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weave`.
 - Hook exit `0`: continue.
 - Hook exit `3`: no hook; continue on the built-in checks.
@@ -89,16 +89,16 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 - If invoked as `/weave into <target>`, use that target; otherwise ask before merge/PR handoff.
 - Local integration uses a written `--no-ff` merge commit unless the repo opinion says to hand off by PR.
 - Apply `[weave].cleanup`: delete the merged branch when `always`, keep it when `never`, ask when `ask`.
-- Never remove worktrees; report any cleanup the harness or operator must finish.
+- Never remove a worktree the harness made; report any cleanup the harness or operator must finish.
 
 ### 6. RSI - session retro (gated by `[weave].rsi`)
 
 At close-out, run the retro when `[weave].rsi` is `always` or unset (the default is on), or `ask` (confirm first); skip on `never`.
 
 - Look back over the session: where it snagged (failed calls, retries, denials, serialized waits, discovery loops), what context, hooks, and overrides helped, and what got in the way.
-- Distill that into a handful of concrete, forward-looking experiments to try next session — testable nudges, not a session log.
+- Distill that into a handful of experiments to try next session: testable nudges, not a session log.
 - Append them under an `## Experiments` heading in `.loom/warp.md` so the next `/warp` picks them up. Create the file (`kind: loom-config`, stamped today) if it does not exist; never overwrite warp's existing repo opinion.
-- Keep it to signal. If nothing durable surfaced, say so and write nothing.
+- If nothing durable surfaced, say so and write nothing.
 
 ## Output
 

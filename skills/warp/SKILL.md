@@ -47,7 +47,7 @@ flowchart TD
 
 Use only on first run, missing `[warp]`, or `/warp configure`.
 
-- Survey how the repo opens work: branch names, source branch, worktree habit, ticket refs, existing `.loom/warp.md`, and open scripts.
+- Survey how the repo opens work: branch names, worktree habit, ticket refs, existing `.loom/warp.md`, and open scripts.
 - Propose the `[warp]` knobs and any `.loom/warp.md` repo opinion.
 - Write nothing until the operator approves the exact diff.
 - If the operator declines, write nothing and continue to Orient only.
@@ -76,4 +76,4 @@ Compose only what `.loom/warp.md` names: a brainstorm, plan, code pass, or no to
 
 ## Output
 
-Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/warp.md` changes. warp never commits.
+Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/warp.md` changes.
