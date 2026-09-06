@@ -56,7 +56,7 @@ inject_fields = ["updated", "kind", "location"]
 
 [lint]
 kinds = ["readme", "reference", "roadmap", "spec", "plan", "design", "review", "loom-config"]
-statuses = ["living", "hardened", "superseded", "ideation"]
+statuses = ["living", "hardened", "superseded"]
 
 [lint.specs]            # spec-check budgets and word lists; omit a key to take its shipped default
 max_norm_words = 24

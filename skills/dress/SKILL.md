@@ -47,33 +47,11 @@ Determine whether this repo is blank, undressed, or already dressed, then gather
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` to see the current startup slice.
 - Inspect only enough repo shape to explain the proposal: modules, build/test signals, existing docs worth mapping, and obvious gaps.
 
-Example loom survey probe:
-
-```bash
-printf '\n## .loom\n'
-find .loom -maxdepth 2 -type f -print 2>/dev/null || true
-
-printf '\n## loom.toml\n'
-cat .loom/loom.toml 2>/dev/null || true
-
-printf '\n## warp.md\n'
-cat .loom/warp.md 2>/dev/null || true
-
-printf '\n## doc-scan\n'
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"
-
-printf '\n## startup slice\n'
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"
-```
-
 ### 2. Propose - reconcile to the minimum surface
 
 Review the reference project as calibration for the minimum loom surface, then turn the survey into an adoption diff: current state -> needed loom surface -> proposed changes. Still write nothing.
 
-Example reference project probe:
-
 ```bash
-printf '\n## reference project\n'
 cat "${CLAUDE_PLUGIN_ROOT}/references/reference-project.md"
 ```
 

@@ -87,43 +87,20 @@ state and no change queue. Git holds the history; the change log holds the inten
 
 ## Why no change queue
 
-OpenSpec keeps every change as a delta file (ADDED, MODIFIED, REMOVED blocks) merged into the spec
-on archive, for two stated reasons: a delta is diffable at a glance, and parallel changes to one
-spec file stop conflicting. The grammar answers both without a queue.
-
-- **Diffability.** One requirement is one block under a permanent id, so a git hunk on a spec
-  file is a requirement, and the change-log line in the same diff is its why. The commit diff is
-  the review surface; a delta file is a second copy of the same text whose only job is to be
-  merged later.
-- **Conflicts.** Parallel edits to different ids are different hunks and merge cleanly. Parallel
-  edits to the same id are a real conflict and should surface as one, now, while the authors
-  still hold the context; a queue defers that collision to archive time.
-- **The proposal form survives as the work spec.** It carries only the blocks the work changes,
-  in the same grammar, and dies when the work lands. Work state, not a queue: no archive step,
-  no second ratification.
-
-Kept from OpenSpec: RFC-2119 modals, scenarios you could write a test for, and the boundary test
-(if the implementation can change without changing externally visible behavior, it is not spec).
-Dropped: RENAMED sections (ids make renames free), archive tooling, and the two-review cadence.
+No delta files and no change queue: one requirement is one block under a permanent id, so a git
+hunk on a spec file is the requirement and the change-log line in the same diff is its why.
+Parallel edits to one id surface as a conflict now, while the authors still hold the context, not
+at archive time. Kept from OpenSpec: RFC-2119 modals, scenarios you could write a test for, and
+the boundary test (if the implementation can change without changing externally visible behavior,
+it is not spec). Dropped: RENAMED sections (ids make renames free), archive tooling, and the
+two-review cadence.
 
 ## Linter surface
 
-Rule families as `doc-linter` reports them. Fixtures under `tests/fixtures/spec-repo/` hold one
-violation per file, named by rule.
-
-| Family | Checks | `[lint.specs]` keys |
-|---|---|---|
-| G | first line, known sections in order, no duplicates, `Purpose` and `Requirements` present, file length (warn) | `max_file_lines` |
-| P | Purpose sentence budget | `max_purpose_sentences` |
-| R | header shape, one normative sentence, one SHALL/MUST, SHOULD/MAY (warn), EARS shape, word budget, one token per capability, unique ids | `ears`, `max_norm_words` |
-| S | scenario header and bullets, test ref (warn), a WHEN and a THEN, scenario count (warn) | `max_scenarios` |
-| L | invariant, non-goal, and change-log line shapes | |
-| W | banned words (error), weak verbs (warn) | `banned`, `flagged` |
-
-`ears` is `strict` (a shape violation fails), `warn`, or `off`; the default is `strict`. It governs
-the shape check only. The one-modal rule holds at every setting: RFC-2119 is the floor that
-OpenSpec and the 29148 lineage share, and the EARS shape is the stricter, less-travelled choice on
-top of it. The knob exists so a repo can ablate that choice, not so a sentence can argue with it.
+The rule families and their `[lint.specs]` knobs are specified requirement by requirement in
+[managed-docs.md](../docs/specs/managed-docs.md), with one violation per fixture under
+`tests/fixtures/spec-repo/`, named by rule. `ears` is `strict` (a shape violation fails), `warn`,
+or `off` (the shape check is skipped), default `strict`; the one-modal rule holds at every setting.
 
 ## Slicing contract
 
