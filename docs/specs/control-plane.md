@@ -43,7 +43,7 @@ WHEN no config file exists, the system SHALL run every consumer on the shipped d
 - GIVEN a repo with no .loom directory
 - WHEN the session slice runs
 - THEN the bearings are emitted and the run exits 0
-#### Scenario: lint-without-config
+#### Scenario: lint-without-config -> tests/test-doc-linter.sh#noconf-repo
 - GIVEN a repo with no .loom directory
 - WHEN doc-linter runs
 - THEN documents are checked against the shipped vocabulary with no LINT finding
@@ -57,15 +57,15 @@ WHEN a key is absent from a present config, the system SHALL use that key's ship
 
 ### R-CONFIG-005: A broken config is refused or ignored whole
 IF the config cannot be parsed, THEN the system SHALL refuse the run or run on the shipped defaults and never act on part of the file.
-#### Scenario: gate-refuses
+#### Scenario: gate-refuses -> tests/test-doc-linter.sh#gate-refuses
 - GIVEN a config holding an inline table
 - WHEN doc-linter runs
 - THEN it names the bad file and exits 2 without linting
-#### Scenario: session-start-degrades
+#### Scenario: session-start-degrades -> tests/test-doc-slicer.sh#session-start-degrades
 - GIVEN the same config
 - WHEN the session slice runs
 - THEN it runs on the shipped defaults and exits 0
-#### Scenario: no-partial-effect
+#### Scenario: no-partial-effect -> tests/test-skill-hook.sh#no-partial-effect
 - GIVEN a config whose exclude and hook lines precede the bad line
 - WHEN the hook runner and discovery read it
 - THEN neither the hook nor the exclude takes effect
@@ -114,7 +114,7 @@ WHEN a [weave] section is present, the system SHALL require a cleanup value from
 - GIVEN cleanup = "sometimes"
 - WHEN doc-linter runs
 - THEN it reports WEAVE naming the value
-#### Scenario: invalid-rsi
+#### Scenario: invalid-rsi -> tests/test-doc-linter.sh#rsi=sometimes
 - GIVEN rsi = "sometimes"
 - WHEN doc-linter runs
 - THEN it reports WEAVE naming the value

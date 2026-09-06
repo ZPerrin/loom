@@ -25,10 +25,12 @@ _list_md() { # $1=ROOT
 
 # exclude path-prefixes from [discovery] exclude in <ROOT>/.loom/loom.toml
 doc_excludes() { # $1=ROOT
-  local conf="$1/.loom/loom.toml"
+  local conf="$1/.loom/loom.toml" cfg
   [ -f "$conf" ] || return 0
-  awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null \
-    | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'
+  # A config the parser refuses yields no excludes at all: piping the parser's stdout
+  # straight on would apply the lines above the failing one, which is half a config.
+  cfg="$(awk -f "$_DISCOVER_DIR/parse-toml.awk" "$conf" 2>/dev/null)" || return 0
+  printf '%s\n' "$cfg" | awk -F= '$1=="discovery.exclude"{sub(/^[^=]*=/,""); print}'
 }
 
 _excluded() { # $1=relpath $2=newline-separated exclude prefixes -> 0 if excluded

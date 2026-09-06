@@ -39,7 +39,7 @@ The system SHALL take the universe from the working tree's markdown files with g
 - WHEN doc_universe lists the repo
 - THEN a.md is listed
 - AND link.md is not
-#### Scenario: no-git-fallback
+#### Scenario: no-git-fallback -> tests/test-discover.sh#no-git-fallback
 - WHEN doc_universe lists a directory that is not a git checkout
 - THEN its markdown files are still found
 
@@ -62,23 +62,23 @@ WHEN a universe file has no frontmatter kind key, the system SHALL list it as a 
 - WHEN omission_candidates lists the repo
 - THEN b.md is listed
 - AND a.md is not
-#### Scenario: doc-scan-report
+#### Scenario: doc-scan-report -> tests/test-doc-scan.sh#doc-scan-report
 - WHEN doc-scan runs in a repo
 - THEN the managed docs and the candidates are listed apart
 
 ### R-DOCS-005: Stamping writes lifecycle fields and touches nothing else
 WHEN doc-stamp sets lifecycle fields on a file, the system SHALL write them into its frontmatter and change nothing else.
-#### Scenario: stamp-bare
+#### Scenario: stamp-bare -> tests/test-doc-stamp.sh#stamp-bare
 - GIVEN a file with no frontmatter
 - WHEN doc-stamp sets kind, status, and updated
 - THEN the file gains a frontmatter block holding those three keys
 - AND its content is unchanged
-#### Scenario: stamp-existing
+#### Scenario: stamp-existing -> tests/test-doc-stamp.sh#stamp-existing
 - GIVEN frontmatter holding kind and status and no updated key
 - WHEN doc-stamp sets status and updated
 - THEN status carries the new value and updated is added
 - AND every other line is unchanged
-#### Scenario: stamp-twice
+#### Scenario: stamp-twice -> tests/test-doc-stamp.sh#stamp-twice
 - GIVEN a file stamped once
 - WHEN the same doc-stamp command runs again
 - THEN the file is unchanged
@@ -89,7 +89,7 @@ WHEN a managed document links to a relative path that does not exist, the system
 - GIVEN a README linking to nope/missing.md
 - WHEN doc-linter runs
 - THEN it reports BROKEN naming nope/missing.md
-#### Scenario: skipped-links
+#### Scenario: skipped-links -> tests/test-doc-linter.sh#skipped-links
 - GIVEN an external link, a link with a fragment, and a link inside a fenced code block
 - WHEN doc-linter runs
 - THEN none of them is reported
@@ -116,7 +116,7 @@ WHEN a managed document's kind or status is outside the configured vocabulary or
 - GIVEN a doc with status: frozen and a vocabulary without frozen
 - WHEN doc-linter runs
 - THEN it reports FRONTMATTER naming status=frozen
-#### Scenario: bad-date
+#### Scenario: bad-date -> tests/test-doc-linter.sh#updated=2026-9-6
 - GIVEN a doc whose updated value is not YYYY-MM-DD
 - WHEN doc-linter runs
 - THEN it reports FRONTMATTER naming the value
@@ -133,7 +133,7 @@ The system SHALL check kind and status against [lint] kinds and statuses when se
 - WHEN doc-linter runs
 - THEN it reports LINT for missing kinds and for missing statuses
 - AND a readme with status living is not reported
-#### Scenario: no-config
+#### Scenario: no-config -> tests/test-doc-linter.sh#no-loom-toml
 - GIVEN no .loom/loom.toml at all
 - WHEN doc-linter runs
 - THEN values are checked against the shipped lists with no LINT finding
@@ -171,12 +171,12 @@ WHEN a run ends, the system SHALL exit 0 with a clean line if no error finding e
 
 ### R-DOCS-012: Link checks run ahead of adoption
 WHEN doc-linter runs with --links, the system SHALL run only the link checks over the named files or the whole universe with no frontmatter required.
-#### Scenario: links-mode
+#### Scenario: links-mode -> tests/test-doc-linter.sh#links-mode
 - GIVEN a markdown file with no frontmatter and a broken relative link
 - WHEN doc-linter --links names that file
 - THEN it reports BROKEN for the link
 - AND a run with no link finding prints doc-linter --links: clean
-#### Scenario: links-missing-file
+#### Scenario: links-missing-file -> tests/test-doc-linter.sh#links-missing-file
 - WHEN doc-linter --links names a path that does not exist
 - THEN it reports INPUT naming the path
 - AND exits 1
@@ -211,7 +211,7 @@ WHEN a spec document breaks the skeleton in its first line or its sections, the 
 - WHEN doc-linter runs
 - THEN it reports SPEC G006 at the first content line
 - AND a document without ## Requirements is reported the same way
-#### Scenario: over-length
+#### Scenario: over-length -> tests/test-lint-spec.sh#spec-repo-overlength
 - GIVEN more lines than max_file_lines
 - WHEN doc-linter runs
 - THEN it reports SPECWARN G005 at the last line
@@ -233,7 +233,7 @@ WHEN a requirement header breaks the id shape or a document mixes tokens or repe
 - GIVEN requirements R-DEMO-001 and R-OTHER-001 in one document
 - WHEN doc-linter runs
 - THEN it reports SPEC R009 naming both tokens
-#### Scenario: duplicate-id
+#### Scenario: duplicate-id -> tests/test-lint-spec.sh#r010-duplicate-requirement-id.md
 - GIVEN two ### R-DEMO-001 headers
 - WHEN doc-linter runs
 - THEN it reports SPEC R010 at the second naming the first's line
@@ -287,7 +287,7 @@ WHEN a scenario departs from the scenario shape or the scenario rules, the syste
 - GIVEN a #### Not a scenario header line
 - WHEN doc-linter runs
 - THEN it reports SPEC S001 at that line
-#### Scenario: bad-bullet
+#### Scenario: bad-bullet -> tests/test-lint-spec.sh#s001-bad-bullet
 - GIVEN a bullet opening with none of GIVEN, WHEN, THEN, or AND, or a scenario whose first bullet is AND
 - WHEN doc-linter runs
 - THEN it reports SPEC S001 at that bullet
@@ -328,7 +328,7 @@ WHEN a checked spec line contains a word from the banned or flagged list, the sy
 - WHEN doc-linter runs
 - THEN it reports SPECWARN W002 naming the verb at that line
 - AND Purpose text, requirement titles, and scenario bullets are not checked for flagged words
-#### Scenario: custom-lists
+#### Scenario: custom-lists -> tests/test-lint-spec.sh#spec-repo-wordlists
 - GIVEN [lint.specs] banned = ["widget-flow"] and flagged = ["juggle"] and lines holding each word
 - WHEN doc-linter runs
 - THEN it reports SPEC W001 naming widget-flow and SPECWARN W002 naming juggle

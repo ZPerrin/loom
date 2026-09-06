@@ -145,6 +145,17 @@ printf '[weave]\ncleanup = "sometimes"\n' > "$WV/.loom/loom.toml"
 fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
 assert_contains "$fo" "sometimes" "[weave] invalid cleanup value flagged"
 
+# rsi is the section's optional knob: absent is fine, a value outside the set is not.
+printf '[weave]\ncleanup = "always"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
+assert_not_contains "$fo" "rsi" "[weave] absent rsi: no finding (on by default when unset)"
+
+printf '[weave]\ncleanup = "always"\nrsi = "sometimes"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"; frc=$?
+assert_exit "$frc" "1" "[weave] invalid rsi: exit 1"
+assert_contains "$fo" "WEAVE"         "[weave] invalid rsi: weave finding"
+assert_contains "$fo" "rsi=sometimes" "[weave] invalid rsi value flagged"
+
 rm -rf "$WV"
 
 # --- executable-hooks config validation ---
@@ -215,5 +226,97 @@ assert_contains "$o" "LAYOUT   .loom/loom.toml: [specs] repo_dir=/srv/specs" "ab
 assert_contains "$o" "[specs] work_dir=../shared/specs"                      "parent-escaping work_dir flagged"
 assert_contains "$o" "[plans] dir=.loom/../../plans"                         "embedded .. in plans dir flagged"
 rm -rf "$HR"
+
+# --- no config at all: the shipped vocabulary is what documents are checked against ---
+# Two shapes of "no config": no .loom directory (noconf-repo), and a .loom directory that
+# holds no loom.toml (no-loom-toml). Neither is a LINT finding — loom demands no
+# configuration to run — and under both, kind and status are checked against the lists
+# doc-linter ships with, so the vocabulary still bites.
+NCR="$DIR/fixtures/noconf-repo"; rm -rf "$NCR"; mkdir -p "$NCR/docs"
+( cd "$NCR" && test_git_init )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n' > "$NCR/README.md"
+nco="$(cd "$NCR" && bash "$LINTER" 2>&1)"; ncrc=$?
+assert_exit "$ncrc" "0" "noconf-repo: a repo with no .loom directory exits 0"
+assert_contains "$nco" "doc-linter: clean" "noconf-repo: the shipped vocabulary accepts readme/living"
+assert_not_contains "$nco" "LINT" "noconf-repo: an absent config is never a LINT finding"
+
+printf -- '---\nkind: bogus\nstatus: living\nupdated: 2026-09-06\n---\n# Odd\n' > "$NCR/docs/odd.md"
+nco="$(cd "$NCR" && bash "$LINTER" 2>&1)"; ncrc=$?
+assert_exit "$ncrc" "1" "noconf-repo: a kind outside the shipped list still exits 1"
+assert_contains "$nco" "kind=bogus not allowed" "noconf-repo: documents are checked against the shipped kinds"
+assert_not_contains "$nco" "LINT" "noconf-repo: still no LINT finding without a config"
+rm -f "$NCR/docs/odd.md"
+
+# no-loom-toml: the .loom directory exists and the config file does not — same defaults.
+mkdir -p "$NCR/.loom"
+printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-09-06\n---\n# weave notes\n' > "$NCR/.loom/weave.md"
+nlo="$(cd "$NCR" && bash "$LINTER" 2>&1)"; nlrc=$?
+assert_exit "$nlrc" "0" "no-loom-toml: a .loom directory without loom.toml exits 0"
+assert_contains "$nlo" "doc-linter: clean" "no-loom-toml: values check clean against the shipped lists"
+assert_not_contains "$nlo" "LINT" "no-loom-toml: a missing loom.toml is not a LINT finding"
+rm -rf "$NCR"
+
+# --- gate-refuses: an unparseable loom.toml stops the lint before it starts ---
+# A broken config is refused whole, not applied as far as it parsed: the linter names the
+# file and exits 2, and the BROKEN link this repo carries is never reported.
+GR="$DIR/fixtures/gate-refuses-repo"; rm -rf "$GR"; mkdir -p "$GR/.loom"
+( cd "$GR" && test_git_init )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n\n[gone](nope/missing.md)\n' > "$GR/README.md"
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\nbad = { inline = "table" }\n' > "$GR/.loom/loom.toml"
+gro="$(cd "$GR" && bash "$LINTER" 2>&1)"; grrc=$?
+assert_exit "$grrc" "2" "gate-refuses: an unparseable config exits 2"
+assert_contains "$gro" "loom.toml" "gate-refuses: the bad file is named"
+assert_not_contains "$gro" "BROKEN" "gate-refuses: nothing is linted"
+assert_not_contains "$gro" "clean"  "gate-refuses: no verdict is printed"
+rm -rf "$GR"
+
+# --- skipped-links: external, fragment-only, and fenced links are not link findings ---
+SL="$DIR/fixtures/skipped-links-repo"; rm -rf "$SL"; mkdir -p "$SL/.loom"
+( cd "$SL" && test_git_init )
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$SL/.loom/loom.toml"
+{ printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n'
+  printf '# Home\n\n'
+  printf 'An [external link](https://example.invalid/nope.md) and a [fragment link](#home).\n\n'
+  printf '```\n[fenced link](nope/missing.md)\n```\n'
+} > "$SL/README.md"
+slo="$(cd "$SL" && bash "$LINTER" 2>&1)"; slrc=$?
+assert_exit "$slrc" "0" "skipped-links: none of the three links is a finding"
+assert_contains "$slo" "doc-linter: clean" "skipped-links: the repo reports clean"
+assert_not_contains "$slo" "BROKEN" "skipped-links: no BROKEN finding at all"
+assert_not_contains "$slo" "nope/missing.md" "skipped-links: the link inside the fence is not resolved"
+assert_not_contains "$slo" "example.invalid" "skipped-links: the external link is not resolved"
+rm -rf "$SL"
+
+# --- bad-date: an updated value that is not YYYY-MM-DD is named ---
+BD="$DIR/fixtures/bad-date-repo"; rm -rf "$BD"; mkdir -p "$BD/.loom"
+( cd "$BD" && test_git_init )
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$BD/.loom/loom.toml"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-9-6\n---\n# Home\n' > "$BD/README.md"
+bdo="$(cd "$BD" && bash "$LINTER" 2>&1)"; bdrc=$?
+assert_exit "$bdrc" "1" "bad-date: a non-ISO updated value exits 1"
+assert_contains "$bdo" "FRONTMATTER"      "bad-date: reports FRONTMATTER"
+assert_contains "$bdo" "updated=2026-9-6" "bad-date: names the offending value"
+rm -rf "$BD"
+
+# --- links-mode / links-missing-file: --links runs the link checks alone ---
+# No frontmatter is required, so dress can preview a repo's link findings before adoption.
+LM="$DIR/fixtures/links-mode-repo"; rm -rf "$LM"; mkdir -p "$LM"
+( cd "$LM" && test_git_init )
+printf '# Draft\n\n[gone](nope/missing.md)\n' > "$LM/draft.md"
+printf '# Fine\n\n[the draft](draft.md)\n' > "$LM/fine.md"
+lmo="$(cd "$LM" && bash "$LINTER" --links draft.md 2>&1)"; lmrc=$?
+assert_exit "$lmrc" "1" "links-mode: a broken link in an unstamped file exits 1"
+assert_contains "$lmo" "BROKEN"          "links-mode: reports BROKEN for the link"
+assert_contains "$lmo" "nope/missing.md" "links-mode: names the missing href"
+assert_not_contains "$lmo" "FRONTMATTER" "links-mode: frontmatter is neither required nor checked"
+lmo="$(cd "$LM" && bash "$LINTER" --links fine.md 2>&1)"; lmrc=$?
+assert_exit "$lmrc" "0" "links-mode: a run with no link finding exits 0"
+assert_contains "$lmo" "doc-linter --links: clean" "links-mode: a clean run says so in its own words"
+
+lfo="$(cd "$LM" && bash "$LINTER" --links no/such/file.md 2>&1)"; lfrc=$?
+assert_exit "$lfrc" "1" "links-missing-file: a path that does not exist exits 1"
+assert_contains "$lfo" "INPUT"            "links-missing-file: reports INPUT"
+assert_contains "$lfo" "no/such/file.md"  "links-missing-file: names the path"
+rm -rf "$LM"
 
 finish

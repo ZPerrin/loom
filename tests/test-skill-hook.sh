@@ -32,4 +32,14 @@ printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nbranch_convention = "fe
 o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
 assert_exit "$rc" "3" "no hook configured → exit 3"
 
+# no-partial-effect: a config the parser refuses is refused whole. The hook line sits above
+# the unparseable one, so a runner reading the parser's partial stdout would run it; reading
+# the parser's exit status instead does not. Exit 2, not 3 — a broken config is not "no hook".
+printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nhook = "warp.sh"\n[lint]\nbad = { inline = "table" }\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "2" "no-partial-effect: an unparseable loom.toml exits 2"
+assert_not_contains "$o" "HELPER_RAN" "no-partial-effect: the hook above the bad line does not run"
+assert_contains "$o" "unparseable" "no-partial-effect: the one line printed says the config is unparseable"
+assert_eq "$(printf '%s\n' "$o" | grep -c .)" "1" "no-partial-effect: exactly one line is printed"
+
 rm -rf "$R"; finish
