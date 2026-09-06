@@ -6,7 +6,9 @@
 # override), and tests/fixtures/spec-repo-ears/docs/specs/*.md ([lint.specs] ears = "warn").
 # Every spec fixture is deliberately minimal: one isolated grammar violation per file
 # (family prefix in the filename: g/p=structure, r=requirements, s=scenarios,
-# w/l=word-list & line-shape), so the expected rule id per file is exact. Grammar is
+# w/l=word-list & line-shape), so the expected rule id per file is exact — the table loop
+# below asserts the rule on the lint lines that name that file, not merely somewhere in the
+# run, so two fixtures sharing a rule id each still carry their own assertion. Grammar is
 # references/spec-grammar.md; change-log vocabulary and word lists are
 # references/spec-writing-rules.md. Fixtures conform to both, not only to the checker.
 set -u
@@ -43,6 +45,8 @@ docs/specs/r006-extra-body-line.md	R006
 docs/specs/r008-normative-too-long.md	R008
 docs/specs/r009-mixed-tokens.md	R009
 docs/specs/s001-bad-scenario-header.md	S001
+docs/specs/s001-bad-bullet-keyword.md	S001
+docs/specs/s001-bad-bullet-opens-with-and.md	S001
 docs/specs/s002-no-test-ref.md	S002
 docs/specs/s003-missing-when-then.md	S003
 docs/specs/s004-too-many-scenarios.md	S004
@@ -50,7 +54,8 @@ docs/specs/w001-banned-word.md	W001
 docs/specs/w002-flagged-word.md	W002
 docs/specs/l001-bad-invariant-shape.md	L001
 docs/specs/l001-bad-changelog-line.md	L001
-docs/specs/r010-duplicate-inv-id.md	R010"
+docs/specs/r010-duplicate-inv-id.md	R010
+docs/specs/r010-duplicate-requirement-id.md	R010"
 
 # reset-flow.md's normative sentence is 23 words: clean under the default 30-word
 # budget (see the doc-linter integration loop below, run at defaults for both repos);
@@ -72,11 +77,25 @@ while IFS="$(printf '\t')" read -r rel rule; do
   if [ "$rule" = "-" ]; then
     assert_not_contains "$out" "$rel" "spec-repo $rel: conforming fixture yields no finding"
   else
-    assert_contains "$out" "$rule" "spec-repo $rel: doc-linter output mentions $rule"
+    assert_contains "$(printf '%s\n' "$out" | grep -F "$rel")" "$rule" \
+      "spec-repo $rel: the lint line naming this fixture reports $rule"
   fi
 done <<SPECROWS
 $SPEC_REPO_TABLE
 SPECROWS
+
+# R010's message carries positions, so assert them: the finding lands on the second header
+# and names the first's line. Both numbers are read out of the fixture, never hardcoded.
+echo "-- duplicate requirement id: R010 at the second header, naming the first --"
+DUP_REL="docs/specs/r010-duplicate-requirement-id.md"
+dup_first="$(grep -n '^### R-DEMO-001' "$SPEC_REPO/$DUP_REL" | sed -n 1p | cut -d: -f1)"
+dup_second="$(grep -n '^### R-DEMO-001' "$SPEC_REPO/$DUP_REL" | sed -n 2p | cut -d: -f1)"
+dup_out="$(printf '%s\n' "$out" | grep -F "$DUP_REL")"
+assert_contains "$dup_out" "$DUP_REL:$dup_second:" \
+  "duplicate id: R010 is reported at the second R-DEMO-001 header"
+assert_contains "$dup_out" "duplicate id R-DEMO-001 (first at line $dup_first)" \
+  "duplicate id: the message names the first header's line"
+
 rm -rf "$SPEC_REPO/.git"
 
 tout="$(run_full_lint "$TUNED_REPO")"; trc=$?
@@ -152,5 +171,44 @@ assert_exit "$bbrc" "1" "invalid [lint.specs] budget fails the lint"
 assert_contains "$bbout" "max_norm_words=0 not a positive integer" "invalid budget names the key and the value"
 assert_not_contains "$bbout" "R008" "invalid budget falls back to the shipped default: no R008 at 26 words"
 rm -rf "$BADBUDGET"
+
+# ------------------------------------------------------ [lint.specs] max_file_lines (G005)
+# A doc longer than the budget warns at its own last line, and a warning never fails the
+# run. Built ad hoc so the budget can be tiny instead of the fixture being huge; the last
+# line is counted from the file rather than hardcoded.
+echo "-- doc-linter: [lint.specs] max_file_lines over-length warning --"
+OVERLEN="$DIR/fixtures/spec-repo-overlength"
+rm -rf "$OVERLEN"; mkdir -p "$OVERLEN/.loom" "$OVERLEN/docs/specs"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-05\n---\n# Home\n' > "$OVERLEN/README.md"
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-05\n---\n# Capability: demo\n\n## Purpose\nDemonstrates minimal valid spec structure for isolated lint fixtures.\n\n## Requirements\n### R-DEMO-001: Example behavior\nWHEN a user performs the action, the system SHALL record the result within 1 second.\n#### Scenario: basic -> test_example_basic\n- GIVEN a ready system\n- WHEN the user performs the action\n- THEN the result is recorded\n' > "$OVERLEN/docs/specs/demo.md"
+printf '[lint]\nkinds = ["readme", "spec"]\nstatuses = ["living"]\n\n[lint.specs]\nmax_file_lines = 10\n' > "$OVERLEN/.loom/loom.toml"
+( cd "$OVERLEN" && test_git_init >/dev/null 2>&1 && git add -A >/dev/null 2>&1 )
+olast="$(awk 'END{print NR}' "$OVERLEN/docs/specs/demo.md")"
+oout="$(cd "$OVERLEN" && bash "$LINTER" 2>&1)"; orc=$?
+assert_exit "$orc" "0" "over-length: G005 is a warning and does not fail the run"
+assert_contains "$oout" "SPECWARN docs/specs/demo.md:$olast:" "over-length: the warning lands on the file's last line"
+assert_contains "$oout" "file exceeds 10 lines" "over-length: the message names the configured budget"
+assert_contains "$oout" "(G005)" "over-length: the rule reported is G005"
+rm -rf "$OVERLEN"
+
+# ------------------------------------------ [lint.specs] banned / flagged custom word lists
+# The configured arrays append to the checker's built-in lists: a configured banned phrase
+# is an error naming the phrase, a configured flagged verb a warning naming the verb.
+echo "-- doc-linter: [lint.specs] custom banned and flagged word lists --"
+WORDLISTS="$DIR/fixtures/spec-repo-wordlists"
+rm -rf "$WORDLISTS"; mkdir -p "$WORDLISTS/.loom" "$WORDLISTS/docs/specs"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-05\n---\n# Home\n' > "$WORDLISTS/README.md"
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-05\n---\n# Capability: demo\n\n## Purpose\nDemonstrates the widget-flow for isolated lint fixtures.\n\n## Invariants\n- INV-1: The parser does not juggle two configs.\n\n## Requirements\n### R-DEMO-001: Example behavior\nWHEN a user performs the action, the system SHALL record the result within 1 second.\n#### Scenario: basic -> test_example_basic\n- GIVEN a ready system\n- WHEN the user performs the action\n- THEN the result is recorded\n' > "$WORDLISTS/docs/specs/demo.md"
+printf '[lint]\nkinds = ["readme", "spec"]\nstatuses = ["living"]\n\n[lint.specs]\nbanned = ["widget-flow"]\nflagged = ["juggle"]\n' > "$WORDLISTS/.loom/loom.toml"
+( cd "$WORDLISTS" && test_git_init >/dev/null 2>&1 && git add -A >/dev/null 2>&1 )
+cwout="$(cd "$WORDLISTS" && bash "$LINTER" 2>&1)"; cwrc=$?
+assert_exit "$cwrc" "1" "custom-lists: a configured banned word fails the lint"
+assert_contains "$cwout" "SPEC     docs/specs/demo.md" "custom-lists: the banned word is reported as an error"
+assert_contains "$cwout" "banned word: 'widget-flow'" "custom-lists: W001 names widget-flow"
+assert_contains "$cwout" "(W001)" "custom-lists: the banned word's rule is W001"
+assert_contains "$cwout" "SPECWARN docs/specs/demo.md" "custom-lists: the flagged verb is reported as a warning"
+assert_contains "$cwout" "weak verb: 'juggle'" "custom-lists: W002 names juggle"
+assert_contains "$cwout" "(W002)" "custom-lists: the flagged verb's rule is W002"
+rm -rf "$WORDLISTS"
 
 finish
