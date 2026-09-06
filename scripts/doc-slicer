@@ -45,10 +45,14 @@ SLICE_HEADERS="$(cfg_get context.slice_headers)"
 INJECT_FIELDS="$(cfg_get context.inject_fields)"
 
 # print the markdown under "<header>" in <file>, header line excluded, stop at next "## ".
+# Fenced code (``` or ~~~) is body, never a header: a fenced example of a section is not one,
+# and a fenced "## " line does not end the section it sits in.
 # Match is exact ($0 == hdr); trailing whitespace in the file would prevent a match.
 emit_section() { # $1=file $2=header
   [ -f "$1" ] || return 0
   awk -v hdr="$2" '
+    /^ ? ? ?(```|~~~)/ { if (cap) print; fence = !fence; next }
+    fence { if (cap) print; next }
     $0 == hdr { cap = 1; next }
     cap && /^## / { exit }
     cap { print }

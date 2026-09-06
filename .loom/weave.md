@@ -1,7 +1,7 @@
 ---
 kind: loom-config
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Weave
 
@@ -16,6 +16,6 @@ for anything that stays.
 
 One mutation per command, asserting before mutating: `git merge --no-ff <branch> -m "<msg>"`
 (never `-F -` with a heredoc), confirm the merge landed, then clean up. Session branches land on
-the release branch from its own worktree, and the release branch is pushed for cross-machine
-continuity. Delegate worktrees the coordinator made are removed once their branch has merged; the
-harness's session worktree is left to the harness, detached so its branch can go.
+the release branch from its own worktree, then the release branch is pushed. Delegate worktrees
+the coordinator made are removed once their branch has merged; the harness's session worktree is
+left to the harness, detached so its branch can go.

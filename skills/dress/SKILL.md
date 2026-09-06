@@ -1,6 +1,6 @@
 ---
 name: dress
-description: Use when adopting loom on a repo, or re-tuning an existing loom harness configuration.
+description: Use when adopting loom on a repo, or re-tuning an existing loom configuration.
 ---
 
 ## Dress
@@ -9,7 +9,7 @@ Install or retune loom for a repo. dress decides the repo-local control surfaces
 
 `dress` handles three repo states:
 
-- **Blank/new:** little structure exists; propose the smallest useful loom harness.
+- **Blank/new:** little structure exists; propose the smallest useful loom surface.
 - **Undressed existing:** code/docs exist but `.loom/loom.toml` does not; map existing material before seeding anything.
 - **Dressed:** `.loom/loom.toml` exists; read current config and overrides, then propose retuning instead of reinstalling.
 
@@ -19,7 +19,7 @@ These are the surfaces `dress` reads or writes directly. The full `.loom/loom.to
 
 | Surface | Dress uses it for |
 |---|---|
-| `.loom/loom.toml` | read existing harness config; propose or write the repo control plane |
+| `.loom/loom.toml` | read existing config; propose or write the repo control plane |
 | `.loom/<skill>.md` | read existing repo opinion; propose only when a skill needs repo-specific guidance |
 | `.loom/scripts/*` | detect or scaffold approved deterministic hook scripts |
 | managed Markdown/frontmatter | adopt, seed, move, exclude, or stamp docs in the managed set |
@@ -28,7 +28,7 @@ These are the surfaces `dress` reads or writes directly. The full `.loom/loom.to
 
 ```mermaid
 flowchart TD
-    survey["Survey - explore the repo, write nothing"] --> propose["Propose - reconcile to the minimum harness"]
+    survey["Survey - explore the repo, write nothing"] --> propose["Propose - reconcile to the minimum surface"]
     propose --> confirm{"Confirm - approval boundary"}
     confirm -->|revise| propose
     confirm -->|approved| write["Write - materialize the approved set"]
@@ -40,7 +40,7 @@ flowchart TD
 
 ### 1. Survey - explore the repo, write nothing
 
-Determine whether this repo is blank, undressed, or already dressed, then gather only the facts needed to propose the harness.
+Determine whether this repo is blank, undressed, or already dressed, then gather only the facts needed to propose the surface.
 
 - Check `.loom/`: whether `.loom/loom.toml` exists, which `.loom/<skill>.md` overrides exist, and whether hook scripts already exist under `.loom/scripts/`.
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` to see what loom currently sees: managed docs, candidate docs, top-level dirs, exclusions, and code signals.
@@ -66,9 +66,9 @@ printf '\n## startup slice\n'
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"
 ```
 
-### 2. Propose - reconcile to the minimum harness
+### 2. Propose - reconcile to the minimum surface
 
-Review the reference project as calibration for the minimum loom surface, then turn the survey into an adoption diff: current state -> needed harness surface -> proposed changes. Still write nothing. Do not copy the reference shape wholesale.
+Review the reference project as calibration for the minimum loom surface, then turn the survey into an adoption diff: current state -> needed loom surface -> proposed changes. Still write nothing. Do not copy the reference shape wholesale.
 
 Example reference project probe:
 

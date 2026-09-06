@@ -204,8 +204,7 @@ validate_hook_form() {
 
 check_lint_config() {
   [ -f "$CONF" ] || return 0
-  [ -n "$RAW_KINDS" ] || add "LINT     .loom/loom.toml: [lint] missing kinds"
-  [ -n "$RAW_STATUSES" ] || add "LINT     .loom/loom.toml: [lint] missing statuses"
+  # kinds and statuses are optional: an absent key takes the shipped vocabulary (INV-2).
   local key v
   for key in $SPEC_BUDGET_KEYS; do   # [lint.specs] is optional; budgets must be positive integers iff set
     v="$(cfg_get "lint.specs.$key")"
@@ -233,8 +232,10 @@ check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a
   done
 }
 
-check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
-  printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
+check_warp_config() { # optional [warp] section; required-and-valid iff present.
+  # Detect the header itself, as check_weave_config does: an empty [warp] yields no parsed
+  # keys, so key-detection would pass it as absent.
+  [ -f "$CONF" ] && grep -q '^\[warp\]' "$CONF" || return 0
   local bc sr wt wh
   bc="$(cfg_get warp.branch_convention)"
   sr="$(cfg_get warp.source_repo)"
@@ -252,7 +253,7 @@ check_warp_config() { # the [warp] section is optional, but required-and-valid i
 
 check_weave_config() { # optional [weave] section; required-and-valid iff present.
   # Single-knob section: detect the header itself — an empty [weave] yields no parsed
-  # keys, so key-detection (as in check_warp_config) would miss a missing cleanup.
+  # keys, so key-detection would miss a missing cleanup.
   [ -f "$CONF" ] && grep -q '^\[weave\]' "$CONF" || return 0
   local cl rsi wh
   cl="$(cfg_get weave.cleanup)"

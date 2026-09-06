@@ -50,7 +50,7 @@ Walk the spec by id: for each requirement and scenario, what the evidence says. 
 
 - **Undocumented:** behavior the evidence asserts and no id covers.
 - **Drift:** the evidence contradicts a requirement or scenario; either side may be the bug.
-- **Unverified:** a scenario without a test ref, a ref that resolves to nothing, or a requirement without a scenario.
+- **Unverified:** a scenario without a test ref, a ref that resolves to nothing, a test that does not establish the sentence it is named for, or a requirement without a scenario.
 - **Dead:** no test and no code path exercises the requirement.
 - **Detail:** the evidence pins how the code does something rather than what the feature promises; it is named in the report and never logged, and a test that pins the how gets no scenario.
 

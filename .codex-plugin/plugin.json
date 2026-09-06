@@ -1,7 +1,7 @@
 {
   "name": "loom",
   "version": "0.1.0",
-  "description": "A docs & context harness for Claude Code and Codex — six skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
+  "description": "An agentic workflow toolkit for Claude Code and Codex — six skills plus bash/awk scripts that keep a repo's docs lean and routed and its specs true to the code.",
   "author": {
     "name": "Zebulon Perrin"
   },
@@ -9,15 +9,15 @@
   "keywords": [
     "docs",
     "context",
-    "harness",
+    "toolkit",
     "skills",
     "progressive-disclosure"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Loom",
-    "shortDescription": "Docs & context harness for lean, routed docs",
-    "longDescription": "A docs & context harness for Claude Code and Codex — six skills plus a bash/awk linter and slicer that keep a repo's documentation lean, routed, and useful to agents.",
+    "shortDescription": "Agentic workflow toolkit: lean docs, living specs",
+    "longDescription": "An agentic workflow toolkit for Claude Code and Codex — six skills plus bash/awk scripts that keep a repo's docs lean and routed and its specs true to the code.",
     "developerName": "Zebulon Perrin",
     "category": "Productivity",
     "capabilities": [

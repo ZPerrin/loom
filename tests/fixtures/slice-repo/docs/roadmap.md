@@ -10,6 +10,11 @@ location: BOGUS/should-not-appear.md
 
 Shipping the slicer.
 
+```md
+## Not a section
+Fenced example inside the section.
+```
+
 ## Next
 
 Later stuff.

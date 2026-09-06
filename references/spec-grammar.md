@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Spec grammar
 
@@ -13,8 +13,8 @@ authority: what it rejects is not a spec, however sensible the prose. Sentence r
 ## Two modalities, one grammar
 
 A **repo spec** says what the code does for one capability: `docs/specs/<capability>.md` or the
-`[specs].repo_dir` override, committed, one per capability. A capability is a domain boundary
-(auth-session, payments, notifications), not a code module.
+`[specs].repo_dir` override, committed, one per capability. A capability is a product feature named by
+what its owner gets (auth-session, payments, notifications), never a code module or a script.
 
 A **work spec** says what one unit of work will make true for one capability: dated
 `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` or the `[specs].work_dir` override,

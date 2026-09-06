@@ -54,6 +54,7 @@ docs/specs/w001-banned-word.md	W001
 docs/specs/w002-flagged-word.md	W002
 docs/specs/l001-bad-invariant-shape.md	L001
 docs/specs/l001-bad-changelog-line.md	L001
+docs/specs/l001-bad-nongoal-shape.md	L001
 docs/specs/r010-duplicate-inv-id.md	R010
 docs/specs/r010-duplicate-requirement-id.md	R010"
 
@@ -137,6 +138,16 @@ off_out="$(awk -v rel="$rel" -v max_norm_words="$MNW" -v max_purpose_sentences="
                -f "$AWK_CHECKER" "$src" 2>&1)"
 assert_contains     "$strict_out" "R003" "r003 fixture: R003 fires at the default (strict) ears"
 assert_not_contains "$off_out"    "R003" "r003 fixture: ears=off silences R003 entirely"
+
+echo "-- checker-direct: json=1 emits one object per finding --"
+jrel="docs/specs/s002-no-test-ref.md"
+json_out="$(awk -v rel="$jrel" -v json=1 -v max_norm_words="$MNW" -v max_purpose_sentences="$MPS" \
+                -v max_scenarios="$MSC" -v max_file_lines="$MFL" -f "$AWK_CHECKER" "$SPEC_REPO/$jrel" 2>&1)"
+assert_contains "$json_out" "\"rule\":\"S002\""     "json=1: the finding carries its rule"
+assert_contains "$json_out" "\"severity\":\"warn\"" "json=1: the finding carries its severity"
+assert_contains "$json_out" "\"file\":\"$jrel\""    "json=1: the finding carries the file"
+assert_contains "$json_out" "\"id\":\"R-"           "json=1: the finding carries the requirement id"
+assert_eq "$(printf '%s\n' "$json_out" | grep -c '^{')" "$(printf '%s\n' "$json_out" | grep -c .)" "json=1: every line is one JSON object"
 
 # ------------------------------------------------------- [lint.specs] ears config validation
 # doc-linter validates the config value itself, independent of any spec content; built and

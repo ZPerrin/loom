@@ -95,7 +95,7 @@ WHEN a managed document links to a relative path that does not exist, the system
 - THEN none of them is reported
 
 ### R-DOCS-007: Link text is plain and listed paths are links
-WHEN link text sits in backticks or a list item names an existing tracked path in backticks with no link, the system SHALL report CODELINK or MISSING naming it.
+WHEN link text sits in backticks or a list item names an existing path in backticks with no link, the system SHALL report CODELINK or MISSING naming it.
 #### Scenario: code-link -> tests/test-doc-linter.sh#CODELINK
 - GIVEN a link whose text is run in backticks
 - WHEN doc-linter runs
@@ -131,7 +131,7 @@ The system SHALL check kind and status against [lint] kinds and statuses when se
 #### Scenario: missing-vocab -> tests/test-doc-linter.sh#lint-config-repo
 - GIVEN .loom/loom.toml with no [lint] section
 - WHEN doc-linter runs
-- THEN it reports LINT for missing kinds and for missing statuses
+- THEN no LINT finding is reported and the shipped vocabulary applies
 - AND a readme with status living is not reported
 #### Scenario: no-config -> tests/test-doc-linter.sh#no-loom-toml
 - GIVEN no .loom/loom.toml at all
@@ -287,8 +287,12 @@ WHEN a scenario departs from the scenario shape or the scenario rules, the syste
 - GIVEN a #### Not a scenario header line
 - WHEN doc-linter runs
 - THEN it reports SPEC S001 at that line
-#### Scenario: bad-bullet -> tests/test-lint-spec.sh#s001-bad-bullet
-- GIVEN a bullet opening with none of GIVEN, WHEN, THEN, or AND, or a scenario whose first bullet is AND
+#### Scenario: bad-bullet -> tests/test-lint-spec.sh#s001-bad-bullet-keyword.md
+- GIVEN a bullet opening with none of GIVEN, WHEN, THEN, or AND
+- WHEN doc-linter runs
+- THEN it reports SPEC S001 at that bullet
+#### Scenario: bullet-opens-with-and -> tests/test-lint-spec.sh#s001-bad-bullet-opens-with-and.md
+- GIVEN a scenario whose first bullet is AND
 - WHEN doc-linter runs
 - THEN it reports SPEC S001 at that bullet
 #### Scenario: no-test-ref -> tests/test-lint-spec.sh#s002-no-test-ref.md
@@ -310,7 +314,10 @@ WHEN a line under Invariants or Non-goals or Change log departs from that sectio
 - GIVEN an Invariants line with no colon after the id
 - WHEN doc-linter runs
 - THEN it reports SPEC L001 at that line
-- AND a Non-goals line shaped the same way is reported the same way
+#### Scenario: bad-nongoal -> tests/test-lint-spec.sh#l001-bad-nongoal-shape.md
+- GIVEN a Non-goals line with no colon after the id
+- WHEN doc-linter runs
+- THEN it reports SPEC L001 at that line
 #### Scenario: bad-changelog -> tests/test-lint-spec.sh#l001-bad-changelog-line.md
 - GIVEN a Change log line with no leading date and id
 - WHEN doc-linter runs
@@ -359,10 +366,17 @@ WHEN a document repeats an INV or N id, the system SHALL report R010 at the seco
 - WHEN doc-linter runs
 - THEN it reports SPEC R010 at the second line
 
+### R-DOCS-025: Findings are available as JSON
+WHERE the spec checker runs with json set, the system SHALL emit each finding as one JSON object carrying file, severity, rule, line, and id.
+#### Scenario: json-findings -> tests/test-lint-spec.sh#json=1
+- GIVEN a spec with one S002 warning
+- WHEN the checker runs with json set
+- THEN one JSON object is emitted carrying the file, severity, rule, line, and id
+
 ## Non-goals
 - N-1: The config grammar, its shipped defaults, the sections only skills read, and each consumer's behavior on an unparseable config belong to control-plane.
-- N-2: Session slices and the on-demand header query belong to session-context.
-- N-3: Hook execution and the executable-form check on hook values belong to skill-hooks.
+- N-2: Session slices and the on-demand header query belong to context.
+- N-3: Hook execution and the executable-form check on hook values belong to hooks.
 - N-4: Editorial judgment on prose is weft's pass and never a check here.
 - N-5: Which documents a repo adopts, excludes, or seeds is dress's decision; this capability lists and grades what it finds.
 
@@ -373,3 +387,9 @@ WHEN a document repeats an INV or N id, the system SHALL report R010 at the seco
 - 2026-09-05 R-DOCS-016: INV and N uniqueness is now checked under R-DOCS-024 -> edited
 - 2026-09-05 R-DOCS-022: an invalid value reports LINT and the checker runs at the shipped default; work spec 2026-09-05-managed-docs landed -> edited
 - 2026-09-05 R-DOCS-023: the spec-repo loop asserts clean rows, so the scenario's test now asserts it -> edited
+- 2026-09-06 R-DOCS-007: the MISSING check tests that a path exists and is not ignored, never that git tracks it, so tracked left the sentence -> edited
+- 2026-09-06 R-DOCS-009: the missing-vocab scenario asserted two LINT findings that INV-2 of control-plane forbids; the linter now takes the shipped vocabulary silently and the scenario says so -> edited
+- 2026-09-06 R-DOCS-019: the bad-bullet ref matched two fixture rows; each fixture now has its own scenario -> edited
+- 2026-09-06 R-DOCS-020: the Non-goals half of the line-shape rule had no fixture -> asserted
+- 2026-09-06 R-DOCS-025: the checker's json output had no requirement and no test -> edited
+- 2026-09-06 N-2: the neighbors are named context and hooks, as their specs are; N-3 the same -> edited

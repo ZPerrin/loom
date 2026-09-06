@@ -1,19 +1,24 @@
 ---
 kind: readme
 status: living
-updated: 2026-08-30
+updated: 2026-09-06
 ---
 # AGENTS
 
-loom — a docs & context harness, packaged as a Claude Code + Codex plugin.
+loom is a toolkit for working with agents: six skills plus the config and state they need,
+packaged as a Claude Code and Codex plugin.
 
 See [README.md](README.md)
 
 ## Agentic Guidelines
 
-### SDLC
-
-Accumulate approved work for the next public version on `release/<major>.<minor>.<patch>` and publish that branch for cross-machine continuity. Promote it to the default branch and tag the release only with explicit user approval.
+- Approved work accumulates on `release/<major>.<minor>.<patch>`, pushed for cross-machine
+  continuity. Promote to the default branch and tag the release only with explicit approval.
+- The runtime is bash 3.2 and awk with no other dependency; Windows checkouts enter through
+  `scripts/run-hook.cmd`.
+- Everything ships to Claude Code and Codex alike; nothing host-specific sits on the critical path.
+- [docs/specs](docs/specs/) says what each capability promises, one spec per capability;
+  refine-spec reconciles drift.
 
 ## Agentic Validation
 
