@@ -40,6 +40,8 @@ These are the surfaces `refine-spec` reads or writes directly. The full `.loom/l
 
 ### 1. Read
 
+When no capability is named, or the name is a script, a module, or a test file, map first: list the product's features from the front doors (README, roadmap, the skills' descriptions), put the cut to the owner as features at the 20,000-foot view, and read no test until one is chosen. Evidence is walked inside a fence, never to find one.
+
 The repo spec if one exists, `.loom/spec.md`, the tests the scenarios name and the tests that cover the capability, then the code they exercise. Resolve every test ref by the repo's form; a ref that resolves to nothing is a finding. Where a sampled run is called for, write down what was run.
 
 ### 2. Compare
@@ -50,6 +52,7 @@ Walk the spec by id: for each requirement and scenario, what the evidence says. 
 - **Drift:** the evidence contradicts a requirement or scenario; either side may be the bug.
 - **Unverified:** a scenario without a test ref, a ref that resolves to nothing, or a requirement without a scenario.
 - **Dead:** no test and no code path exercises the requirement.
+- **Detail:** the evidence pins how the code does something rather than what the feature promises; it is named in the report and never logged, and a test that pins the how gets no scenario.
 
 An existing change-log line that already records the observation under the id is a finding already open: cite it, do not log it again. A finding `doc-linter` already reports by id is carried in the report from the lint output, not logged; the change log holds what only this pass observed.
 

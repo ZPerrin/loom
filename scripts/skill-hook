@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # skill-hook — run a skill's configured [<skill>] hook with scripts_dir on PATH.
 #   usage: skill-hook <skill> [args…]
-# exit: 0 hook ran clean · 3 no hook configured · other = hook's own failing code.
+# exit: 0 hook ran clean · 2 loom.toml unparseable · 3 no hook configured ·
+#       other = hook's own failing code.
 # The runner does not interpret failure — the calling skill does (warp: fall to floor;
-# weave: stop close-out). See references/tooling.md.
+# weave: stop close-out).
 set -u
 SELF="$(cd "$(dirname "$0")" && pwd)"
 skill="${1:?usage: skill-hook <skill> [args…]}"; shift || true
@@ -12,7 +13,13 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CONF="$ROOT/.loom/loom.toml"
 [ -f "$CONF" ] || exit 3
 
-CFG="$(awk -f "$SELF/lib/parse-toml.awk" "$CONF" 2>/dev/null)"
+# A config the parser refuses is refused whole: its partial stdout would name a hook the
+# owner never validly configured, and a broken config is not "no hook" (exit 3) — it is a
+# repo the runner cannot read, so say so once and stop.
+if ! CFG="$(awk -f "$SELF/lib/parse-toml.awk" "$CONF" 2>/dev/null)"; then
+  printf 'skill-hook: unparseable .loom/loom.toml — refusing to run the %s hook\n' "$skill" >&2
+  exit 2
+fi
 get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
 
 hook="$(get "${skill}.hook")"

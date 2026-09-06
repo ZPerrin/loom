@@ -65,4 +65,18 @@ assert_contains "$nout" "Bearings"      "no-config still emits Bearings"
 assert_contains "$nout" "seed: no conf" "no-config includes git log"
 rm -rf "$NC"
 
+# session-start-degrades: an unparseable loom.toml is refused whole and the slice runs on
+# the shipped defaults. The [context] override above the bad line names "## Later"; the
+# shipped default names "## Now", so which body is harvested says which config won.
+DG="$DIR/fixtures/degrade-repo"; rm -rf "$DG"; mkdir -p "$DG/.loom"
+printf -- '---\nkind: roadmap\nstatus: living\nupdated: 2026-09-06\n---\n# Plan\n\n## Now\n\nShipping the default header.\n\n## Later\n\nThe overridden header.\n' > "$DG/plan.md"
+printf '[context]\nslice_headers = ["## Later"]\n\n[lint]\nbad = { inline = "table" }\n' > "$DG/.loom/loom.toml"
+( cd "$DG" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: degrade repo" )
+dgo="$(cd "$DG" && bash "$SLICER" 2>&1)"; dgrc=$?
+assert_exit "$dgrc" "0" "session-start-degrades: an unparseable config still exits 0"
+assert_contains "$dgo" "Bearings"                     "session-start-degrades: bearings are still emitted"
+assert_contains "$dgo" "Shipping the default header." "session-start-degrades: the shipped ## Now header is harvested"
+assert_not_contains "$dgo" "The overridden header."   "session-start-degrades: no key from the refused file takes effect"
+rm -rf "$DG"
+
 finish

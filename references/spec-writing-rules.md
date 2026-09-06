@@ -67,6 +67,11 @@ Right: The system SHALL serve repeat session lookups within 5 ms at p95.
 Why: if the implementation can change without changing externally visible behavior, it is not
 spec; specs outlive implementations.
 
+**Promise, not mechanism.**
+Wrong: WHEN the repo is not a git checkout, the system SHALL find markdown with a bounded find that skips .git and node_modules.
+Right: WHEN the repo is not a git checkout, the system SHALL still find its markdown files.
+Why: the skip list is taste; a different one breaks no promise the owner made, and a line that pins it forbids the better solution. A requirement states what the feature promises the people and skills that use it; the code keeps the how, and a test that pins the how gets no scenario.
+
 **Weak verbs hide the behavior.**
 Wrong: The system SHALL support exporting reports.
 Right: WHEN a user requests export, the system SHALL produce a CSV of the current report within 10 s.

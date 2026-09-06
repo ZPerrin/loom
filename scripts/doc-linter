@@ -51,7 +51,7 @@ DEFAULT_KINDS="$(default_get lint.kinds)"
 DEFAULT_STATUSES="$(default_get lint.statuses)"
 KINDS="${RAW_KINDS:-$DEFAULT_KINDS}"
 STATUSES="${RAW_STATUSES:-$DEFAULT_STATUSES}"
-CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-.loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
+CONFIG_DIR=".loom"   # loom's one home in a repo; overrides live beside loom.toml
 SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/scripts}"; SCRIPTS_DIR="${SCRIPTS_DIR%/}"
 
 # [lint.specs]: budgets, the ears knob, and word lists for the spec checker. Defaults here mirror
@@ -59,12 +59,13 @@ SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/s
 # built-in lists.
 SPEC_AWK="$SELF_DIR/lib/lint-spec.awk"
 SPEC_BUDGET_KEYS="max_norm_words max_purpose_sentences max_scenarios max_file_lines"
-spec_cfg() { local v; v="$(cfg_get "lint.specs.$1")"; printf '%s' "${v:-$2}"; }
-SPEC_MAX_NORM="$(spec_cfg max_norm_words 30)"
-SPEC_MAX_PURPOSE="$(spec_cfg max_purpose_sentences 3)"
-SPEC_MAX_SCEN="$(spec_cfg max_scenarios 8)"
-SPEC_MAX_LINES="$(spec_cfg max_file_lines 400)"
-SPEC_EARS="$(spec_cfg ears strict)"
+# An invalid value is reported by check_lint_config; the checker itself runs at the shipped default.
+spec_budget() { local v; v="$(cfg_get "lint.specs.$1")"; case "$v" in ""|0*|*[!0-9]*) printf '%s' "$2" ;; *) printf '%s' "$v" ;; esac; }
+SPEC_MAX_NORM="$(spec_budget max_norm_words 30)"
+SPEC_MAX_PURPOSE="$(spec_budget max_purpose_sentences 3)"
+SPEC_MAX_SCEN="$(spec_budget max_scenarios 8)"
+SPEC_MAX_LINES="$(spec_budget max_file_lines 400)"
+SPEC_EARS="$(cfg_get lint.specs.ears)"; case "$SPEC_EARS" in strict|warn|off) ;; *) SPEC_EARS=strict ;; esac
 SPEC_BANNED="$(cfg_get lint.specs.banned | paste -s -d '|' -)"
 SPEC_FLAGGED="$(cfg_get lint.specs.flagged | paste -s -d '|' -)"
 
@@ -174,12 +175,12 @@ check_spec() { # $1=file — kind: spec docs run through the awk checker; tab-se
                -f "$SPEC_AWK" "$f")
 }
 
-check_placement() { # $1=file $2=kind  — loom-config docs must live at <config_dir>/<skill>.md
+check_placement() { # $1=file $2=kind  — loom-config docs must live at .loom/<skill>.md
   [ "$2" = "loom-config" ] || return 0
   local f="$1" rel dir base; rel="${f#"$ROOT"/}"
   dir="$(dirname "$rel")"; base="$(basename "$rel" .md)"
   if [ "$dir" != "$CONFIG_DIR" ]; then
-    add "PLACEMENT $rel: loom-config outside config_dir ($CONFIG_DIR/) — its skill won't find it"
+    add "PLACEMENT $rel: loom-config outside .loom/ — its skill won't find it"
     return
   fi
   if [ -n "$SKILLS" ] && ! in_list "$base" "$SKILLS"; then
