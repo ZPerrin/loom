@@ -49,10 +49,20 @@ hiding signal: the operator still catches substantive misses at the gate.
 - 2026-09-05 (s2): dress's Survey prose describes doc-scan sections doc-scan no longer emits;
   Sonnet read the script source to resolve it. Fix on the next dress touch; candidate tripwire for
   weft: skill prose naming a script's output.
-- 2026-09-05 (s5): An acceptance line named a file count where the skill permits writing nothing;
-  the delegate argued with the brief and was right. Test: 6's briefs need no such argument in a
-  Return.
 - 2026-09-05 (s5): Test-ref resolution is prose (refine-spec's Read step, `.loom/spec.md`'s
   broken-ref rule with no enforcer); a `grep -F` rule cannot see whether a loop asserts a table
   row, which s6 found is the difference between a resolved ref and an asserted one. Candidate for
   determinism when 7 touches the parser.
+- 2026-09-06 (s6): The first brownfield cut came out per-script; the skills now map first from
+  the front doors. Test: the external-repo run's first cut is by feature without the owner
+  correcting it, or the map-first clause needs an example.
+- 2026-09-06 (s6): Feature-grain drafts of a wide capability came out over the 400-line budget
+  twice and needed a merge pass. Test: the next wide spec's first draft lands under budget, or
+  the writing rules gain a sizing rule (scenarios per requirement, bullets per scenario).
+- 2026-09-06 (s6): The change-log dispositions open, edited, kept had no word for "the test now
+  asserts it" or "the code now keeps it"; both were written as edited and kept. Test: the next
+  reconciliation needs a fourth word, then the grammar gets one; otherwise the three stand.
+- 2026-09-06 (s6): An Opus delegate writing tests against a spec followed the brief to the letter,
+  ran the suite under bash 3.2 unprompted, and surfaced two spec ambiguities. Test: the same
+  brief shape on Sonnet for the next test-writing delegation; if its Return reads the same,
+  "Sonnet by default" stands for test work too.

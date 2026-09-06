@@ -1,7 +1,7 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Roadmap
 
@@ -50,7 +50,7 @@ spec parser is shared with the slicer when slicing lands.
 - [x] Skill: spec authoring (2026-09-05): `skills/spec`, house format with six hard constraints
       and no graph; references load by skill-time injection with a prose floor beneath it, so a
       harness that renders the line literally still loads both. Its first run wrote
-      `docs/specs/spec-lint.md`: 28 requirements, lint-clean, nine scenarios still without a test.
+      loom's first repo spec, since absorbed into `docs/specs/managed-docs.md`.
 - [x] Skill: spec reconciliation (2026-09-05): `skills/refine-spec`, the descendant of
       `refine-docs`, sibling to weft (weft fights slop, refine-spec fights drift). Evidence order
       tests > code > a sampled run, findings keyed by id, confirm before anything is written;
@@ -59,6 +59,13 @@ spec parser is shared with the slicer when slicing lands.
       reconciled `docs/specs/spec-lint.md`: nine untested scenarios, no drift.
 - [x] Example spec as `tests/fixtures/` lint fixtures, conforming and violating (2026-09-05): one
       conforming capability, one violation per file named by rule, knob repos for `[lint.specs]`.
+- [x] Dogfood on loom (2026-09-06): four repo specs cut by product feature under `docs/specs/`
+      (managed-docs, control-plane, context, hooks), every scenario naming its test bar the Codex
+      session-start check, which waits on the release smoke test. The writing rules gained "Promise,
+      not mechanism"; `.loom/spec.md` carries the cut rule; both spec skills map first and classify
+      detail. Code landed through the first work spec and a delegate: clean fixture rows asserted,
+      invalid lint knobs fall back, INV/N ids unique, a refused config never half-applies, and
+      `[skills].config_dir` retired. The external-repo run and the ablations are deferred (see plan).
 - [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all
       slicing; whoever dispatches pushes, whoever works pulls.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
