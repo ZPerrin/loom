@@ -15,7 +15,7 @@ dated orchestration state under `.loom/`. The design is the
 [plan](../.loom/plans/2026-08-30-0.2.0-living-specs.md).
 
 Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
-skills, the lint fixtures, and four repo specs on loom itself. Left:
+skills, the lint fixtures, and four repo specs on loom itself, reconciled against the code. Left:
 
 - [ ] Dogfood on an external repo with the owner at the fence, then the skill-format ablations
       under Ideas.
