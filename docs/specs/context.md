@@ -20,6 +20,10 @@ WHEN a session starts, the system SHALL emit the recent commits as bearings, the
 - GIVEN a repo with one commit
 - WHEN the session slice runs
 - THEN a Bearings heading is emitted with that commit beneath it
+#### Scenario: bearings-count -> tests/test-doc-slicer.sh#bearings-count
+- GIVEN three commits and recent_commits = 2
+- WHEN the session slice runs
+- THEN the two newest commits are emitted and the third is not
 
 ### R-CONTEXT-002: Configured sections are harvested with provenance
 WHEN a session starts, the system SHALL emit every [context].slice_headers section from every managed doc, each annotated with the [context].inject_fields values.
@@ -36,6 +40,11 @@ WHEN a session starts, the system SHALL emit every [context].slice_headers secti
 - GIVEN a managed doc with a ## Overview section not named in slice_headers
 - WHEN the session slice runs
 - THEN that section is not emitted
+#### Scenario: fenced-header -> tests/test-doc-slicer.sh#fenced
+- GIVEN a managed doc whose only ## Now line sits inside a fenced code block
+- WHEN the session slice runs
+- THEN nothing from that doc is emitted under ## Now
+- AND a fenced code block inside a harvested section stays in its body
 
 ### R-CONTEXT-003: The slice names the next ring
 WHEN a session starts, the system SHALL tell the agent how to pull one more section on demand.
@@ -64,6 +73,10 @@ WHEN a header query names path filters, the system SHALL keep only docs whose pa
 - GIVEN no doc under docs with a ## Overview section
 - WHEN doc-slicer --header Overview docs runs
 - THEN it says no managed doc has the section and exits 1
+#### Scenario: several-filters -> tests/test-doc-slicer.sh#OR-match
+- GIVEN filters nope and docs, and the ## Now section under docs
+- WHEN doc-slicer --header "## Now" nope docs runs
+- THEN the section is emitted and the run exits 0
 
 ### R-CONTEXT-006: No config means the shipped slice
 WHEN no config exists, the system SHALL harvest the shipped header with the shipped count and fields.
@@ -71,6 +84,7 @@ WHEN no config exists, the system SHALL harvest the shipped header with the ship
 - GIVEN a repo with no .loom directory
 - WHEN the session slice runs
 - THEN bearings are emitted and the run exits 0
+- AND the ## Now body of a managed doc is emitted under the shipped header
 
 ### R-CONTEXT-007: The slice is available at every session start
 The system SHALL make the session slice available when a session starts, resumes, clears, or compacts, on every harness the plugin ships to.
@@ -79,9 +93,20 @@ The system SHALL make the session slice available when a session starts, resumes
 - WHEN a session starts, resumes, clears, or compacts
 - THEN the slice is injected before the first turn
 
+### R-CONTEXT-008: A query without a header is refused
+IF a header query names no header, THEN the system SHALL refuse it and exit 2.
+#### Scenario: no-header-name -> tests/test-doc-slicer.sh#missing
+- WHEN doc-slicer --header runs with no name
+- THEN it exits 2
+
 ## Non-goals
 - N-1: Which documents are managed, and the exclusion knob, belong to managed-docs.
-- N-2: Slicing a spec by capability, id, or section is roadmap item 7 and is not promised here.
+- N-2: Slicing a spec by capability, id, or section is item 7 of the 0.2.0 plan and is not promised here.
 
 ## Change log
 - 2026-09-06 R-CONTEXT-007: both harnesses document the same SessionStart hook loaded from hooks/hooks.json at the plugin root, but a closed Codex issue reported plugin hooks not loading at runtime; verify on Codex at the release smoke test, and until then warp pulls the slice when the opening context lacks one -> open
+- 2026-09-06 R-CONTEXT-002: a ## Now inside a fenced code block was harvested as a section, so the reference project's template roadmap opened every session; a fence is body -> edited
+- 2026-09-06 R-CONTEXT-001: the fixture had one commit, so the count could not be told from a constant; a three-commit repo with recent_commits = 2 now pins it -> asserted
+- 2026-09-06 R-CONTEXT-005: several filters OR-match in code and the sentence says filters; the test passed one -> asserted
+- 2026-09-06 R-CONTEXT-006: the no-config fixture had no managed doc, so the shipped header was never shown harvested -> asserted
+- 2026-09-06 R-CONTEXT-008: a query with no header name exited 2 in the test and no id named it -> edited

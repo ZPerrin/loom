@@ -8,7 +8,7 @@ inject_fields = ["updated", "kind", "location"]
 
 [lint]
 kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
-statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
+statuses = ["living", "hardened", "superseded"]
 
 [warp]
 branch_convention = "issue/<number>-<slug> | feature/<slug>"

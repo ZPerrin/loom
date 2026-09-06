@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-05
+updated: 2026-09-06
 ---
 # Spec writing rules
 
@@ -106,8 +106,9 @@ re-proposed by the next agent that cannot see them.
 
 `- YYYY-MM-DD <id>: <text> -> <disposition>`. The text is the observation or the edit. The
 disposition is `edited` (the spec changed in this diff), `kept` (the spec stands and the code is
-the bug), or `open` (a human decides). A reconciliation pass only ever writes `open`; a human
-closes it. Rationale lives here, not in the requirement.
+the bug), `fixed` (the spec stands and the code now keeps it), `asserted` (the spec stands and a
+test now pins it), or `open` (a human decides). A reconciliation pass only ever writes `open`; a
+human closes it. Rationale lives here, not in the requirement.
 
 ## Word lists
 

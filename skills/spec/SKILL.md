@@ -40,7 +40,7 @@ These are the surfaces `spec` reads or writes directly. The full `.loom/loom.tom
 
 ### 1. Fence
 
-A capability is a product feature named by what the owner gets, never a script or a module; when the request names one of those, map the features from the front doors and put the cut to the owner before reading a test.
+When the request names a script, a module, or a test file, map the features from the front doors and put the cut to the owner before reading a test; the grammar says what a capability is.
 
 Read the repo spec if one exists, the tests that cover the capability, the code they exercise, and the ids already in use. Open the first round with what you found: the behaviors, as candidate requirement titles at the altitude of the promise, each naming its test, and the neighbors the evidence touched. Then the decisions, in rounds: every question whose prerequisites are settled, numbered, each with your recommended answer; a question that depends on an open one waits for the next round. Wait for the owner between rounds. Write no spec text yet.
 

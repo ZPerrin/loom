@@ -6,7 +6,7 @@ updated: 2026-09-06
 # Capability: control-plane
 
 ## Purpose
-control-plane is how a repo owner molds loom to a workflow: one TOML file of settings loom enforces the same way on every run, plus one opinion file per skill for the guidance that has not yet earned determinism. The config is parsed, validated, and applied by the scripts; the opinion is read by the skills as a floor beneath the config, and its content is never checked. A step observed working the same way graduates from opinion to config or to a hook, so the prose shrinks as the harness hardens.
+control-plane is how a repo owner molds loom to a workflow: one TOML file of settings loom enforces the same way on every run, plus one opinion file per skill for the guidance that has not yet earned determinism. The config is parsed, validated, and applied by the scripts; the opinion is read by the skills as a floor beneath the config, and its content is never checked. A step observed working the same way graduates from opinion to config or to a hook, so the prose shrinks as the configuration hardens.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -24,7 +24,18 @@ The system SHALL read tables, scalars, and single-line arrays from the config an
 - GIVEN an array of tables
 - WHEN the config is parsed
 - THEN the file is refused and the line is named
-- AND an inline table or a multiline array is refused the same way
+#### Scenario: quoted-comma -> tests/test-parse-toml.sh#quoted-comma.toml
+- GIVEN an array element whose quoted string holds a comma
+- WHEN the config is parsed
+- THEN the element arrives whole and the next element arrives on its own
+#### Scenario: multiline-array -> tests/test-parse-toml.sh#multiline.toml
+- GIVEN an array opened on one line and closed on another
+- WHEN the config is parsed
+- THEN the file is refused and the refusal names the construct
+#### Scenario: inline-table -> tests/test-parse-toml.sh#inline.toml
+- GIVEN an inline table value
+- WHEN the config is parsed
+- THEN the file is refused and the refusal names the construct
 
 ### R-CONFIG-002: The file is read as written
 The system SHALL ignore comments outside quoted strings and accept CRLF line endings.
@@ -47,6 +58,10 @@ WHEN no config file exists, the system SHALL run every consumer on the shipped d
 - GIVEN a repo with no .loom directory
 - WHEN doc-linter runs
 - THEN documents are checked against the shipped vocabulary with no LINT finding
+#### Scenario: hook-runner-without-config -> tests/test-skill-hook.sh#no-config-file
+- GIVEN a repo with no .loom/loom.toml
+- WHEN the warp hook runs
+- THEN the run exits 3 as for no hook
 
 ### R-CONFIG-004: An absent key takes its own default
 WHEN a key is absent from a present config, the system SHALL use that key's shipped default and leave every set key in force.
@@ -99,6 +114,10 @@ WHEN a [warp] section is present, the system SHALL require branch_convention, so
 - GIVEN no [warp] section
 - WHEN doc-linter runs
 - THEN no WARP finding is reported and the run exits 0
+#### Scenario: empty-section -> tests/test-doc-linter.sh#empty-warp
+- GIVEN a [warp] header with no keys beneath it
+- WHEN doc-linter runs
+- THEN it reports WARP naming each required knob and exits 1
 
 ### R-CONFIG-008: A present weave section is whole
 WHEN a [weave] section is present, the system SHALL require a cleanup value from its set and accept an optional rsi value from its set, reporting WEAVE otherwise.
@@ -120,8 +139,8 @@ WHEN a [weave] section is present, the system SHALL require a cleanup value from
 - THEN it reports WEAVE naming the value
 
 ## Non-goals
-- N-1: The [discovery], [lint], and [lint.specs] keys belong to managed-docs, and the [context] keys belong to session-context.
-- N-2: The scripts_dir key, the hook keys, their executable-form check, and hook execution belong to skill-hooks.
+- N-1: The [discovery], [lint], and [lint.specs] keys belong to managed-docs, and the [context] keys belong to context.
+- N-2: The scripts_dir key, the hook keys, their executable-form check, and hook execution belong to hooks.
 - N-3: What a skill does with its knob values, and the content of its opinion file, is that skill's own prose.
 - N-4: Where an opinion file must sit is checked by managed-docs.
 
@@ -129,3 +148,9 @@ WHEN a [weave] section is present, the system SHALL require a cleanup value from
 - 2026-09-05 R-CONFIG-005: the hook runner and discovery act on the lines parsed before the failing line, so a hook ran and an exclude applied from a refused file in a sampled run -> kept
 - 2026-09-05 INV-3: the config_dir key was retired; it moved the placement check and nothing else, and could never move the file it lived in -> edited
 - 2026-09-06 R-CONFIG-005: the hook runner refuses and discovery ignores a refused config whole, so the promise now holds in code -> kept
+- 2026-09-06 R-CONFIG-001: a comma inside a quoted array element split the element into fragments with exit 0; the parser now splits outside quotes only -> fixed
+- 2026-09-06 R-CONFIG-001: inline-table and multiline-array refusal had no fixture of their own -> asserted
+- 2026-09-06 R-CONFIG-003: the hook runner with no config file was untested -> asserted
+- 2026-09-06 INV-2: a present config with no [lint] section reported LINT twice and exited 1; an absent vocabulary now takes the shipped lists silently -> fixed
+- 2026-09-06 R-CONFIG-007: an empty [warp] section passed as absent while an empty [weave] reported; the linter now detects the header -> fixed
+- 2026-09-06 N-1: the neighbors are named context and hooks, as their specs are; N-2 the same -> edited

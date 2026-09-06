@@ -67,9 +67,8 @@ assert_contains "$lo" "status=frozen not allowed" "configured statuses are enfor
 rm -f "$LR/docs/playbook.md"
 printf '[discovery]\nexclude = ["docs/archive"]\n' > "$LR/.loom/loom.toml"
 lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
-assert_exit "$lrc" "1" "loom.toml without lint vocab: exit 1"
-assert_contains "$lo" "[lint] missing kinds" "missing lint kinds is explicit"
-assert_contains "$lo" "[lint] missing statuses" "missing lint statuses is explicit"
+assert_exit "$lrc" "0" "loom.toml without lint vocab: exit 0, the shipped vocabulary applies"
+assert_not_contains "$lo" "[lint] missing" "an absent [lint] section is not a finding"
 assert_not_contains "$lo" "kind=readme not allowed" "missing lint vocab falls back to shipped kind defaults"
 assert_not_contains "$lo" "status=living not allowed" "missing lint vocab falls back to shipped status defaults"
 
@@ -98,6 +97,14 @@ wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
 assert_exit "$wrc" "1" "[warp] missing knob: exit 1"
 assert_contains "$wo" "WARP"     "[warp] missing worktree: warp finding"
 assert_contains "$wo" "worktree" "[warp] names the missing worktree knob"
+
+# Present but empty -> findings naming every required knob, exit 1 (as [weave] already does).
+printf '[warp]\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
+assert_exit "$wrc" "1" "[warp] empty-warp section: exit 1"
+assert_contains "$wo" "branch_convention" "[warp] empty-warp: names branch_convention"
+assert_contains "$wo" "source_repo"       "[warp] empty-warp: names source_repo"
+assert_contains "$wo" "worktree"          "[warp] empty-warp: names worktree"
 
 # Invalid worktree value -> finding naming the bad value.
 printf '[warp]\nbranch_convention = "x"\nworktree = "sometimes"\nsource_repo = "."\n' > "$WR/.loom/loom.toml"

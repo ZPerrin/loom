@@ -5,81 +5,44 @@ updated: 2026-09-06
 ---
 # Roadmap
 
-## 0.2.0 — living specs
+## Now
 
-Temporary capture until the spec skills exist and can hold this themselves. Distilled from the
-2026-08-30 living-specs design session. The bundle's linter and references port; both skills are
-authored fresh — the prototype narrowed scope, it is not the draft.
+0.2.0 is living specs. Repo specs say what the code does, one per capability, kept in sync by
+reconciliation so work is reviewed against the spec apart from the plan; work specs and plans are
+dated orchestration state under `.loom/`. The design is the
+[spec grammar](../references/spec-grammar.md) and its
+[writing rules](../references/spec-writing-rules.md); the order of work is the
+[plan](../.loom/plans/2026-08-30-0.2.0-living-specs.md).
 
-Frame: loom is the portable harness — one plugin, installed into any harness, no external
-dependencies, carrying the daily workflow and context tooling onto whatever repo it is dressed
-onto. `.loom/` is its on-disk home: the config plane it already is (`loom.toml`, per-skill
-overrides) plus a data plane for work state that the repo owner chooses to commit or ignore.
-dress covers the data plane through its existing Propose step and the reference project's control
-surfaces — defaults, or with the operator — not a new flow. Everything ships to Claude Code and
-Codex alike; no harness-specific mechanism on the critical path.
+Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
+skills, the lint fixtures, and four repo specs on loom itself, reconciled against the code. Left:
 
-Two spec modalities share one grammar and one authoring skill. Repo specs describe what the code
-does: capability-keyed, committed, at `docs/specs/` or wherever the repo says. Keeping them in
-sync with the codebase is reconciliation's main job, so orchestration can review work against the
-spec separately from reviewing it against a plan. Work specs and plans are orchestration state:
-dated `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/`, listings sorted by
-age, usually uncommitted. A loom.toml key overrides either location; discovery stays kind-based so
-placement never breaks hygiene.
-
-Specs are single living documents iterated in place — no draft state, no changes queue; git and
-a change-log section carry history, and frontmatter status carries a spec's life (living,
-hardened, superseded). Ids are the join key across files, so reconciliation targets ids, never
-filenames. Review is ordinary session and commit review; the machine appends to the change log
-and never rewrites Invariants. No index file: the managed set is the index. The grammar is the
-anti-slop device — EARS sentence shapes, RFC-2119 modals, permanent `R-<TOKEN>-<NNN>` ids as
-join keys, scenarios naming their verifying tests, Non-goals fencing scope. Budgets and word-list
-severities are linter config under `[lint.specs]`, defaults shipped, never hardcoded.
-`doc-linter` stays the single entry point and grows per-kind checks in its own bash + awk; the
-spec parser is shared with the slicer when slicing lands.
-
-- [x] spec checks in `doc-linter` (2026-09-05): `lib/lint-spec.awk` ports the bundle's linter
-      rule-for-rule, budgets and word lists from `[lint.specs]`, SPEC fails and SPECWARN warns,
-      `json=1` findings keyed by rule + id. Parity with the bundle's python was proven at the port
-      and the python retired; fixtures carry the recorded expectations.
-- [x] Spec grammar and writing rules as `references/` (2026-09-05): `spec-grammar.md` and
-      `spec-writing-rules.md`, re-ratified for the single-document model — two modalities on one
-      grammar, a change log in place of the drift log, status lifecycle, OpenSpec's diffability
-      answered, `[lint.specs].ears = strict|warn|off`. Wrong/right/why form kept; three rules folded
-      from the survey (no placeholders, cut words never the shape, scenarios cover the failure path).
-- [x] Skill: spec authoring (2026-09-05): `skills/spec`, house format with six hard constraints
-      and no graph; references load by skill-time injection with a prose floor beneath it, so a
-      harness that renders the line literally still loads both. Its first run wrote
-      loom's first repo spec, since absorbed into `docs/specs/managed-docs.md`.
-- [x] Skill: spec reconciliation (2026-09-05): `skills/refine-spec`, the descendant of
-      `refine-docs`, sibling to weft (weft fights slop, refine-spec fights drift). Evidence order
-      tests > code > a sampled run, findings keyed by id, confirm before anything is written;
-      brownfield is the same pass against no spec, and every block is written by `spec`. Findings
-      land as `-> open` change-log lines and a work spec, never a silent rewrite. Its first run
-      reconciled `docs/specs/spec-lint.md`: nine untested scenarios, no drift.
-- [x] Example spec as `tests/fixtures/` lint fixtures, conforming and violating (2026-09-05): one
-      conforming capability, one violation per file named by rule, knob repos for `[lint.specs]`.
-- [x] Dogfood on loom (2026-09-06): four repo specs cut by product feature under `docs/specs/`
-      (managed-docs, control-plane, context, hooks), every scenario naming its test bar the Codex
-      session-start check, which waits on the release smoke test. The writing rules gained "Promise,
-      not mechanism"; `.loom/spec.md` carries the cut rule; both spec skills map first and classify
-      detail. Code landed through the first work spec and a delegate: clean fixture rows asserted,
-      invalid lint knobs fall back, INV/N ids unique, a refused config never half-applies, and
-      `[skills].config_dir` retired. The external-repo run and the ablations are deferred (see plan).
+- [ ] Dogfood on an external repo with the owner at the fence, then the skill-format ablations
+      under Ideas.
 - [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all
       slicing; whoever dispatches pushes, whoever works pulls.
-- [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
-      few hard constraints, output contract, graph only where topology demands it) with
-      constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled in.
-      Ground the format in the ablation runs under Ideas before it hardens.
-- [ ] Review the orchestrator repo piece by piece for what ports — work-handoff and working-note
+- [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
+      table, few hard constraints, output contract, a graph only where topology demands it) with
+      constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled
+      in. Ground it in the ablations before it hardens.
+- [ ] Review the orchestrator repo piece by piece for what ports: handoff and working-note
       templates, the pull-first stance, a `.loom/` data-plane layout. Nothing absorbed wholesale;
-      the repo likely retires into the bare `.loom` + `.git` workspace pattern. Delegate handoffs and
-      their returns are the first candidate for a third data-plane directory; the session 1–3
-      instances are filed with the plan's inputs.
+      the repo likely retires into the bare `.loom` + `.git` workspace pattern, and delegate
+      handoffs and returns are the first candidate for a third data-plane directory.
+- [ ] Release: weft cohesion pass, smoke-test the install on Claude Code and Codex, promote and
+      tag only with explicit approval.
 
-Deferred: any dispatch mechanism beyond hand-authored handoffs, the RSI grading signal for slice
-recipes, and the vendoring build that emits standalone skill directories from the one source.
+## Later
+
+- Dispatch beyond hand-authored handoffs; an RSI grading signal for slice recipes; a vendoring
+  build that emits standalone skill directories from the one source.
+- Hook enforcement. Tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail:
+  they fire on every matching tool call, can block or repair, and can read `loom.toml` for policy,
+  scoped by tool-name matcher plus payload inspection. Skill-frontmatter hooks would be enforced
+  and skill-scoped but are Claude-only. Graduate specific steps as friction shows. Before adding a
+  hook, name what survives the child process: effects on disk do, environment does not.
+- Windows portability debt from the shell-only choice; the field findings are in `ed9f30b` and
+  `a33fe3e`.
 
 ## Ideas
 
@@ -90,20 +53,11 @@ recipes, and the vendoring build that emits standalone skill directories from th
   - **Exemplars over rules.** Taste transmits few-shot. Embed one real before/after pair (the shuttle taxonomy doc with its ledger, and the cut version, one line of why) in the weft reference; a rules paragraph describes taste, a pair of documents transmits it.
   - **Tripwires over gates.** A doc-linter check flagging negation-density in `kind: reference` docs (retired/deprecated/never/don't/instead-of) that rejects nothing — it summons judgment: the next weft pass must justify or cut each flagged line. Style guide plus editor, not compiler.
   - **RSI retro as the grader.** Each retro that records "pass missed X, operator caught X" is a labeled datum; the exemplar gallery grows from real misses, the only place taste data comes from. The shuttle ledger miss is datum #1.
-- taxonomy + rsi = powerful enough to codify into harness?
+- taxonomy + rsi = powerful enough to codify into loom?
 
 - skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
-  element present or absent, two or three objective tasks, `speclint` pass rate as the
+  element present or absent, two or three objective tasks, the spec checks' pass rate as the
   deterministic grader plus one judge rubric — to learn which scaffolding earns its lines before
   the meta-reference hardens. Then keep ablating as maintenance: delete a step or block from a
   skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
   compensations only older models needed.
-
-- hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction. warp.sh retired
-  2026-09-05: under `worktree = "harness"` the open hook's job was done before it could run, and its
-  env-source died with skill-hook's child shell. Before adding a hook, name what survives the child
-  process — effects on disk do, environment does not.
-
-- shell-only constraint reaffirmed 2026-09-05 (spec checks ported to awk rather than shelling
-  out to python). The Windows field findings in history (`ed9f30b`, `a33fe3e`) remain the open
-  portability debt of that choice.
