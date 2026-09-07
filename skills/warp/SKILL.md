@@ -9,7 +9,7 @@ Open a unit of work. warp orients the session, establishes the branch/worktree w
 
 `warp` handles two repo states:
 
-- **Unconfigured:** no `[warp]` section exists in `.loom/loom.toml`; configure the flow or orient only.
+- **Unconfigured:** no `[warp]` section exists in `.loom/loom.toml`, so every key is at its default; configure the flow or orient only.
 - **Configured:** `[warp]` section exists in `.loom/loom.toml`; run the confirmed flow and stop only for real session unknowns or git safety.
 
 ## Warp Control Surfaces
@@ -18,9 +18,9 @@ These are the surfaces `warp` reads or writes directly; the full key map is the 
 
 | Surface | Warp uses it for |
 |---|---|
-| `[warp].branch_convention` | session-open branch naming pattern, or `ask` |
-| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` |
-| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` |
+| `[warp].branch_convention` | session-open branch naming pattern, or `ask` (the default) |
+| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` (the default) |
+| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` (default `.`) |
 | `[warp].hook` | optional invocation command: run through `skill-gate` the moment warp is invoked, by the harness or by this skill's floor; its receipt and report arrive as context |
 | `.loom/skills/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
 | `.loom/scripts/*` | conventional home for hook scripts |
@@ -69,7 +69,7 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 - Failed: surface the failure, then fall back to the prose floor unless git safety blocks.
 - Manual open: name the branch from `branch_convention`, fork from the checkout warp was invoked on unless the invocation names a base, and apply `worktree`.
 - `worktree = always|ask` means the session works inside the worktree; verify `pwd` before the first edit.
-- `worktree = harness` delegates worktree creation to the host harness; a hook there handles only residual setup.
+- `worktree = harness`, the default, leaves the worktree and its branch to the host harness: verify `pwd`, and leave renaming the branch to a hook.
 - Never discard, stash, switch away from, or move uncommitted work without confirmation.
 
 ### 4. Kick off - compose or hand back

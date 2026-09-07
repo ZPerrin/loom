@@ -86,30 +86,31 @@ IF the config cannot be parsed, THEN the system SHALL refuse the run or run on t
 - THEN neither the hook nor the exclude takes effect
 
 ### R-CONFIG-006: Locations stay inside the repo
-WHEN a [specs] or [plans] location is set, the system SHALL accept only a relative path inside the repo and report LAYOUT otherwise.
+WHEN a location under [specs] or [plans] or [handoffs] or [reports] is set, the system SHALL accept only a relative path inside the repo and report LAYOUT otherwise.
 #### Scenario: relative-accepted -> tests/test-doc-linter.sh#documentation/specs
-- GIVEN repo_dir, work_dir, and dir set to relative paths that need not exist yet
+- GIVEN repo_dir, work_dir, and the plans, handoffs, and reports dirs set to relative paths that need not exist yet
 - WHEN doc-linter runs
 - THEN no LAYOUT finding is reported
 #### Scenario: escaping-rejected -> tests/test-doc-linter.sh#/srv/specs
 - GIVEN an absolute repo_dir, a parent-escaping work_dir, and a plans dir with an embedded ..
+- AND an absolute handoffs dir and a parent-escaping reports dir
 - WHEN doc-linter runs
 - THEN it reports LAYOUT naming each key and value and exits 1
 
-### R-CONFIG-007: A present warp section is whole
-WHEN a [warp] section is present, the system SHALL require branch_convention, source_repo, and a worktree value from its set and report WARP otherwise.
+### R-CONFIG-007: Every warp key has a default
+WHEN a [warp] section is present, the system SHALL take each absent key as its default and report WARP for a worktree value outside its set.
 #### Scenario: valid-warp -> tests/test-doc-linter.sh#warp-repo
 - GIVEN branch_convention, source_repo, and worktree = "never"
 - WHEN doc-linter runs
 - THEN no WARP finding is reported
-#### Scenario: missing-knob -> tests/test-doc-linter.sh#worktree
+#### Scenario: absent-knob -> tests/test-doc-linter.sh#absent-knob
 - GIVEN a [warp] section without worktree
 - WHEN doc-linter runs
-- THEN it reports WARP naming worktree and exits 1
-#### Scenario: invalid-value -> tests/test-doc-linter.sh#sometimes
+- THEN no WARP finding is reported and the run exits 0
+#### Scenario: invalid-value -> tests/test-doc-linter.sh#worktree=sometimes
 - GIVEN worktree = "sometimes"
 - WHEN doc-linter runs
-- THEN it reports WARP naming the value
+- THEN it reports WARP naming the value and exits 1
 #### Scenario: absent-section -> tests/test-doc-linter.sh#warp-repo
 - GIVEN no [warp] section
 - WHEN doc-linter runs
@@ -117,7 +118,7 @@ WHEN a [warp] section is present, the system SHALL require branch_convention, so
 #### Scenario: empty-section -> tests/test-doc-linter.sh#empty-warp
 - GIVEN a [warp] header with no keys beneath it
 - WHEN doc-linter runs
-- THEN it reports WARP naming each required knob and exits 1
+- THEN no WARP finding is reported and the run exits 0
 
 ### R-CONFIG-008: A present weave section is whole
 WHEN a [weave] section is present, the system SHALL require a cleanup value from its set and accept an optional rsi value from its set, reporting WEAVE otherwise.

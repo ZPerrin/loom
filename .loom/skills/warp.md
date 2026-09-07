@@ -19,6 +19,10 @@ One shape, no mid-run questions:
   delegate — Objective, Scope in and out, Constraints, Acceptance, Return — with every path pushed
   into the prompt. Handoffs cite behavior by reference (file, section, rule, fixture) and never
   restate it; a delegate trusts the reference over the brief.
+- A handoff is `.loom/handoffs/<date>-<slug>.md`, `kind: handoff`, and its Return names the report,
+  `.loom/reports/<date>-<slug>.md`, `kind: report`; both are committed, since a delegate's worktree
+  sees only what is committed. The brief names the runtime's scripts directory and carries the
+  floor: if the tools block is absent, run `doc-slicer --tools` there first.
 - The brief names the base commit and the delegate verifies it before its first edit. The
   coordinator makes the delegate's worktree off the session commit (`git worktree add -b <branch>
   <path> <sha>`); harness worktree isolation bases on the main checkout, which under a release
@@ -110,6 +114,19 @@ while the runtime changes. For an uncommitted fix, record the changed script's d
   follow-up still missed the plain inline namespaced mention, since fixed and retested; repeat
   the inventory on the next host version rather than treating this as universal coverage.
 - 2026-09-07 (s11): The Codex delegate's floor worked with inherited skill context; it did not
-  test discovery by a fresh agent. Test: one fresh delegate on each host receives only its
-  handoff and runtime pointer and retrieves the required context and returns the named report;
-  if both succeed, use that brief shape before adding automatic delegate context injection.
+  test discovery by a fresh agent. The Claude half ran in s12 and passed: a Sonnet subagent given
+  the handoff path, the repo path, and the scripts path ran `doc-slicer --tools` first and reached
+  the spec by id (the probe report). Test: the same brief shape on one fresh Codex delegate; if it
+  succeeds too, that shape moves into Delegation and SubagentStart stays unregistered.
+- 2026-09-07 (s12): The fresh-delegate probe shared the coordinator's worktree because the work
+  was uncommitted, and it saw two of the coordinator's edits land mid-run. Test: the next
+  delegate on uncommitted work gets its own worktree off a WIP commit; if its report shows no
+  drift, the Delegation line gains "a WIP commit first".
+- 2026-09-07 (s12): A normative sentence listing four tables in its trigger failed R003, since
+  the checker ends a clause at the first comma; the writing rules now say so. Test: the next spec
+  sentence with a list in its trigger passes R003 first time; if it misses again, the R003
+  message names the comma.
+- 2026-09-07 (s12): The delegate's report ran to five times its brief; the brief named sections
+  and set no budget. Test: the next brief's Return sets a line budget for Evidence; if the report
+  lands within it and the coordinator misses nothing, the reference project's example Return
+  names one.

@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # doc-slicer — SessionStart context for loom (bash 3.2 + awk, no deps).
-# Emits a preamble, a git "Bearings" block, then harvests every section whose header is
-# in context.slice_headers across the discovered managed-doc set, each prefixed with a
-# context.inject_fields annotation (frontmatter values; `location` = the source path).
+# Emits the tools block (the scripts, how to run them, where repo specs and work state live),
+# a git "Bearings" block, then harvests every section whose header is in context.slice_headers
+# across the discovered managed-doc set, each prefixed with a context.inject_fields annotation
+# (frontmatter values; `location` = the source path).
 # Path-free: slices are found by discovery + header, so moving a file never breaks them.
 # Usage: doc-slicer                                    — SessionStart slice (hook mode).
+#        doc-slicer --tools                            — the tools block alone, for a delegate's
+#          brief or an agent that opened without the slice: this script's directory, one line
+#          per script, and the five locations from [specs], [plans], [handoffs], and [reports]
+#          or their shipped defaults. It reads no prompt, transcript, or document body.
 #        doc-slicer --header <name> [path-filter…]     — on-demand query: emit just that
 #          section (same provenance annotation) from every managed doc that has it,
 #          optionally narrowed to docs whose path contains a filter. "<name>" may be bare
@@ -35,6 +40,8 @@ elif [ "${1:-}" = "--spec" ]; then
   [ -n "$QUERY_CAP" ] || { echo "doc-slicer --spec: missing capability name" >&2; exit 2; }
   shift
   QUERY_SEL="${1:-}"
+elif [ "${1:-}" = "--tools" ]; then
+  MODE="tools"; shift
 fi
 
 DEFAULT_CFG='context.recent_commits=15
@@ -54,6 +61,29 @@ COMMITS="$(cfg_get context.recent_commits)"; COMMITS="${COMMITS:-15}"
 case "$COMMITS" in ''|*[!0-9]*) COMMITS=15 ;; esac
 SLICE_HEADERS="$(cfg_get context.slice_headers)"
 INJECT_FIELDS="$(cfg_get context.inject_fields)"
+
+# a location as a directory: the configured key or its shipped default, one trailing slash.
+loc() { local v; v="$(cfg_get "$1")"; v="${v:-$2}"; printf '%s/' "${v%/}"; }
+REPO_SPECS="$(loc specs.repo_dir docs/specs)"
+WORK_SPECS="$(loc specs.work_dir .loom/specs)"
+PLANS_DIR="$(loc plans.dir .loom/plans)"
+HANDOFFS_DIR="$(loc handoffs.dir .loom/handoffs)"
+REPORTS_DIR="$(loc reports.dir .loom/reports)"
+
+# the tools block: what an agent needs to use loom here. Its inputs are this script's directory
+# and the five locations above, nothing else.
+emit_tools() {
+  printf '## Tools\n\n'
+  printf 'loom%ss scripts live at `%s`; run each with bash from the repo root:\n\n' "'" "$SELF_DIR"
+  printf -- '- `doc-scan`: the managed docs, and the markdown that could join them\n'
+  printf -- '- `doc-linter`: checks the managed docs, and a spec against the grammar\n'
+  printf -- '- `doc-slicer --header "<name>" [path-filter]`: one section, from every doc that has it\n'
+  printf -- '- `doc-slicer --spec <capability> [id|section|ids]`: one spec, or one block of it\n'
+  printf -- '- `doc-slicer --tools`: this block, for a delegate%ss brief\n' "'"
+  printf -- '- `doc-stamp <file> key=value ...`: sets frontmatter\n\n'
+  printf 'Config: `.loom/loom.toml`. Repo specs: `%s`. Dated work state: specs `%s`, plans `%s`, handoffs `%s` (one brief per delegated task), reports `%s` (what a run found, with its evidence).\n' \
+    "$REPO_SPECS" "$WORK_SPECS" "$PLANS_DIR" "$HANDOFFS_DIR" "$REPORTS_DIR"
+}
 
 # print the markdown under "<header>" in <file>, header line excluded, stop at next "## ".
 # Fenced code (``` or ~~~) is body, never a header: a fenced example of a section is not one,
@@ -115,6 +145,9 @@ EOF
   printf '%s' "$out"
 }
 
+# --- tools mode: the block alone ---
+if [ "$MODE" = "tools" ]; then emit_tools; exit 0; fi
+
 # --- query mode: one header, on demand — a section instead of a whole-file read ---
 if [ "$MODE" = "query" ]; then
   found=""
@@ -163,7 +196,8 @@ EOF
 fi
 
 # --- session mode: the SessionStart slice ---
-printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. When a task goes past a slice, pull the next section on demand — `bash "%s/doc-slicer" --header "<name>" [path-filter]`, or one spec block — `bash "%s/doc-slicer" --spec <capability> [id|section|ids]` — instead of reading whole files._\n\n' "$SELF_DIR" "$SELF_DIR"
+emit_tools
+printf '\n_The slices below are the opening context, the ring past AGENTS.md. When a task goes past one, pull the next section or spec block instead of reading whole files._\n\n'
 
 printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
 git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"

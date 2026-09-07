@@ -16,19 +16,17 @@ dated orchestration state under `.loom/`. The design is the
 
 Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
 skills, the lint fixtures, four repo specs on loom itself reconciled against the code twice, spec
-slicing by capability and id, the skill cohesion pass, and the harness hooks: the skill gate and
+slicing by capability and id, the skill cohesion pass, the harness hooks: the skill gate and
 its receipt on every route a host reports and as each skill's own first step where a host reports
-none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires. Each
+none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires; and the
+data plane whole: `.loom/handoffs/` and `.loom/reports/` beside `specs/` and `plans/` as shipped
+kinds with location overrides, the session slice opening with a tools block that
+`doc-slicer --tools` reprints for a delegate's brief, and every `[warp]` key defaulted. Each
 host's native routes and what each ran are in the
 [Codex](../.loom/reports/2026-09-07-codex-routes-validation.md) and
-[Claude](../.loom/reports/2026-09-07-claude-hooks-validation.md) validation reports. Left, in order:
+[Claude](../.loom/reports/2026-09-07-claude-hooks-validation.md) validation reports. Dispatch
+itself is the 0.3 idea below. Left, in order:
 
-- [ ] The data plane, whole: `.loom/handoffs/` and `.loom/reports/` beside `specs/` and
-      `plans/`, as kinds the linter accepts and the reference project shows, the handoff's shape
-      distilled from warp's delegation opinion. The
-      [discussion handoff](../.loom/handoffs/2026-09-07-0.2-data-plane-context.md) proposes this
-      alongside a small tool preamble and configurable orientation; that design remains to be
-      agreed. Dispatch itself is the 0.3 idea below.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
       table, few hard constraints, output contract, a graph only where topology demands it) with
       constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled

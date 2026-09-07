@@ -23,8 +23,9 @@ WHILE, WHEN/IF. The shape is the anti-slop device: there is no slot for hedging.
 | Unwanted | IF `<condition>`, THEN the system SHALL `<response>`. | IF token validation fails, THEN the system SHALL return 401 within 200 ms. |
 | Optional | WHERE `<feature>`, the system SHALL `<response>`. | WHERE SSO is enabled, the system SHALL skip the password form. |
 
-Under `ears = warn` or `off` the shape is advice and the modal is still law: one SHALL or MUST
-per requirement, the system as subject.
+A trigger holds no comma, since the linter reads the first comma as the clause's end; a list
+inside one is joined with or. Under `ears = warn` or `off` the shape is advice and the modal is
+still law: one SHALL or MUST per requirement, the system as subject.
 
 Quality bar (29148): each requirement is singular, verifiable, unambiguous, implementation-free,
 and necessary. If you cannot name the test, it is not yet a requirement.
