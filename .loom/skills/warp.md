@@ -36,6 +36,8 @@ One shape, no mid-run questions:
   judgment (what the evidence must be, what is never written, the confirm boundary) are the
   coordinator's.
 - An override is written after its first run, from the run's report, never before.
+- A delegate brief explicitly includes the invoked skill's repo opinion among its instructions,
+  whether the gate carries it or the skill's floor reads it.
 - A reconciliation delegate is read-only and stops at Confirm: findings come back by id with a
   recommended direction, and the operator rules them at one gate. A brief names "the tests the
   scenarios name" and never enumerates evidence files; a cited file wins over the brief.
@@ -53,6 +55,8 @@ installed binary or a live event before it changes code. Orient names the instal
 cache's revision against the checkout and diffs `scripts/`, `hooks/`, and `skills/` against it
 before any live hook check. A validation hook logs outside the repo and records whether
 `CLAUDE_PLUGIN_ROOT` was set, which tells a harness run from a floor run.
+After reinstall and reload, verify installed bytes again: a version label can stay the same
+while the runtime changes. For an uncommitted fix, record the changed script's digest.
 
 ## Experiments
 
@@ -99,11 +103,13 @@ before any live hook check. A validation hook logs outside the repo and records 
   on every edit, nine times in one session, and was unregistered. Test: the next deterministic
   rail runs one session as an opt-in before it enters hooks.json, and its per-turn cost is named
   in that session's weave; if it survives, the rule moves into opinion.
-- 2026-09-07 (s10): A Sonnet delegate saw the gate's receipt and opinion and declined the
-  opinion's instruction because its brief said to report and nothing else. Test: the next
-  delegate brief says the loom gate's opinion is part of its instructions; if the Return shows it
-  honored, the line joins the contract shape under Delegation.
 - 2026-09-07 (s10): Two spellings the host resolves itself, a bare Skill name and a typed
   `/warp`, reached the skill with no receipt, and the floor covered both before the matcher was
   widened. Test: the next host or version check opens by typing each spelling the host accepts
-  before the matcher is trusted; if it misses none, the step moves into Validation.
+  before the matcher is trusted; if it misses none, the step moves into Validation. Codex's
+  follow-up still missed the plain inline namespaced mention, since fixed and retested; repeat
+  the inventory on the next host version rather than treating this as universal coverage.
+- 2026-09-07 (s11): The Codex delegate's floor worked with inherited skill context; it did not
+  test discovery by a fresh agent. Test: one fresh delegate on each host receives only its
+  handoff and runtime pointer and retrieves the required context and returns the named report;
+  if both succeed, use that brief shape before adding automatic delegate context injection.

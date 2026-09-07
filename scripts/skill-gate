@@ -7,7 +7,7 @@
 #   gets a fast exit. PreToolUse: tool_input.skill names the skill, "loom:warp" or the bare
 #   "warp" a host resolved itself; another plugin's "x:warp" is not loom's. UserPromptSubmit:
 #   the prompt, when it opens with /loom:<skill>, $loom:<skill>, or the bare /<skill> a host
-#   resolved itself, or mentions $<skill> anywhere; Codex's picker wraps a mention as
+#   resolved itself, or mentions $<skill> or $loom:<skill> anywhere; Codex's picker wraps a mention as
 #   [$loom:<skill>](path) or [$<skill>](path).
 #   Only the skill's name is read; a hook takes no input.
 # The answer opens with the receipt: the skill, then whether .loom/skills/<skill>.md was read,
@@ -47,7 +47,7 @@ if [ "$event" = "UserPromptSubmit" ]; then
     *) skill=""                            # a mention is looked for in the whole payload, so a quote before it hides nothing
        for s in $SKILLS; do
          case "$payload" in
-           *"[\$loom:$s]("*|*"[\$$s]("*|*"\$$s\""*|*"\$$s "*|*"\$$s\\"*)
+           *"[\$loom:$s]("*|*"[\$$s]("*|*"\$loom:$s\""*|*"\$loom:$s "*|*"\$loom:$s\\"*|*"\$$s\""*|*"\$$s "*|*"\$$s\\"*)
              skill="$s"; break ;;
          esac
        done

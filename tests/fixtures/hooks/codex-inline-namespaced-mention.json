@@ -1,0 +1,10 @@
+{
+  "session_id": "test-session",
+  "turn_id": "test-turn",
+  "transcript_path": "/tmp/test-transcript.jsonl",
+  "cwd": "/tmp/test-repo",
+  "hook_event_name": "UserPromptSubmit",
+  "model": "gpt-6-astra",
+  "permission_mode": "default",
+  "prompt": "Please $loom:warp orient only for route validation\n"
+}

@@ -20,12 +20,15 @@ slicing by capability and id, the skill cohesion pass, and the harness hooks: th
 its receipt on every route a host reports and as each skill's own first step where a host reports
 none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires. Each
 host's native routes and what each ran are in the
-[Codex](../.loom/reports/2026-09-07-codex-hooks-validation.md) and
+[Codex](../.loom/reports/2026-09-07-codex-routes-validation.md) and
 [Claude](../.loom/reports/2026-09-07-claude-hooks-validation.md) validation reports. Left, in order:
 
 - [ ] The data plane, whole: `.loom/handoffs/` and `.loom/reports/` beside `specs/` and
       `plans/`, as kinds the linter accepts and the reference project shows, the handoff's shape
-      distilled from warp's delegation opinion. Dispatch itself is the 0.3 idea below.
+      distilled from warp's delegation opinion. The
+      [discussion handoff](../.loom/handoffs/2026-09-07-0.2-data-plane-context.md) proposes this
+      alongside a small tool preamble and configurable orientation; that design remains to be
+      agreed. Dispatch itself is the 0.3 idea below.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
       table, few hard constraints, output contract, a graph only where topology demands it) with
       constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled

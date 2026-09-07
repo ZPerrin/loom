@@ -74,6 +74,18 @@ assert_contains "$out" 'Repo opinion for warp' "gate-mention: a mention that end
 out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"the $specific case"}')"
 assert_eq "$out" "" "gate-mention: a longer word starting like a skill name is not a mention"
 
+# R-HOOKS-012: native Codex inline namespaced mention, anonymized from route R17.
+out="$(run_gate "$(cat "$DIR/fixtures/hooks/codex-inline-namespaced-mention.json")")"
+assert_contains "$out" 'loom gate: warp\nopinion: read .loom/skills/warp.md\nhook: ran hello.sh, exit 0' "receipt-inline-namespaced: the native inline namespaced mention gets the full receipt"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please $loom:warp"}')"
+assert_contains "$out" 'loom gate: warp' "receipt-inline-namespaced: the mention may end the prompt"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please $loom:warp\norient"}')"
+assert_contains "$out" 'loom gate: warp' "receipt-inline-namespaced: an escaped newline ends the name"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please $loom:warped orient"}')"
+assert_eq "$out" "" "receipt-inline-namespaced: a longer name is ignored"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please $other:warp orient"}')"
+assert_eq "$out" "" "receipt-inline-namespaced: another namespace is ignored"
+
 # Codex desktop's picker sends a Markdown skill link in the prompt. The fixture preserves
 # the observed payload shape with session and machine paths replaced by test values.
 out="$(run_gate "$(cat "$DIR/fixtures/hooks/codex-skill-mention.json")")"; rc=$?

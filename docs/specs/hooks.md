@@ -236,6 +236,10 @@ WHEN the gate recognizes a loom skill, the system SHALL open its answer with a r
 - GIVEN a host that resolved the bare name warp to loom's skill
 - WHEN the harness reports the Skill call with the bare name, or a typed prompt opening with /warp
 - THEN the receipt names warp with its opinion and hook, and another plugin's warp gets nothing
+#### Scenario: receipt-inline-namespaced -> tests/test-skill-gate.sh#receipt-inline-namespaced
+- GIVEN a Codex prompt containing a plain $loom:warp mention inside prose
+- WHEN the harness submits the prompt
+- THEN the receipt names warp with its opinion and hook, and a longer name or another namespace gets nothing
 #### Scenario: receipt-refused -> tests/test-skill-gate.sh#receipt-refused
 - GIVEN a config the parser refuses
 - WHEN the harness reports a loom skill invoked
