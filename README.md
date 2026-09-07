@@ -38,8 +38,8 @@ Two files configure them, and eight scripts do the deterministic work:
 | `doc-slicer` | the SessionStart slice; one section, or one spec block by capability and id, on demand |
 | `doc-stamp` | sets frontmatter fields |
 | `skill-hook` | runs a skill's configured hook |
-| `lint-hook` | lints a managed doc the moment a write lands on it, on a host whose hooks fire after tool calls |
-| `skill-gate` | hands a loom skill its repo opinion and its hook's report the moment it is invoked, by conversation or by typing, on a host whose hooks fire there |
+| `lint-hook` | lints a managed doc the moment a write lands on it; not registered by the plugin, a repo opts in on its host's post-write event |
+| `skill-gate` | hands a loom skill a receipt of what ran, its repo opinion, and its hook's report the moment it is invoked, where a host's hooks fire on a typed or model-chosen skill; where none fires, the skill's first step does the same by hand |
 | `hook-trace` | logs every hook event it is registered on, to learn what a harness fires before a real hook is written against it |
 
 The [reference project](references/reference-project.md) shows a minimal dressed repo. This repo

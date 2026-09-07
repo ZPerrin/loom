@@ -45,6 +45,12 @@ One shape, no mid-run questions:
 Options plus a recommendation, depth on request; the gate summary carries the rest. Brevity is not
 hiding signal: the operator still catches substantive misses at the gate.
 
+## Validation
+
+A harness validation records the installed plugin revision, the native payload, and the script
+count beside every claimed route, and a claim about a payload's shape is checked against the
+installed binary or a live event before it changes code.
+
 ## Experiments
 
 - 2026-09-05 (s5): Test-ref resolution is prose (refine-spec's Read step, `.loom/skills/spec.md`'s
@@ -80,13 +86,17 @@ hiding signal: the operator still catches substantive misses at the gate.
   Test: the next contract's neighbor item requires the grep line beside any claim about where an
   assertion lives; if that pass's item 4 carries no unverified location, the line moves into the
   contract template.
-- 2026-09-07 (s8): The hooks design went through two keys and a moment suffix before collapsing
-  to one key, and the operator lost the plot on the way; the Codex-parity constraint arrived after
-  a Claude-only mechanism had been recommended. Test: a design that adds a second key or moment for
-  one concept is put as a one-paragraph proposal first and built only after the shape is agreed,
-  and a recommendation that is host-specific names the host in its first sentence; if the next
-  design round needs no collapse, both lines move into Discourse.
-- 2026-09-07 (s9): The gate's fixture checks passed while Codex's actual picker payload was
-  unrecognized. Test: the next harness-hook validation records the installed revision, a native
-  payload and script count beside the component result for every claimed route; if the Claude
-  review can reproduce the finding without rediscovering the setup, make that a validation rule.
+- 2026-09-07 (s9): The receipt design was agreed in prose, then the build grew a prose entry, an
+  argument on every hook, and the prompt's text in the receipt, and the operator cut all three on
+  the smell test; s8's proposal-first line did not prevent it because the proposal described the
+  surface instead of showing it. Test: a proposal for a new context surface shows its literal
+  bytes and its floor sentence and names every input it passes along, and the build adds nothing
+  beyond them; if the next surface lands without a scope cut, the line moves into Discourse.
+- 2026-09-07 (s9): Lint on write returned a document's two standing warnings as a blocking error
+  on every edit, nine times in one session, and was unregistered. Test: the next deterministic
+  rail runs one session as an opt-in before it enters hooks.json, and its per-turn cost is named
+  in that session's weave; if it survives, the rule moves into opinion.
+- 2026-09-07 (s9): The installed plugin cache lagged the checkout by one commit and the operator
+  had to say so. Test: the next warp report names the cache revision against the checkout
+  unprompted; if it does, the diff of scripts/, hooks/, and skills/ against the cache becomes a
+  line in Orient or a script.

@@ -42,15 +42,12 @@ assert_not_contains "$o" "HELPER_RAN" "no-partial-effect: the hook above the bad
 assert_contains "$o" "unparseable" "no-partial-effect: the one line printed says the config is unparseable"
 assert_eq "$(printf '%s\n' "$o" | grep -c .)" "1" "no-partial-effect: exactly one line is printed"
 
-# pass-through: the skill's arguments reach the hook.
-printf '#!/usr/bin/env bash\necho "ARG=$1"\n' > "$R/.loom/scripts/args.sh"; chmod +x "$R/.loom/scripts/args.sh"
-printf '[warp]\nhook = "args.sh"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp myslug 2>&1)"; rc=$?
-assert_exit "$rc" "0" "pass-through: hook with an argument exits 0"
-assert_contains "$o" "ARG=myslug" "pass-through: the skill's argument reaches the hook"
-printf '[warp]\nhook = "echo CMD=$1"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp myslug 2>&1)"; rc=$?
-assert_contains "$o" "CMD=myslug" "pass-through: a command hook sees the argument as its \$1"
+# command-hook: a value that is not a bare script name runs as a shell command.
+printf '[warp]\nhook = "echo CMD; helper"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "0" "command-hook: a shell command as the hook exits 0"
+assert_contains "$o" "CMD" "command-hook: the command runs"
+assert_contains "$o" "HELPER_RAN" "command-hook: with scripts_dir on its PATH"
 
 # configured-scripts-dir: a non-default [skills].scripts_dir is read, not the default.
 mkdir -p "$R/tools/hooks"; printf '#!/usr/bin/env bash\necho ALT_RAN\n' > "$R/tools/hooks/alt.sh"; chmod +x "$R/tools/hooks/alt.sh"
@@ -74,22 +71,24 @@ assert_exit "$rc" "3" "no-config-file: no loom.toml → exit 3"
 
 # convention: with no key, an executable under scripts_dir named after the skill is the hook,
 # with or without .sh; a key wins over the file.
-printf '#!/usr/bin/env bash\necho "CONVENTION=$1"\n' > "$R/.loom/scripts/weft"; chmod +x "$R/.loom/scripts/weft"
-printf '#!/usr/bin/env bash\necho "CONVENTION_SH=$1"\n' > "$R/.loom/scripts/dress.sh"; chmod +x "$R/.loom/scripts/dress.sh"
-printf '[warp]\nhook = "args.sh"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" weft "by-name" 2>&1)"; rc=$?
+printf '#!/usr/bin/env bash\necho CONVENTION\n' > "$R/.loom/scripts/weft"; chmod +x "$R/.loom/scripts/weft"
+printf '#!/usr/bin/env bash\necho CONVENTION_SH\n' > "$R/.loom/scripts/dress.sh"; chmod +x "$R/.loom/scripts/dress.sh"
+printf '#!/usr/bin/env bash\necho KEY\n' > "$R/.loom/scripts/key.sh"; chmod +x "$R/.loom/scripts/key.sh"
+printf '[warp]\nhook = "key.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" weft 2>&1)"; rc=$?
 assert_exit "$rc" "0" "convention-name: a script named after the skill runs with no key"
-assert_contains "$o" "CONVENTION=by-name" "convention-name: it receives the argument"
-o="$(cd "$R" && bash "$HOOK" dress x 2>&1)"
-assert_contains "$o" "CONVENTION_SH=x" "convention-sh: the .sh spelling is found too"
+assert_contains "$o" "CONVENTION" "convention-name: it runs"
+assert_eq "$(cd "$R" && bash "$HOOK" --name weft)" "weft" "convention-name: --name says which file"
+o="$(cd "$R" && bash "$HOOK" dress 2>&1)"
+assert_contains "$o" "CONVENTION_SH" "convention-sh: the .sh spelling is found too"
 rm -f "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" weft "no-config" 2>&1)"; rc=$?
+o="$(cd "$R" && bash "$HOOK" weft 2>&1)"; rc=$?
 assert_exit "$rc" "0" "convention-noconf: no loom.toml at all still runs the named script"
-assert_contains "$o" "CONVENTION=no-config" "convention-noconf: with the argument"
+assert_contains "$o" "CONVENTION" "convention-noconf: it runs"
 printf '#!/usr/bin/env bash\necho "FILE"\n' > "$R/.loom/scripts/warp"; chmod +x "$R/.loom/scripts/warp"
-printf '[warp]\nhook = "args.sh"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp k 2>&1)"
-assert_contains "$o" "ARG=k" "convention-key-wins: a configured key wins over the file"
+printf '[warp]\nhook = "key.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"
+assert_contains "$o" "KEY" "convention-key-wins: a configured key wins over the file"
 assert_not_contains "$o" "FILE" "convention-key-wins: the file does not also run"
 
 rm -rf "$R"; finish

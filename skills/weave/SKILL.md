@@ -20,7 +20,7 @@ These are the surfaces `weave` reads or writes directly; the full key map is the
 |---|---|
 | `[weave].cleanup` | merged branch cleanup: `always`, `never`, or `ask` |
 | `[weave].rsi` | end-of-session retro filed to `.loom/skills/warp.md`: `always`, `ask`, `never` (default on) |
-| `[weave].hook` | optional invocation command: the harness runs it through `skill-gate` the moment weave is invoked and its report arrives with this skill; run it by hand as the floor |
+| `[weave].hook` | optional invocation command: run through `skill-gate` the moment weave is invoked, by the harness or by this skill's floor; its receipt and report arrive as context |
 | `.loom/skills/weave.md` | repo opinion for distillation, pruning, and close-out convention |
 | `.loom/scripts/*` | conventional home for hook scripts |
 
@@ -49,6 +49,8 @@ flowchart TD
 
 ## Workflow
 
+The gate first: a `loom gate: weave` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/weave.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weave`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Configure - approval boundary
 
 Use only on first run, missing `[weave]`, or `/weave configure`.
@@ -60,7 +62,7 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 
 ### 2. Scope - the session delta
 
-- Read `.loom/skills/weave.md` if present and not already in your context.
+- Weigh the repo opinion the gate carried: what to distill, what to prune, how to hand back.
 - Scope the work against the branch base: `git log`, `git diff <base>..HEAD`, and `git status --porcelain`.
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and resolve markdown spares: distill, adopt, exclude, or leave for a named follow-up.
 - Pull sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`; read whole files only when rewriting them.
@@ -78,10 +80,10 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`.
 - Resolve `git status --porcelain`: every untracked, modified, or deleted file is staged or explained.
-- If weave has a hook, `.loom/scripts/weave` or `[weave].hook`, and its report is not already in your context, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weave`.
-- Hook exit `0`: continue.
-- Hook exit `3`: no hook; continue on the built-in checks.
-- Other hook exit: stop and report the close hook failure.
+- The hook, `.loom/scripts/weave` or `[weave].hook`, rules the check, by the receipt's hook line or your own run of it.
+- Ran, exit 0: continue.
+- None, or exit 3: continue on the built-in checks.
+- Failed: stop and report the close hook failure.
 
 ### 5. Integrate - only on opt-in
 

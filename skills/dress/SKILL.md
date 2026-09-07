@@ -38,6 +38,8 @@ flowchart TD
 
 ## Workflow
 
+The gate first: a `loom gate: dress` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/dress.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" dress`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Survey - explore the repo, write nothing
 
 Determine whether this repo is blank, undressed, or already dressed, then gather only the facts needed to propose the surface.
