@@ -38,6 +38,8 @@ These are the surfaces `refine-spec` reads or writes directly; the full key map 
 
 ## Workflow
 
+The gate first: a `loom gate: refine-spec` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/refine-spec.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" refine-spec`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Read
 
 When no capability is named, or the name is a script, a module, or a test file, map first: list the product's features from the front doors (README, roadmap, the skills' descriptions), put the cut to the operator as features at the 20,000-foot view, and read no test until one is chosen. Evidence is walked inside a fence, never to find one.

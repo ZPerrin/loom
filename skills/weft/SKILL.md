@@ -41,13 +41,15 @@ flowchart TD
 
 ## Workflow
 
+The gate first: a `loom gate: weft` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/weft.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weft`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Load - the standard and the voice
 
-Load the ethos weft enforces, the front doors it must preserve, and any repo opinion:
+Load the ethos weft enforces and the front doors it must preserve; the repo opinion arrived with the gate:
 
 ```bash
 cat "${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md"
-cat README.md AGENTS.md .loom/skills/weft.md 2>/dev/null
+cat README.md AGENTS.md 2>/dev/null
 ```
 
 Hold the pass to that standard: docs orient and route, code is the road, thin is often correct. A sentence earns its place only if it is durable, well-placed, and changes the reader's next action — "true" is not enough.

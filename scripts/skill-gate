@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
-# skill-gate — a loom skill opens with the repo's opinion of it and the report of its hook,
-# handed to the model as context before the skill's first step, at either way a skill is
-# invoked and on either harness. Registered in hooks/hooks.json on PreToolUse with matcher
-# Skill for Claude's model-invoked skills, and on UserPromptSubmit for typed invocations.
-# Codex's model-chosen skills retain the prose floor; ordinary prompts get a fast exit.
-#   stdin: the harness payload, or the first argument where a harness passes it that way.
-#   PreToolUse: tool_input.skill names the skill ("loom:warp"), tool_input.args its text.
-#   UserPromptSubmit: the prompt, when it opens with /loom:<skill> or $loom:<skill>, or mentions
-#   $<skill>. Codex's picker wraps a mention as [$loom:<skill>](path) or [$<skill>](path).
-#   For a loom skill: .loom/skills/<skill>.md past its frontmatter, if present, and the report
-#   of the skill's hook run through skill-hook with the invocation's text, if one exists, are
-#   returned together as additionalContext. Nothing to say, or a payload the gate cannot read,
-#   is silence. Exit 0 always: a gate never blocks a skill or a prompt, and a failing hook is
-#   reported to the skill, whose prose says what it means. Text is read up to the first escaped quote.
+# skill-gate — a loom skill opens with a receipt of what the gate did, the repo's opinion of it,
+# and the report of its hook, handed to the model as context before the skill's first step.
+#   stdin: the harness payload, or the first argument where a host passes it that way.
+#   Registered in hooks/hooks.json on PreToolUse with matcher Skill for Claude's model-invoked
+#   skills, and on UserPromptSubmit for typed invocations on either host; an ordinary prompt
+#   gets a fast exit. PreToolUse: tool_input.skill names the skill ("loom:warp"),
+#   UserPromptSubmit: the prompt, when it opens with /loom:<skill> or $loom:<skill>, or
+#   mentions $<skill> anywhere; Codex's picker wraps a mention as [$loom:<skill>](path) or
+#   [$<skill>](path). Only the skill's name is read; a hook takes no input.
+# The answer opens with the receipt: the skill, then whether .loom/skills/<skill>.md was read,
+# then which hook ran through skill-hook and how it exited, or that there is none, or that the
+# config was refused. The opinion and the hook's output follow. A
+# skill that sees no receipt for its invocation does the same by hand; that floor is its own
+# prose. Exit 0 always: a gate never blocks a skill or a prompt, and a failing hook is reported
+# to the skill, whose prose says what it means. A hook may run again for one invocation;
+# tolerating the repeat is the hook's job.
 set -u
 SELF="$(cd "$(dirname "$0")" && pwd)"
 . "$SELF/lib/discover.sh"
+SKILLS="warp weave weft dress spec refine-spec"
 
 # stdin -> one JSON string body: backslash, quote, tab, and CR escaped; lines joined with \n.
 json_esc() {
@@ -31,50 +34,71 @@ event=""
 case "$payload" in *"${q}hook_event_name${q}"*)
   event="${payload#*"${q}hook_event_name${q}"}"; event="${event#*$q}"; event="${event%%$q*}" ;;
 esac
-args=""
 if [ "$event" = "UserPromptSubmit" ]; then
   case "$payload" in *"${q}prompt${q}"*) ;; *) exit 0 ;; esac
-  prompt="${payload#*"${q}prompt${q}"}"; prompt="${prompt#*$q}"; prompt="${prompt%%$q*}"
+  prompt="${payload#*"${q}prompt${q}"}"; prompt="${prompt#*$q}"
   case "$prompt" in
-    /loom:*|\$loom:*) skill="${prompt#?loom:}"; skill="${skill%%[ \\]*}"; args="${prompt#?loom:$skill}"; args="${args# }" ;;
-    *) skill=""
-       for s in warp weave weft dress spec refine-spec; do
-         case "$prompt" in
-           *"[\$loom:$s]("*")"*|*"[\$$s]("*")"*|*"\$$s"|*"\$$s "*|*"\$$s\\"*)
+    /loom:*|\$loom:*)                      # the name ends at a space, an escape, or the string's close
+      skill="${prompt#?loom:}"; skill="${skill%%[[:space:]]*}"; skill="${skill%%\\*}"; skill="${skill%%\"*}" ;;
+    *) skill=""                            # a mention is looked for in the whole payload, so a quote before it hides nothing
+       for s in $SKILLS; do
+         case "$payload" in
+           *"[\$loom:$s]("*|*"[\$$s]("*|*"\$$s\""*|*"\$$s "*|*"\$$s\\"*)
              skill="$s"; break ;;
          esac
        done
-       [ -n "$skill" ] || exit 0
-       args="$prompt" ;;
+       [ -n "$skill" ] || exit 0 ;;
   esac
-  args="$(printf '%s' "$args" | sed 's/\\n/ /g; s/\\t/ /g; s/\\\\/\\/g')"
 else
   event="PreToolUse"
   case "$payload" in *"${q}tool_name${q}"*"${q}Skill${q}"*"${q}skill${q}"*) ;; *) exit 0 ;; esac
   skill="${payload#*"${q}skill${q}"}"; skill="${skill#*$q}"; skill="${skill%%$q*}"
   case "$skill" in loom:*) skill="${skill#loom:}" ;; *) exit 0 ;; esac
-  case "$payload" in *"${q}args${q}"*)
-    args="${payload#*"${q}args${q}"}"; args="${args#*$q}"; args="${args%%$q*}" ;;
-  esac
 fi
 case "$skill" in ""|*[!a-z-]*) exit 0 ;; esac          # a skill name is lowercase letters and hyphens
+case " $SKILLS " in *" $skill "*) ;; *) exit 0 ;; esac
 ROOT="$(loom_repo_root)"
 
-ctx=""
-f="$ROOT/.loom/skills/$skill.md"
-if [ -f "$f" ]; then
-  body="$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next } { print }' "$f" | json_esc)"
-  [ -n "$body" ] && ctx="Repo opinion for $skill, from .loom/skills/$skill.md, layered over the skill you are about to load:\\n\\n$body"
+# The opinion: the file past its frontmatter, or why there is nothing to carry.
+f=".loom/skills/$skill.md"; body=""; opinion="none"
+if [ -f "$ROOT/$f" ]; then
+  if [ -r "$ROOT/$f" ]; then
+    body="$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next } { print }' "$ROOT/$f")"
+    if [ -n "$body" ]; then opinion="read $f"; else opinion="empty $f"; fi
+  else opinion="unreadable $f"; fi
 fi
 
-# The repo's hook, routed by skill-hook: 3 is none; 0 reports its output; anything else reports
-# the exit code with what it printed. The gate interprets none of it.
-report="$( (cd "$ROOT" && bash "$SELF/skill-hook" "$skill" "$args") 2>&1 )"; rc=$?
+# The hook: skill-hook names it first (3 none, 2 config refused), then runs it. The gate
+# interprets none of it; the exit code and what it printed reach the skill.
+name="$( (cd "$ROOT" && bash "$SELF/skill-hook" --name "$skill") 2>&1 )"; rc=$?
+report=""
+case "$rc" in
+  3) hook="none" ;;
+  2) hook="refused, exit 2, .loom/loom.toml unparseable"; report="$name" ;;
+  *) report="$( (cd "$ROOT" && bash "$SELF/skill-hook" "$skill") 2>&1 )"; rc=$?
+     if [ "$rc" -eq 0 ]; then hook="ran $name, exit 0"; else hook="failed $name, exit $rc"; fi ;;
+esac
+
+ctx="loom gate: $skill
+opinion: $opinion
+hook: $hook"
+[ -n "$body" ] && ctx="$ctx
+
+Repo opinion for $skill, from $f, layered over the skill you are about to load:
+
+$body"
 case "$rc" in
   3) ;;
-  0) [ -n "$report" ] && ctx="${ctx:+$ctx\\n\\n}The $skill hook ran at invocation and printed:\\n\\n$(printf '%s\n' "$report" | json_esc)" ;;
-  *) ctx="${ctx:+$ctx\\n\\n}The $skill hook exited $rc at invocation:\\n\\n$(printf '%s\n' "$report" | json_esc)" ;;
+  0) [ -n "$report" ] && ctx="$ctx
+
+The $skill hook ran at invocation and printed:
+
+$report" ;;
+  *) ctx="$ctx
+
+The $skill hook exited $rc at invocation:
+
+$report" ;;
 esac
-[ -n "$ctx" ] || exit 0
-printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"%s"}}\n' "$event" "$ctx"
+printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"%s"}}\n' "$event" "$(printf '%s\n' "$ctx" | json_esc)"
 exit 0

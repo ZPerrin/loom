@@ -25,6 +25,35 @@ part of the release or required to read this report. The source plugin manifest 
 `0.2.0`; the locally installed development cache remains `0.2.0+codex.20260907060857` until the
 next install. No default-branch promotion or release tag is part of this handoff.
 
+## Ruling and landing, 2026-09-07
+
+Reviewed with Claude Code 2.1.261 on the plugin cache at the merge commit, one commit behind
+the picker fix; the two files differ only by that matcher, which neither Claude check touches.
+Each Claude route ran the gate once: the model's Skill call fired PreToolUse alone and the
+refine-spec opinion arrived before the skill's first step; a typed `/loom:spec` fired
+UserPromptSubmit alone, expanded inline with the spec opinion attached, and no Skill event
+followed. Loom carries no hook script for either skill, so each check was one native event and
+zero script runs. The Skill payload keys remain `skill` and `args`; the installed binary has no
+`skill_name`. UserPromptExpansion exists in this version with `command_name` and `command_args`
+and is not registered. Lint on write passed live too: nine harness edits of the hooks spec
+each returned the two S002 warnings naming that file, and a written probe's broken link came
+back as a finding; a shell write is outside the matcher, as on Codex. That a document carrying
+warnings gets them back as a blocking error on every edit is logged under R-HOOKS-006.
+
+The operator ruled: the Skill matcher stays; the typed route stays on UserPromptSubmit, the one
+registration both hosts honor; the gate answers with a receipt even when it finds nothing; every
+skill's first step does the gate's work by hand when no receipt for its invocation is in context,
+reading its opinion file and running its hook through skill-hook; a hook
+may run again for one invocation and tolerates the repeat, which the hooks spec now states as a
+non-goal; the tool-read adapter is not shipped and is a non-goal too. Two later rulings the
+same day: a hook takes no input, since it is what the repo always wants run at that moment and
+nothing ever consumed the text, so the gate reads only the skill's name and the quote-parsing
+gap below is moot; and lint on write is unregistered for 0.2.0, the skills running the linter
+at their own steps, after nine harness edits of one spec each returned its two standing
+warnings as a blocking error. The `$<skill>` double run on Claude is accepted as is. Option A
+below with the shared floor is what shipped. The receipt is specified in the
+[hooks spec](../../docs/specs/hooks.md) under R-HOOKS-012.
+
 ## Direction for 0.2
 
 The operator wants deterministic loading of repo skill guidance in both harnesses, using an
@@ -49,18 +78,19 @@ supplied directly by the harness or reused from context without such a read.
 ## Execution route matrix
 
 The table assigns candidate owners for release. **Live Codex** means observed in this desktop;
-**component** means an isolated script check; **documented Claude** still needs a native check.
+**component** means an isolated script check; **documented Claude** was checked natively on
+2026-09-07, as the ruling section records.
 The current shared registration has SessionStart, PostToolUse, UserPromptSubmit, and
 PreToolUse matching Skill. UserPromptExpansion and the completion receipt are proposed changes.
 
 | Work or entry point | Claude Code route | Codex desktop route | Evidence and ownership constraint |
 |---|---|---|---|
 | Opening bearings | SessionStart -> doc-slicer | SessionStart -> doc-slicer | Live Codex delivery; Claude live check remains. Resume/compact reloads are intentional context refreshes. |
-| Writing a managed document | PostToolUse on write/edit tools -> lint-hook | PostToolUse on apply_patch -> lint-hook | Live Codex findings, repair, and multi-file filtering passed. Component checks cover Claude-shaped edits. Unmanaged files produce no findings. |
-| User explicitly invokes a skill | Candidate: UserPromptExpansion -> skill-gate. Current implementation uses UserPromptSubmit. | UserPromptSubmit -> skill-gate for recognized picker/mention forms | Codex picker and short mention passed live. On Claude, choose expansion or prompt dispatch for this path, not both. |
-| Model invokes the Skill tool | PreToolUse matching Skill -> skill-gate | No corresponding Skill tool exposed in the tested harness | Claude event is documented and payload adapter passes; native namespace/argument capture remains. |
+| Writing a managed document | Not registered for 0.2.0; skills run doc-linter at their steps | Not registered for 0.2.0; skills run doc-linter at their steps | lint-hook passed live on both hosts and stays as an opt-in a repo registers itself. Warnings come back as exit 2 like errors. |
+| User explicitly invokes a skill | UserPromptSubmit -> skill-gate; expansion left unregistered | UserPromptSubmit -> skill-gate for recognized picker/mention forms | Codex picker and short mention passed live; Claude's typed command passed live, once, with no Skill event beside it. |
+| Model invokes the Skill tool | PreToolUse matching Skill -> skill-gate | No corresponding Skill tool exposed in the tested harness | Passed live on Claude, once, opinion before the first step; the prompt gate stayed silent for the ordinary prompt that led to it. |
 | Tool reads a skill file | Prefer the structured routes above; a read approximation is an alternative in the options matrix | Experimental PreToolUse on Bash -> recognized skill-file read -> skill-gate | Live proof for one weft command. Repeated reads run again; another read command did not match. Decide whether this route loads guidance only or also executes scripts. |
-| Skill is reused with no observable invocation/read event | Prose floor -> proposed model-call entry to skill-gate | Prose floor -> proposed model-call entry to skill-gate | No tool hook can act on an absent tool call. The floor uses the current invocation's results, not an old receipt. |
+| Skill is reused with no observable invocation/read event | Prose floor: read the opinion, `skill-hook <skill>` | Prose floor: read the opinion, `skill-hook <skill>` | No tool hook can act on an absent tool call. The floor does the gate's work by hand when no receipt for the current invocation is in context. |
 
 Claude documents direct command expansion as a separate path from model calls to Skill. Its
 [UserPromptExpansion contract](https://code.claude.com/docs/en/hooks#userpromptexpansion) supplies
@@ -105,18 +135,21 @@ Codex manifest to its own bindings file. Codex's
 overriding that default file. Both registrations would call the same scripts and use the same
 `.loom/` controls. This packaging change has not been made.
 
-## Proposed gate receipt and prose floor
+## Gate receipt and prose floor
 
-The receipt comes from skill-gate, separate from arbitrary repo-script stdout. A possible
-human-readable shape, deliberately without an invocation ID, is:
+The receipt comes from skill-gate, separate from arbitrary repo-script stdout, without an
+invocation ID and without the invocation's text, which is already in context. It says what ran:
 
 ```text
-LOOM_SKILL_GATE skill=warp
-override: loaded .loom/skills/warp.md
-hook: completed exit=0
+loom gate: warp
+opinion: read .loom/skills/warp.md
+hook: ran warp.sh, exit 0
 ```
 
-The precise format is still to be specified. Its behavior should make these distinctions:
+The opinion line is `read`, `empty`, or `unreadable` with the file, or `none`; the hook line names
+the hook skill-hook resolved, by key or by convention, as `ran <hook>, exit 0` or `failed <hook>,
+exit N`, or is `none`, or `refused, exit 2, .loom/loom.toml unparseable`. The opinion text and the
+hook's output follow. The floor makes these distinctions:
 
 | Gate result | What the prose floor does |
 |---|---|
@@ -134,11 +167,11 @@ it must not imply a native Skill event or invent original invocation arguments. 
 distinguishes current from earlier invocation context through the prose contract; there is no
 claim of code-enforced deduplication from the marker alone.
 
-This needs a model-call entry to skill-gate as well as its existing harness-payload entry. No
-new CLI syntax is specified here. The underlying skill-hook runner remains responsible for
-script execution; the gate owns preparation and the receipt. Update the spec and tests when
-changing the current empty-output behavior. The four skills without a runner fallback and
-weave's missing argument forwarding must be reconciled with the common entry contract.
+There is no model-call entry to the gate. The floor is the gate in words: all six skills open with
+the same sentence, which reads the receipt when there is one and otherwise reads the opinion file
+and runs `skill-hook <skill>` by hand, exit 3 meaning no hook. The skill-hook runner remains
+responsible for script execution, and `skill-hook --name <skill>` tells the gate which hook it
+resolved so the receipt can name it.
 
 ## Claude validation handoff
 
@@ -325,12 +358,9 @@ These are design findings and proposals; the runtime has not been changed for th
 
 ## Remaining work
 
-- Validate the route and option matrices with Claude, then choose the Codex read adapter's
-  scope before promoting it. Resolve both hosts' overlap questions without assuming the
-  proposed receipt itself deduplicates native executions.
-- Exercise warp's prose fallback with a new ordinary-language request. A prior invocation's
-  report must not suppress the new invocation. Keep its model-triggered runner distinct from
-  native interception. Recreate a deliberate-failure probe for the pending prompt-gate check.
+- Exercise the shared floor on Codex with a model-chosen skill and a repo hook: the skill runs
+  `skill-gate` by name once, and a second invocation with the same text is not suppressed by
+  the first receipt. Recreate a deliberate-failure probe for the pending prompt-gate check.
 - Fix the reproduced quote-parsing and skill-fallback gaps with meaningful evidence. Reconcile
   R-HOOKS-006, R-HOOKS-007, R-HOOKS-008, and R-HOOKS-011; native Claude checks remain outstanding.
   Use the plugin cachebuster/install workflow for shipped changes, then refresh and verify.

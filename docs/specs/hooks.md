@@ -6,7 +6,7 @@ updated: 2026-09-07
 # Capability: hooks
 
 ## Purpose
-hooks is where a workflow step graduates from prose to a script, the same way every time, with the prose that described it dropping to a floor beneath: a skill opens with the repo's opinion of it and the report of its hook, run the moment the skill is invoked, and a written managed document meets the linter. The runner hands the skill one of a few outcomes and never decides what an outcome means. The linter meets the runner in one place, checking that a named script can run before any session needs it.
+hooks is where a workflow step graduates from prose to a script, the same way every time, with the prose that described it dropping to a floor beneath: a skill opens with a receipt of what its gate found, the repo's opinion of it, and the report of its hook, run the moment the skill is invoked, and a written managed document meets the linter where a repo asks for that. The runner hands the skill one of a few outcomes and never decides what an outcome means. The linter meets the runner in one place, checking that a named script can run before any session needs it.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -15,7 +15,7 @@ hooks is where a workflow step graduates from prose to a script, the same way ev
 
 ## Requirements
 ### R-HOOKS-001: A configured hook runs at its skill's moment
-WHEN a skill's config section names a hook, the system SHALL run it with the repo's scripts directory first on PATH and the skill's arguments passed through.
+WHEN a skill's config section names a hook, the system SHALL run it with the repo's scripts directory first on PATH.
 #### Scenario: configured-hook -> tests/test-skill-hook.sh#HELPER_RAN
 - GIVEN [warp] hook = "warp.sh" and a sibling script in the scripts directory
 - WHEN the warp hook runs
@@ -25,11 +25,6 @@ WHEN a skill's config section names a hook, the system SHALL run it with the rep
 - GIVEN no scripts_dir key and a pathless hook name
 - WHEN the warp hook runs
 - THEN the script is found under .loom/scripts
-#### Scenario: arguments -> tests/test-skill-hook.sh#pass-through
-- GIVEN hook = "args.sh" and the warp hook invoked with an argument
-- WHEN the warp hook runs
-- THEN the script receives the argument as its first parameter
-- AND a hook written as a command sees it as its own first parameter
 #### Scenario: configured-scripts-dir -> tests/test-skill-hook.sh#configured-scripts-dir
 - GIVEN scripts_dir = "tools/hooks" and a hook there
 - WHEN the warp hook runs
@@ -116,13 +111,9 @@ WHEN a harness reports a write to a managed document, the system SHALL return ev
 - GIVEN a payload whose file path is relative, or carries JSON's escaped slashes
 - WHEN the harness reports the write
 - THEN the document is found and linted all the same
-#### Scenario: harness-hook
-- GIVEN the plugin installed on a harness whose hooks fire after a tool call
-- WHEN a Write, Edit, MultiEdit, or apply_patch lands on a managed document
-- THEN the findings reach the model before its next turn
 
 ### R-HOOKS-007: A skill opens with its repo opinion
-WHEN a harness reports a loom skill's invocation, the system SHALL return that skill's opinion file past its frontmatter as context, and nothing when there is none.
+WHEN a harness reports a loom skill's invocation, the system SHALL return that skill's opinion file past its frontmatter as context beneath the receipt.
 #### Scenario: gate-opinion -> tests/test-skill-gate.sh#gate-opinion
 - GIVEN a repo with .loom/skills/warp.md
 - WHEN the harness reports the warp skill invoked
@@ -140,7 +131,7 @@ WHEN a harness reports a loom skill's invocation, the system SHALL return that s
 #### Scenario: gate-no-opinion -> tests/test-skill-gate.sh#gate-no-opinion
 - GIVEN a repo with no .loom/skills/weft.md
 - WHEN the harness reports the weft skill invoked
-- THEN nothing is returned and the gate exits 0
+- THEN the receipt says the opinion is none, no opinion text follows, and the gate exits 0
 #### Scenario: gate-other-skill -> tests/test-skill-gate.sh#gate-other-skill
 - WHEN the harness reports a skill from another plugin invoked
 - THEN nothing is returned and the gate exits 0
@@ -157,31 +148,32 @@ WHEN a harness reports a loom skill's invocation, the system SHALL return that s
 - THEN the opinion is in the skill's context before its first step
 
 ### R-HOOKS-008: A skill's hook runs when it is invoked
-WHEN a loom skill that has a hook is invoked, the system SHALL run the hook on the invocation's text and hand its report to the skill as context.
+WHEN a loom skill that has a hook is invoked, the system SHALL run the hook and hand its report to the skill as context.
 #### Scenario: hook-ran -> tests/test-skill-gate.sh#hook-ran
-- GIVEN [warp] hook naming a script that echoes its argument
-- WHEN the harness reports loom:warp invoked with the text issue 12
-- THEN the script's output is returned as context beside the opinion, with issue 12 in it
+- GIVEN [warp] hook naming a script that prints
+- WHEN the harness reports loom:warp invoked
+- THEN the script's output is returned beneath the receipt beside the opinion
 #### Scenario: hook-picker -> tests/test-skill-gate.sh#gate-picker
 - GIVEN a prompt naming warp through the Codex desktop skill picker and a hook for warp
 - WHEN the harness reports the prompt submitted
-- THEN the hook receives the whole prompt and its report reaches the skill
+- THEN the hook runs and its report reaches the skill
+- AND a quote in the prompt before the mention hides nothing
 #### Scenario: hook-failed -> tests/test-skill-gate.sh#hook-failed
 - GIVEN [weave] hook naming a script that exits 7
 - WHEN the harness reports the weave skill invoked
-- THEN the context reports the exit code and what the script printed
+- THEN the receipt says the hook failed with exit 7 and the context reports what the script printed
 - AND the gate exits 0
 #### Scenario: hook-unset -> tests/test-skill-gate.sh#hook-unset
 - GIVEN a skill with no hook by key or by name and no opinion file
 - WHEN the harness reports it invoked
-- THEN nothing is returned
+- THEN the receipt says the hook is none and no report follows it
 
 ### R-HOOKS-009: A script named after the skill is its hook
 WHEN no key names a hook and the scripts directory holds an executable named after the skill with or without the .sh suffix, the system SHALL run it.
 #### Scenario: by-name -> tests/test-skill-hook.sh#convention-name
 - GIVEN an executable weft under the scripts directory and no [weft] section
-- WHEN the weft hook runs with an argument
-- THEN weft runs and receives the argument
+- WHEN the weft hook runs
+- THEN weft runs
 #### Scenario: sh-spelling -> tests/test-skill-hook.sh#convention-sh
 - GIVEN an executable dress.sh under the scripts directory
 - WHEN the dress hook runs
@@ -217,13 +209,44 @@ WHEN a harness passes the payload as the first argument or names the written fil
 - WHEN the lint hook runs
 - THEN the document's finding is returned and the hook exits 2
 
+### R-HOOKS-012: A gate's answer opens with a receipt
+WHEN the gate recognizes a loom skill, the system SHALL open its answer with a receipt naming the opinion read and the hook run, with its exit code.
+#### Scenario: receipt-found -> tests/test-skill-gate.sh#receipt-found
+- GIVEN a repo with .loom/skills/warp.md and [warp] hook naming a script that prints
+- WHEN the harness reports loom:warp invoked
+- THEN the first line names warp, the opinion line says the file was read, and the hook line names the script with exit 0
+- AND the receipt carries none of the invocation's text
+#### Scenario: receipt-by-convention -> tests/test-skill-gate.sh#receipt-by-convention
+- GIVEN no [spec] hook key and an executable spec under the scripts directory
+- WHEN the harness reports loom:spec invoked
+- THEN the hook line names spec
+#### Scenario: receipt-none -> tests/test-skill-gate.sh#receipt-none
+- GIVEN a skill with no opinion file and no hook
+- WHEN the harness reports it invoked
+- THEN the receipt says the opinion is none and the hook is none, and nothing follows it
+#### Scenario: receipt-quiet -> tests/test-skill-gate.sh#receipt-quiet
+- GIVEN a hook that exits 0 and prints nothing
+- WHEN the harness reports its skill invoked
+- THEN the receipt names the hook with exit 0 and no report follows
+#### Scenario: receipt-failed -> tests/test-skill-gate.sh#receipt-failed
+- GIVEN a hook that exits 7
+- WHEN the harness reports its skill invoked
+- THEN the receipt names the hook as failed with exit 7
+#### Scenario: receipt-refused -> tests/test-skill-gate.sh#receipt-refused
+- GIVEN a config the parser refuses
+- WHEN the harness reports a loom skill invoked
+- THEN the receipt says the hook was refused with exit 2 and names the config, and the runner's one line follows
+
 ## Non-goals
 - N-1: What warp or weave do with an outcome is their own prose.
 - N-2: Whether a warp or weave section is whole is control-plane.
 - N-3: Which events a harness fires, and with what payload, is the harness's own contract; loom registers on the documented ones and records the rest with hook-trace.
+- N-4: Exactly-once execution of a hook is not promised; a hook may run again for one invocation, and tolerating the repeat is the hook's own job.
+- N-5: A read of a skill's file is not an invocation, so a skill invoked with no harness event prepares itself by its own prose, reading its opinion and running its hook through skill-hook.
+- N-6: A hook takes no input; what a skill was invoked with is the skill's own business, never the hook's.
+- N-7: The plugin registers no lint on write for 0.2.0; the skills run the linter at their steps, and a repo that wants a written document met by the linter registers lint-hook on its host's post-write event itself.
 
 ## Change log
-- 2026-09-07 R-HOOKS-006: Codex desktop returned a broken-link finding through a nested apply_patch call and stayed silent after repair; the Claude live smoke test remains -> open
-- 2026-09-07 R-HOOKS-007: Codex desktop delivered the opinion and hook report through both the corrected picker matcher and a short dollar mention; tests pin the captured picker shape. A narrow tool-read probe also delivered context, but is not shipped and does not establish a skill-invocation event. Claude's native routes and overlap still need validation; model-chosen Codex skills retain the prose floor. Evidence and options are in the [validation report](../../.loom/reports/2026-09-07-codex-hooks-validation.md) -> open
+- 2026-09-07 R-HOOKS-006: the hook returns warnings as exit 2 like errors, which on Claude read as a blocking error on every edit of a document carrying a standing warning; unregistered for 0.2.0 under N-7, so a repo that opts in inherits this until warnings go back as context -> open
 - 2026-09-06 R-HOOKS-008: a skill's hook is repo code the harness runs at invocation; loom leans on the harness's own trust prompt for project hooks and adds no check of its own, which the operator may want revisited -> open
 - 2026-09-06 R-HOOKS-007: a gate exits 0 whatever it finds, which every gate scenario asserts one by one; a candidate invariant for the operator to type -> open

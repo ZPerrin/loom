@@ -112,7 +112,7 @@ rsi = "always"
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>`            | `warp` |
 | `[weave].cleanup` | session-close branch cleanup preference                             | `weave` |
 | `[weave].rsi` | end-of-session retro filed to `.loom/skills/warp.md`: `always`, `ask`, `never` (default on) | `weave` |
-| `[<skill>].hook` | names the hook when it is a command or a script not named after the skill; run the moment the skill is invoked with the invocation's text as its argument, by the harness where its hooks fire and by the skill's prose as the floor, its report reaching the skill as context | `skill-gate`, `skill-hook`, the skill |
+| `[<skill>].hook` | names the hook when it is a command or a script not named after the skill; run with no input the moment the skill is invoked, by the harness where its hooks fire and by the skill's prose as the floor, its receipt and report reaching the skill as context | `skill-gate`, `skill-hook`, the skill |
 | `.loom/skills/<skill>.md` | repo opinion for that skill, handed to it at invocation           | named skill, `skill-gate` |
 | `.loom/scripts/<skill>` | that skill's hook, found by name with or without `.sh` | `skill-hook`, `skill-gate` |
 

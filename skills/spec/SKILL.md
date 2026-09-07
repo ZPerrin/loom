@@ -38,6 +38,8 @@ These are the surfaces `spec` reads or writes directly; the full key map is the 
 
 ## Workflow
 
+The gate first: a `loom gate: spec` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/spec.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" spec`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Fence
 
 When the request names a script, a module, or a test file, map the features from the front doors and put the cut to the operator before reading a test; the grammar says what a capability is.
