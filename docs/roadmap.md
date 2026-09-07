@@ -18,14 +18,14 @@ Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` a
 skills, the lint fixtures, four repo specs on loom itself reconciled against the code twice, spec
 slicing by capability and id, the skill cohesion pass, and the harness hooks: the skill gate and
 its receipt on every route a host reports and as each skill's own first step where a host reports
-none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires. Both hosts' native routes and what each ran are in the
-[hook validation report](../.loom/reports/2026-09-07-codex-hooks-validation.md). Left, in order:
+none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires. Each
+host's native routes and what each ran are in the
+[Codex](../.loom/reports/2026-09-07-codex-hooks-validation.md) and
+[Claude](../.loom/reports/2026-09-07-claude-hooks-validation.md) validation reports. Left, in order:
 
-- [ ] Orchestration state: `.loom/handoffs/` as the third data-plane directory, its template
-      distilled from the orchestrator repo and warp's delegation opinion; a delegate worktree
-      carries a marker naming its brief and its session slice opens with that in place of the
-      roadmap; the worktree-and-marker recipe graduates to a script. The orchestrator repo then
-      retires into the bare `.loom` + `.git` workspace pattern.
+- [ ] The data plane, whole: `.loom/handoffs/` and `.loom/reports/` beside `specs/` and
+      `plans/`, as kinds the linter accepts and the reference project shows, the handoff's shape
+      distilled from warp's delegation opinion. Dispatch itself is the 0.3 idea below.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
       table, few hard constraints, output contract, a graph only where topology demands it) with
       constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled
@@ -52,6 +52,12 @@ none, a hook by name under `.loom/scripts/`, and a tracer for learning what a ho
   - **Tripwires over gates.** A doc-linter check flagging negation-density in `kind: reference` docs (retired/deprecated/never/don't/instead-of) that rejects nothing — it summons judgment: the next weft pass must justify or cut each flagged line. Style guide plus editor, not compiler.
   - **RSI retro as the grader.** Each retro that records "pass missed X, operator caught X" is a labeled datum; the exemplar gallery grows from real misses, the only place taste data comes from. The shuttle ledger miss is datum #1.
 - taxonomy + rsi = powerful enough to codify into loom?
+
+- 0.3, orchestration: a delegate worktree carries a marker naming its handoff and its session
+  slice opens with that in place of the roadmap; the worktree-and-marker recipe graduates to
+  `.loom/scripts/delegate`; a delegate is a background session (`claude --bg -w`) whose id the
+  handoff records; the orchestrator repo retires into the bare `.loom` + `.git` workspace
+  pattern. Moved out of 0.2.0 on 2026-09-07.
 
 - skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
   element present or absent, two or three objective tasks, the spec checks' pass rate as the

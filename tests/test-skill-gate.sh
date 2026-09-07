@@ -54,6 +54,12 @@ out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"/loom:warp fix 
 assert_contains "$out" 'Repo opinion for warp' "gate-typed: a quote later in the prompt changes nothing"
 out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"$loom:warp"}')"
 assert_contains "$out" 'Repo opinion for warp' "gate-typed: the \$loom: spelling and a bare name are the skill too"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"/warp orient only"}')"
+assert_contains "$out" 'loom gate: warp\nopinion: read .loom/skills/warp.md\nhook: ran hello.sh, exit 0' "receipt-bare-name: a typed /warp the host resolved gets the receipt too"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"/simplify the diff"}')"
+assert_eq "$out" "" "receipt-bare-name: a typed command that is not a loom skill gets nothing"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"/other:warp orient"}')"
+assert_eq "$out" "" "receipt-bare-name: another plugin's typed warp gets nothing"
 out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please warp into issue 12"}')"; rc=$?
 assert_exit "$rc" "0" "gate-typed: an ordinary prompt exits 0"
 assert_eq "$out" "" "gate-typed: an ordinary prompt gets nothing"
@@ -136,6 +142,13 @@ rm -rf "$RB"
 out="$(run_gate '{"tool_name":"Skill","tool_input":{"skill":"anthropic-skills:pdf","args":""}}')"; rc=$?
 assert_exit "$rc" "0" "gate-other-skill: another plugin's skill exits 0"
 assert_eq "$out" "" "gate-other-skill: nothing is returned"
+
+# A host that resolves a bare skill name reports it bare; another plugin's skill of that name is not loom's.
+out="$(run_gate '{"tool_name":"Skill","tool_input":{"skill":"warp","args":""}}')"; rc=$?
+assert_exit "$rc" "0" "receipt-bare-name: a bare skill name the host resolved exits 0"
+assert_contains "$out" 'loom gate: warp\nopinion: read .loom/skills/warp.md\nhook: ran hello.sh, exit 0' "receipt-bare-name: the bare name gets the receipt, the opinion, and the hook"
+out="$(run_gate '{"tool_name":"Skill","tool_input":{"skill":"other:warp","args":""}}')"
+assert_eq "$out" "" "receipt-bare-name: another plugin's warp is not loom's"
 
 out="$(run_gate '{"tool_name":"Skill","tool_input":{"skill":"loom:../warp","args":""}}')"; rc=$?
 assert_exit "$rc" "0" "gate-bad-name: a skill name that is not letters and hyphens exits 0"

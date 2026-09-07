@@ -232,6 +232,10 @@ WHEN the gate recognizes a loom skill, the system SHALL open its answer with a r
 - GIVEN a hook that exits 7
 - WHEN the harness reports its skill invoked
 - THEN the receipt names the hook as failed with exit 7
+#### Scenario: receipt-bare-name -> tests/test-skill-gate.sh#receipt-bare-name
+- GIVEN a host that resolved the bare name warp to loom's skill
+- WHEN the harness reports the Skill call with the bare name, or a typed prompt opening with /warp
+- THEN the receipt names warp with its opinion and hook, and another plugin's warp gets nothing
 #### Scenario: receipt-refused -> tests/test-skill-gate.sh#receipt-refused
 - GIVEN a config the parser refuses
 - WHEN the harness reports a loom skill invoked
