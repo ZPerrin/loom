@@ -5,7 +5,7 @@ description: Use when adopting loom on a repo, or re-tuning an existing loom con
 
 ## Dress
 
-Install or retune loom for a repo. dress decides the repo-local control surfaces: `.loom/loom.toml`, optional `.loom/<skill>.md` overrides, managed docs, and `.loom/scripts/` hooks. The plugin supplies the runtime (`doc-scan`, `doc-slicer`, `doc-linter`, `doc-stamp`, `skill-hook`); dress configures what that runtime sees.
+Install or retune loom for a repo. dress decides the repo-local control surfaces: `.loom/loom.toml`, optional `.loom/skills/<skill>.md` overrides, managed docs, and `.loom/scripts/` hooks. The plugin supplies the runtime (`doc-scan`, `doc-slicer`, `doc-linter`, `doc-stamp`, `skill-hook`); dress configures what that runtime sees.
 
 `dress` handles three repo states:
 
@@ -15,12 +15,12 @@ Install or retune loom for a repo. dress decides the repo-local control surfaces
 
 ## Dress Control Surfaces
 
-These are the surfaces `dress` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project, which the Propose step loads explicitly.
+These are the surfaces `dress` reads or writes directly; the full key map is the [reference project](../../references/reference-project.md), which Propose loads whole.
 
 | Surface | Dress uses it for |
 |---|---|
 | `.loom/loom.toml` | read existing config; propose or write the repo control plane |
-| `.loom/<skill>.md` | read existing repo opinion; propose only when a skill needs repo-specific guidance |
+| `.loom/skills/<skill>.md` | read existing repo opinion; propose only when a skill needs repo-specific guidance |
 | `.loom/scripts/*` | detect or scaffold approved deterministic hook scripts |
 | managed Markdown/frontmatter | adopt, seed, move, exclude, or stamp docs in the managed set |
 
@@ -42,7 +42,7 @@ flowchart TD
 
 Determine whether this repo is blank, undressed, or already dressed, then gather only the facts needed to propose the surface.
 
-- Check `.loom/`: whether `.loom/loom.toml` exists, which `.loom/<skill>.md` overrides exist, and whether hook scripts already exist under `.loom/scripts/`.
+- Check `.loom/`: whether `.loom/loom.toml` exists, which `.loom/skills/<skill>.md` overrides exist, and whether hook scripts already exist under `.loom/scripts/`.
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` to see what loom currently sees: the managed docs and the frontmatter-less candidates.
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` to see the current startup slice.
 - Inspect only enough repo shape to explain the proposal: modules, build/test signals, existing docs worth mapping, and obvious gaps.
@@ -56,9 +56,9 @@ cat "${CLAUDE_PLUGIN_ROOT}/references/reference-project.md"
 ```
 
 - **Control plane.** Always propose `.loom/loom.toml`; say whether it is new or a retune, and whether an existing one is valid.
-- **Managed set.** For existing Markdown, say adopt, leave unmanaged, exclude, move, or seed. `AGENTS.md` is the default agent-facing `readme`; seed only durable content.
+- **Managed set.** For existing Markdown, say adopt, leave unmanaged, exclude, move, or seed. `AGENTS.md` is the default agent-facing `readme`; seed only durable content, and seed `CLAUDE.md` as the one-line `@AGENTS.md` import, excluded from discovery, since Claude Code reads only the former.
 - **Startup slice.** Propose `context.slice_headers` and `context.inject_fields` from headings that exist or docs you propose to create.
-- **Overrides.** Propose `.loom/<skill>.md` only for repo opinion that changes a skill's DEFAULT behavior.
+- **Overrides.** Propose `.loom/skills/<skill>.md` only for repo opinion that changes a skill's DEFAULT behavior.
 - **Hooks/scripts.** Propose scripts only for deterministic behavior.
 - **Gaps.** Name what loom needs but the repo does not yet know. Do not fill unknowns with invented prose.
 

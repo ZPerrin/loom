@@ -1,7 +1,7 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Roadmap
 
@@ -15,20 +15,20 @@ dated orchestration state under `.loom/`. The design is the
 [plan](../.loom/plans/2026-08-30-0.2.0-living-specs.md).
 
 Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
-skills, the lint fixtures, and four repo specs on loom itself, reconciled against the code. Left:
+skills, the lint fixtures, four repo specs on loom itself reconciled against the code twice, spec
+slicing by capability and id, the skill cohesion pass, and the harness hooks: the opinion gate the
+moment a skill is invoked, lint on write, a hook by name under `.loom/scripts/`, and a tracer for
+learning what a host fires. Left, in order:
 
-- [ ] Dogfood on an external repo with the owner at the fence, then the skill-format ablations
-      under Ideas.
-- [ ] Spec-aware slicing beside `doc-slicer --header`: by capability, id, section. Opt-in like all
-      slicing; whoever dispatches pushes, whoever works pulls.
+- [ ] Orchestration state: `.loom/handoffs/` as the third data-plane directory, its template
+      distilled from the orchestrator repo and warp's delegation opinion; a delegate worktree
+      carries a marker naming its brief and its session slice opens with that in place of the
+      roadmap; the worktree-and-marker recipe graduates to a script. The orchestrator repo then
+      retires into the bare `.loom` + `.git` workspace pattern.
 - [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
       table, few hard constraints, output contract, a graph only where topology demands it) with
       constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled
       in. Ground it in the ablations before it hardens.
-- [ ] Review the orchestrator repo piece by piece for what ports: handoff and working-note
-      templates, the pull-first stance, a `.loom/` data-plane layout. Nothing absorbed wholesale;
-      the repo likely retires into the bare `.loom` + `.git` workspace pattern, and delegate
-      handoffs and returns are the first candidate for a third data-plane directory.
 - [ ] Release: weft cohesion pass, smoke-test the install on Claude Code and Codex, promote and
       tag only with explicit approval.
 
@@ -36,11 +36,8 @@ skills, the lint fixtures, and four repo specs on loom itself, reconciled agains
 
 - Dispatch beyond hand-authored handoffs; an RSI grading signal for slice recipes; a vendoring
   build that emits standalone skill directories from the one source.
-- Hook enforcement. Tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail:
-  they fire on every matching tool call, can block or repair, and can read `loom.toml` for policy,
-  scoped by tool-name matcher plus payload inspection. Skill-frontmatter hooks would be enforced
-  and skill-scoped but are Claude-only. Graduate specific steps as friction shows. Before adding a
-  hook, name what survives the child process: effects on disk do, environment does not.
+- Skill-scoped hooks: SKILL.md frontmatter hooks are enforced for the rest of the session and are
+  Claude-only; a candidate once the tool-call rail has run.
 - Windows portability debt from the shell-only choice; the field findings are in `ed9f30b` and
   `a33fe3e`.
 

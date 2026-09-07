@@ -205,6 +205,42 @@ else
   assert_contains "$o" "not executable" "non-executable hook script flagged"
 fi
 
+# invalid: a hook under a skill section the linter has no other check for names a script
+# that exists but is NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/open.sh"; chmod -x "$HR/.loom/scripts/open.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"
+[spec]
+hook = "open.sh"'
+if [ -x "$HR/.loom/scripts/open.sh" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "open.sh not executable" "skill-hook-key: non-executable skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" "open.sh not executable" "skill-hook-key: a non-executable hook under any skill section is flagged"
+fi
+
+# invalid: a script named after a skill under scripts_dir, no key at all, NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/weft"; chmod -x "$HR/.loom/scripts/weft"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"'
+if [ -x "$HR/.loom/scripts/weft" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "scripts/weft" "by-name: non-executable skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" ".loom/scripts/weft: script named after a skill but not executable" "by-name: a non-executable script named after a skill is flagged"
+fi
+rm -f "$HR/.loom/scripts/weft"
+chmod +x "$HR/.loom/scripts/warp.sh"   # an earlier case left warp.sh without the bit; by name it is now a finding
+
+# invalid: the .sh spelling named after a skill, no key, NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/weft.sh"; chmod -x "$HR/.loom/scripts/weft.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"'
+if [ -x "$HR/.loom/scripts/weft.sh" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "scripts/weft" "by-name-suffixed: skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" ".loom/scripts/weft.sh: script named after a skill but not executable" "by-name-suffixed: weft.sh is flagged"
+fi
+rm -f "$HR/.loom/scripts/weft.sh"
+
 # valid: inline pipeline hook (not a file under scripts_dir) accepted as-is
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
@@ -255,13 +291,24 @@ assert_not_contains "$nco" "LINT" "noconf-repo: still no LINT finding without a 
 rm -f "$NCR/docs/odd.md"
 
 # no-loom-toml: the .loom directory exists and the config file does not — same defaults.
-mkdir -p "$NCR/.loom"
-printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-09-06\n---\n# weave notes\n' > "$NCR/.loom/weave.md"
+mkdir -p "$NCR/.loom/skills"
+printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-09-06\n---\n# weave notes\n' > "$NCR/.loom/skills/weave.md"
 nlo="$(cd "$NCR" && bash "$LINTER" 2>&1)"; nlrc=$?
 assert_exit "$nlrc" "0" "no-loom-toml: a .loom directory without loom.toml exits 0"
 assert_contains "$nlo" "doc-linter: clean" "no-loom-toml: values check clean against the shipped lists"
 assert_not_contains "$nlo" "LINT" "no-loom-toml: a missing loom.toml is not a LINT finding"
 rm -rf "$NCR"
+
+# --- MISSING-negative: a listed path that is absent or gitignored is not a MISSING finding ---
+MN="$DIR/fixtures/missing-neg-repo"; rm -rf "$MN"; mkdir -p "$MN/ignored"
+printf 'ignored/\n' > "$MN/.gitignore"
+printf '# hidden\n' > "$MN/ignored/x.md"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n\n- `ignored/x.md` — gitignored\n- `absent/y.md` — never existed\n' > "$MN/README.md"
+( cd "$MN" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: missing neg" )
+mno="$(cd "$MN" && bash "$LINTER" 2>&1)"; mnrc=$?
+assert_exit "$mnrc" "0" "MISSING-negative: an absent or gitignored listed path exits 0"
+assert_not_contains "$mno" "MISSING" "MISSING-negative: neither path is a MISSING finding"
+rm -rf "$MN"
 
 # --- gate-refuses: an unparseable loom.toml stops the lint before it starts ---
 # A broken config is refused whole, not applied as far as it parsed: the linter names the

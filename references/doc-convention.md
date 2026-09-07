@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-05
+updated: 2026-09-07
 ---
 # Doc convention
 
@@ -50,7 +50,7 @@ The editorial ethos below is my working attempt at combating this. The jury is s
   files; filenames never are.
 - **Work specs and plans** (`kind: spec`, `kind: plan`) are orchestration state: dated
   `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/` or their overrides,
-  listed by age, committed or ignored as the owner chooses.
+  listed by age, committed or ignored as the operator chooses.
 - **Status carries a doc's life**: `living` while iterated in place, `hardened` once settled,
   `superseded` when replaced. No draft state, no changes queue; git and a change-log section hold
   history.

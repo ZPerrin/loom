@@ -5,7 +5,7 @@ description: Use when the user asks whether a spec is still accurate, suspects s
 
 ## Refine spec
 
-Hold one capability's living spec against the code that claims to implement it. Read what the tests and code do, compare it with what the spec says by id, put each divergence to the owner with a recommended direction, and land only what the owner rules. Drift runs both ways: a spec that lags the code and code that broke the spec look the same until the owner says which is the bug.
+Hold one capability's living spec against the code that claims to implement it. Read what the tests and code do, compare it with what the spec says by id, put each divergence to the operator with a recommended direction, and land only what the operator rules. Drift runs both ways: a spec that lags the code and code that broke the spec look the same until the operator says which is the bug.
 
 Two entry states:
 
@@ -14,14 +14,14 @@ Two entry states:
 
 ## Refine Spec Control Surfaces
 
-These are the surfaces `refine-spec` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
+These are the surfaces `refine-spec` reads or writes directly; the full key map is the [reference project](../../references/reference-project.md).
 
 | Surface | Refine spec uses it for |
 |---|---|
 | `[specs].repo_dir` | where the capability's repo spec is looked for (default `docs/specs`) |
 | `[specs].work_dir` | where a proposal with text lands, as a work spec `spec` writes (default `.loom/specs`) |
-| `.loom/spec.md` | repo opinion shared with `spec`: capability boundaries and the form a test ref is resolved by |
-| `.loom/refine-spec.md` | optional repo opinion: how to sample a run, refs known to be stale, where a sweep costs too much |
+| `.loom/skills/spec.md` | repo opinion shared with `spec`: capability boundaries and the form a test ref is resolved by |
+| `.loom/skills/refine-spec.md` | optional repo opinion: how to sample a run, refs known to be stale, where a sweep costs too much |
 | `doc-linter` | the gate on every file touched |
 | `doc-stamp` | `updated=<today>` on the repo spec a line was appended to |
 | `spec` | writes every requirement block: a first repo spec, an in-place extension, a work spec |
@@ -31,18 +31,18 @@ These are the surfaces `refine-spec` reads or writes directly. The full `.loom/l
 
 - **Evidence in order, named.** Every finding names its evidence: the test first, the code it exercises where no test speaks, a sampled run only where both are silent. A sample answers one named question; it is never a sweep.
 - **Findings carry an id.** A finding is keyed by the id it contradicts, the id it extends, or the id `spec` mints for it. A file or a line number is a locator, never a key.
-- **Never a silent rewrite.** This skill edits no requirement, scenario, invariant, or non-goal. What it writes to the repo spec is the change-log line the writing rules allow a reconciliation pass, and the stamp. Recommend a direction for each finding, and write only what the owner ruled.
-- **Confirm before writing.** Present the whole set of findings before any file changes. An invocation that fixes a direction for every finding kind, such as leaving all of them open, is a confirmed set, which is how a brief drives this skill with no owner present.
-- **Writing is spec's.** New blocks, replacement blocks, and a first repo spec go through `spec`, handed the fence in its own terms: capability, token, boundary, and every decision and invariant the owner gave, so its Confirm needs no second round. Where the harness cannot invoke a skill from a skill, read [spec](../spec/SKILL.md) and follow it.
+- **Never a silent rewrite.** This skill edits no requirement, scenario, invariant, or non-goal. What it writes to the repo spec is the change-log line the writing rules allow a reconciliation pass, and the stamp. Recommend a direction for each finding, and write only what the operator ruled.
+- **Confirm before writing.** Present the whole set of findings before any file changes. An invocation that fixes a direction for every finding kind, such as leaving all of them open, is a confirmed set, which is how a brief drives this skill with no operator present.
+- **Writing is spec's.** New blocks, replacement blocks, and a first repo spec go through `spec`, handed the fence in its own terms: capability, token, boundary, and every decision and invariant the operator gave, so its Confirm needs no second round. Where the harness cannot invoke a skill from a skill, read [spec](../spec/SKILL.md) and follow it.
 - **One capability.** The scope is the capability named or the one the diff touched. Behavior that belongs to a neighbor is a finding for the neighbor's spec, reported and not chased.
 
 ## Workflow
 
 ### 1. Read
 
-When no capability is named, or the name is a script, a module, or a test file, map first: list the product's features from the front doors (README, roadmap, the skills' descriptions), put the cut to the owner as features at the 20,000-foot view, and read no test until one is chosen. Evidence is walked inside a fence, never to find one.
+When no capability is named, or the name is a script, a module, or a test file, map first: list the product's features from the front doors (README, roadmap, the skills' descriptions), put the cut to the operator as features at the 20,000-foot view, and read no test until one is chosen. Evidence is walked inside a fence, never to find one.
 
-The repo spec if one exists, `.loom/spec.md`, the tests the scenarios name and the tests that cover the capability, then the code they exercise. Resolve every test ref by the repo's form; a ref that resolves to nothing is a finding. Where a sampled run is called for, write down what was run.
+The repo spec if one exists, `.loom/skills/spec.md`, the tests the scenarios name and the tests that cover the capability, then the code they exercise. Resolve every test ref by the repo's form; a ref that resolves to nothing is a finding. Where a sampled run is called for, write down what was run.
 
 ### 2. Compare
 
@@ -58,12 +58,12 @@ An existing change-log line that already records the observation under the id is
 
 ### 3. Confirm
 
-Present the findings by id, each with its kind, its evidence, and your recommended direction: the spec follows the code (for a dead requirement, the block goes and its id retires), the code is the bug, or open. Rounds as needed; wait for the owner between them. With no repo spec, present the fence in `spec`'s terms plus the behaviors found, the test each names, and the neighbors the evidence touched.
+Present the findings by id, each with its kind, its evidence, and your recommended direction: the spec follows the code (for a dead requirement, the block goes and its id retires), the code is the bug, or open. Rounds as needed; wait for the operator between them. With no repo spec, present the fence in `spec`'s terms plus the behaviors found, the test each names, and the neighbors the evidence touched.
 
 ### 4. Land
 
 - **Left open:** append the change-log line to the repo spec. Where there is text to propose, `spec` writes it as a work spec carrying only those blocks.
-- **Ruled:** the owner has closed the finding. Hand the ruling to `spec`, which makes the edit or logs the code as the bug under the disposition the owner named. Lines this skill writes itself end `open`.
+- **Ruled:** the operator has closed the finding. Hand the ruling to `spec`, which makes the edit and deletes the open line it closes in the same diff, or leaves the line open with the ruling in its text while the code is the bug. Lines this skill writes itself end `open`.
 - **No repo spec:** `spec` writes the first repo spec from the fence.
 
 Stamp the repo spec with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stamp" <file> updated=<today>` when a line was appended. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`; a finding on a line this skill wrote sends it back here.

@@ -1,7 +1,7 @@
 ---
 kind: loom-config
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Warp
 
@@ -47,12 +47,13 @@ hiding signal: the operator still catches substantive misses at the gate.
 
 ## Experiments
 
-- 2026-09-05 (s5): Test-ref resolution is prose (refine-spec's Read step, `.loom/spec.md`'s
+- 2026-09-05 (s5): Test-ref resolution is prose (refine-spec's Read step, `.loom/skills/spec.md`'s
   broken-ref rule with no enforcer); a `grep -F` rule cannot see whether a loop asserts a table
-  row, which s6 found is the difference between a resolved ref and an asserted one. Candidate for
-  determinism when 7 touches the parser.
+  row, which s6 found is the difference between a resolved ref and an asserted one, and s8 saw a
+  ref resolve inside an assertion's label rather than its needle. Candidate for determinism when a
+  ref checker lands.
 - 2026-09-06 (s6): The first brownfield cut came out per-script; the skills now map first from
-  the front doors. Test: the external-repo run's first cut is by feature without the owner
+  the front doors. Test: the next brownfield cut, on any repo, is by feature without the operator
   correcting it, or the map-first clause needs an example.
 - 2026-09-06 (s6): Feature-grain drafts of a wide capability came out over the 400-line budget
   twice and needed a merge pass. Test: the next wide spec's first draft lands under budget, or
@@ -69,7 +70,19 @@ hiding signal: the operator still catches substantive misses at the gate.
   findings control-plane's INV-2 forbids) with both tests passing; four delegates fenced to one
   capability each saw nothing, and the operator's ruling on one exposed it. Test: refine-spec's
   Read step checks each Non-goal's claim about a neighbor against that neighbor's requirements;
-  if the next multi-spec pass catches a contradiction that way, the step stands.
+  if the next multi-spec pass catches a contradiction that way, the step stands (s8: three passes
+  ran the check and found every claim borne out, so nothing to catch yet).
 - 2026-09-06 (s7): The whole-set weft ran on Fable; the four reconciliations on Sonnet held. Test:
   the next whole-set weft runs on Sonnet with the same brief and a ruled list; if its flagged list
   matches this run's, "Sonnet by default" covers editorial work too.
+- 2026-09-07 (s8): A read-only reconciliation delegate placed four test refs in a file where grep
+  finds none of them, under the neighbor item, which asks for a location but not the evidence.
+  Test: the next contract's neighbor item requires the grep line beside any claim about where an
+  assertion lives; if that pass's item 4 carries no unverified location, the line moves into the
+  contract template.
+- 2026-09-07 (s8): The hooks design went through two keys and a moment suffix before collapsing
+  to one key, and the operator lost the plot on the way; the Codex-parity constraint arrived after
+  a Claude-only mechanism had been recommended. Test: a design that adds a second key or moment for
+  one concept is put as a one-paragraph proposal first and built only after the shape is agreed,
+  and a recommendation that is host-specific names the host in its first sentence; if the next
+  design round needs no collapse, both lines move into Discourse.

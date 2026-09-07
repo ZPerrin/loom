@@ -54,6 +54,7 @@ docs/specs/w001-banned-word.md	W001
 docs/specs/w002-flagged-word.md	W002
 docs/specs/l001-bad-invariant-shape.md	L001
 docs/specs/l001-bad-changelog-line.md	L001
+docs/specs/l002-closed-changelog-line.md	L002
 docs/specs/l001-bad-nongoal-shape.md	L001
 docs/specs/r010-duplicate-inv-id.md	R010
 docs/specs/r010-duplicate-requirement-id.md	R010"
@@ -201,6 +202,21 @@ assert_contains "$oout" "SPECWARN docs/specs/demo.md:$olast:" "over-length: the 
 assert_contains "$oout" "file exceeds 10 lines" "over-length: the message names the configured budget"
 assert_contains "$oout" "(G005)" "over-length: the rule reported is G005"
 rm -rf "$OVERLEN"
+
+# ------------------------------------------------------ L002 in isolation
+# A decided change-log line is a warning on its own: the run stays clean and exits 0.
+echo "-- doc-linter: L002 closed change-log line is a warning --"
+L2="$DIR/fixtures/spec-repo-l002"
+rm -rf "$L2"; mkdir -p "$L2/.loom" "$L2/docs/specs"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n' > "$L2/README.md"
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-06\n---\n# Capability: demo\n\n## Purpose\nDemonstrates minimal valid spec structure for isolated lint fixtures.\n\n## Requirements\n### R-DEMO-001: Example behavior\nWHEN a user performs the action, the system SHALL record the result within 1 second.\n#### Scenario: basic -> test_example_basic\n- GIVEN a ready system\n- WHEN the user performs the action\n- THEN the result is recorded\n\n## Change log\n- 2026-09-06 R-DEMO-001: a line decided in this diff -> edited\n' > "$L2/docs/specs/demo.md"
+printf '[lint]\nkinds = ["readme", "spec"]\nstatuses = ["living"]\n' > "$L2/.loom/loom.toml"
+( cd "$L2" && test_git_init >/dev/null 2>&1 && git add -A >/dev/null 2>&1 )
+l2out="$(cd "$L2" && bash "$LINTER" 2>&1)"; l2rc=$?
+assert_exit "$l2rc" "0" "l002-isolated: a decided change-log line alone does not fail the run"
+assert_contains "$l2out" "(L002)" "l002-isolated: the warning is reported"
+assert_contains "$l2out" "doc-linter: clean" "l002-isolated: the run is otherwise clean"
+rm -rf "$L2"
 
 # ------------------------------------------ [lint.specs] banned / flagged custom word lists
 # The configured arrays append to the checker's built-in lists: a configured banned phrase

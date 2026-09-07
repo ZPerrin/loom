@@ -1,6 +1,6 @@
 {
   "name": "loom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An agentic workflow toolkit for Claude Code and Codex — six skills plus bash/awk scripts that keep a repo's docs lean and routed and its specs true to the code.",
   "author": { "name": "Zebulon Perrin" },
   "license": "MIT",

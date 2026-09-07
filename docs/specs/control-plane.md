@@ -1,12 +1,12 @@
 ---
 kind: spec
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Capability: control-plane
 
 ## Purpose
-control-plane is how a repo owner molds loom to a workflow: one TOML file of settings loom enforces the same way on every run, plus one opinion file per skill for the guidance that has not yet earned determinism. The config is parsed, validated, and applied by the scripts; the opinion is read by the skills as a floor beneath the config, and its content is never checked. A step observed working the same way graduates from opinion to config or to a hook, so the prose shrinks as the configuration hardens.
+control-plane is how the operator molds loom to a workflow: one TOML file of settings loom enforces the same way on every run, plus one opinion file per skill for the guidance that has not yet earned determinism. The config is parsed, validated, and applied by the scripts; the opinion is read by the skills as a floor beneath the config, and its content is never checked. A step observed working the same way graduates from opinion to config or to a hook, so the prose shrinks as the configuration hardens.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -145,12 +145,3 @@ WHEN a [weave] section is present, the system SHALL require a cleanup value from
 - N-4: Where an opinion file must sit is checked by managed-docs.
 
 ## Change log
-- 2026-09-05 R-CONFIG-005: the hook runner and discovery act on the lines parsed before the failing line, so a hook ran and an exclude applied from a refused file in a sampled run -> kept
-- 2026-09-05 INV-3: the config_dir key was retired; it moved the placement check and nothing else, and could never move the file it lived in -> edited
-- 2026-09-06 R-CONFIG-005: the hook runner refuses and discovery ignores a refused config whole, so the promise now holds in code -> kept
-- 2026-09-06 R-CONFIG-001: a comma inside a quoted array element split the element into fragments with exit 0; the parser now splits outside quotes only -> fixed
-- 2026-09-06 R-CONFIG-001: inline-table and multiline-array refusal had no fixture of their own -> asserted
-- 2026-09-06 R-CONFIG-003: the hook runner with no config file was untested -> asserted
-- 2026-09-06 INV-2: a present config with no [lint] section reported LINT twice and exited 1; an absent vocabulary now takes the shipped lists silently -> fixed
-- 2026-09-06 R-CONFIG-007: an empty [warp] section passed as absent while an empty [weave] reported; the linter now detects the header -> fixed
-- 2026-09-06 N-1: the neighbors are named context and hooks, as their specs are; N-2 the same -> edited

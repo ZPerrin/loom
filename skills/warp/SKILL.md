@@ -14,15 +14,15 @@ Open a unit of work. warp orients the session, establishes the branch/worktree w
 
 ## Warp Control Surfaces
 
-These are the surfaces `warp` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
+These are the surfaces `warp` reads or writes directly; the full key map is the [reference project](../../references/reference-project.md).
 
 | Surface | Warp uses it for |
 |---|---|
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` |
-| `[warp].hook` | optional session-open command, run via `skill-hook` |
-| `.loom/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
+| `[warp].hook` | optional invocation command: the harness runs it through `skill-gate` the moment warp is invoked and its report arrives with this skill; run it by hand as the floor |
+| `.loom/skills/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
 | `.loom/scripts/*` | conventional home for hook scripts |
 
 ## Workflow Graph
@@ -47,21 +47,21 @@ flowchart TD
 
 Use only on first run, missing `[warp]`, or `/warp configure`.
 
-- Survey how the repo opens work: branch names, worktree habit, ticket refs, existing `.loom/warp.md`, and open scripts.
-- Propose the `[warp]` knobs and any `.loom/warp.md` repo opinion.
+- Survey how the repo opens work: branch names, worktree habit, ticket refs, existing `.loom/skills/warp.md`, and open scripts.
+- Propose the `[warp]` knobs and any `.loom/skills/warp.md` repo opinion.
 - Write nothing until the operator approves the exact diff.
 - If the operator declines, write nothing and continue to Orient only.
 
 ### 2. Orient - load enough context
 
-- Read `.loom/warp.md` if present, including any `## Experiments` a prior weave retro filed for this session to weigh.
-- Treat the SessionStart slice as already loaded; if the opening context shows no slice, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` first. Pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`.
+- Read `.loom/skills/warp.md` if present and not already in your context, including any `## Experiments` a prior weave retro filed for this session to weigh.
+- Treat the SessionStart slice as already loaded; if the opening context shows no slice, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` first. Pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`, and a spec or one of its blocks with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --spec <capability> [id|section|ids]`.
 - Resolve `/warp <arg>` through `source_repo`: GitHub ref means fetch the issue/PR; local path means free-text work description; no arg means ask only if needed.
 - Do not mutate the workspace before orientation.
 
 ### 3. Open - establish the workspace
 
-- If `[warp] hook` is set, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" warp "<slug>"`.
+- If warp has a hook, `.loom/scripts/warp` or `[warp].hook`, and its report is not already in your context, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" warp "<the invocation's text>"`.
 - Hook exit `0`: verify the working directory and continue.
 - Hook exit `3`: no hook; open by hand.
 - Other hook exit: surface the failure, then fall back to the prose floor unless git safety blocks.
@@ -72,8 +72,8 @@ Use only on first run, missing `[warp]`, or `/warp configure`.
 
 ### 4. Kick off - compose or hand back
 
-Compose only what `.loom/warp.md` names: a brainstorm, plan, code pass, or no tool at all. If a named tool is absent, say so and continue with an oriented workspace.
+Compose only what `.loom/skills/warp.md` names: a brainstorm, plan, code pass, or no tool at all. If a named tool is absent, say so and continue with an oriented workspace.
 
 ## Output
 
-Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/warp.md` changes.
+Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/skills/warp.md` changes.

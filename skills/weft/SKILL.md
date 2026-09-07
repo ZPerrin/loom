@@ -23,7 +23,7 @@ weft has no `.loom/loom.toml` section. Its standard is the shared ethos, its che
 | [editorial ethos](../../references/doc-convention.md) | the standard every cut is judged against: durable signal, one home, compression, determinism over prose |
 | `doc-scan` / `doc-linter` | the managed set and the mechanical findings, before and after edits |
 | `README.md` / `AGENTS.md` | the project's front doors and voice anchors |
-| `.loom/weft.md` | optional repo opinion: local voice, known-stale areas, stricter taste |
+| `.loom/skills/weft.md` | optional repo opinion: local voice, known-stale areas, stricter taste |
 | project tree and code | evidence that a doc is true, stale, misplaced, or needless |
 
 ## Workflow Graph
@@ -47,7 +47,7 @@ Load the ethos weft enforces, the front doors it must preserve, and any repo opi
 
 ```bash
 cat "${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md"
-cat README.md AGENTS.md .loom/weft.md 2>/dev/null
+cat README.md AGENTS.md .loom/skills/weft.md 2>/dev/null
 ```
 
 Hold the pass to that standard: docs orient and route, code is the road, thin is often correct. A sentence earns its place only if it is durable, well-placed, and changes the reader's next action — "true" is not enough.

@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Reference Project
 
@@ -13,6 +13,7 @@ Calibration only. Do not copy this shape wholesale; use it to recognize what a m
 example/
   .gitignore
   AGENTS.md
+  CLAUDE.md
   README.md
   frontend/README.md
   backend/README.md
@@ -21,17 +22,18 @@ example/
   docs/roadmap.md
   docs/specs/<capability>.md
   .loom/loom.toml
-  .loom/warp.md
-  .loom/weave.md
+  .loom/skills/warp.md
+  .loom/skills/weave.md
   .loom/scripts/warp.sh
   .loom/scripts/weave.sh
   .loom/specs/yyyy-mm-dd-<slug-or-issue>.md
   .loom/plans/yyyy-mm-dd-<slug-or-issue>.md
 ```
 
-`.loom/` is two planes. The config plane is `loom.toml`, the per-skill overrides, and `scripts/`.
+`.loom/` is two planes. The config plane is `loom.toml`, `skills/` holding one opinion file per skill, and
+`scripts/` holding the hooks, one named after each skill that has one.
 The data plane is `specs/` and `plans/`: dated work state, listed by age. Whether that state is
-committed is the owner's one adoption decision; a dressed repo has answered it, in `.gitignore` or
+committed is the operator's one adoption decision; a dressed repo has answered it, in `.gitignore` or
 by committing the directories. The example ignores them. Repo specs are not work state; they are
 capability-keyed, committed, and live under `docs/specs/`. Every location has a `loom.toml`
 override; discovery is kind-based, so moving a doc never breaks hygiene.
@@ -43,11 +45,20 @@ override; discovery is kind-based, so moving a doc never breaks hygiene.
 .loom/plans/
 ```
 
+## Example `CLAUDE.md`
+
+Claude Code reads `CLAUDE.md` and never `AGENTS.md`, so a dressed repo carries the one-line import
+and excludes it from discovery, since it has no frontmatter of its own:
+
+```text
+@AGENTS.md
+```
+
 ## Example `.loom/loom.toml`
 
 ```toml
 [discovery]
-exclude = ["vendor", "tmp"]
+exclude = ["vendor", "tmp", "CLAUDE.md"]
 
 [context]
 recent_commits = 15
@@ -73,12 +84,10 @@ dir = ".loom/plans"
 branch_convention = "feature/<slug>"
 worktree = "harness"
 source_repo = "."
-hook = "warp.sh"
 
 [weave]
 cleanup = "ask"
 rsi = "always"
-hook = "weave.sh"
 ```
 
 ## loom.toml Control Surfaces
@@ -101,12 +110,11 @@ hook = "weave.sh"
 | `[warp].branch_convention` | session-open branch naming pattern, or `ask`                        | `warp` |
 | `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness`           | `warp` |
 | `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>`            | `warp` |
-| `[warp].hook` | optional session-open command or script                             | `warp`, `skill-hook` |
 | `[weave].cleanup` | session-close branch cleanup preference                             | `weave` |
-| `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) | `weave` |
-| `[weave].hook` | optional session-close command or script                            | `weave`, `skill-hook` |
-| `.loom/<skill>.md` | repo opinion prose floor for that skill                             | named skill |
-| `.loom/scripts/*` | conventional home for hook scripts                                  | configured hooks |
+| `[weave].rsi` | end-of-session retro filed to `.loom/skills/warp.md`: `always`, `ask`, `never` (default on) | `weave` |
+| `[<skill>].hook` | names the hook when it is a command or a script not named after the skill; run the moment the skill is invoked with the invocation's text as its argument, by the harness where its hooks fire and by the skill's prose as the floor, its report reaching the skill as context | `skill-gate`, `skill-hook`, the skill |
+| `.loom/skills/<skill>.md` | repo opinion for that skill, handed to it at invocation           | named skill, `skill-gate` |
+| `.loom/scripts/<skill>` | that skill's hook, found by name with or without `.sh` | `skill-hook`, `skill-gate` |
 
 ## Example root `README.md`
 
@@ -222,7 +230,7 @@ Near-term choices or milestones.
 Deferred ideas that still matter.
 ```
 
-## Example `.loom/warp.md`
+## Example `.loom/skills/warp.md`
 
 ```md
 ---
@@ -235,7 +243,7 @@ updated: 2026-07-05
 Repo opinion for opening work: branch naming, worktree habit, context order, and any kickoff recipe that is not yet deterministic.
 ```
 
-## Example `.loom/weave.md`
+## Example `.loom/skills/weave.md`
 
 ```md
 ---

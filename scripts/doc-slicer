@@ -9,6 +9,11 @@
 #          section (same provenance annotation) from every managed doc that has it,
 #          optionally narrowed to docs whose path contains a filter. "<name>" may be bare
 #          ("Overview") or exact ("## Overview" / "### Deep"). Exit 1 if nothing matched.
+#        doc-slicer --spec <capability> [selector]     — one spec, found by its first line
+#          "# Capability: <slug>" among managed kind: spec docs, never by path. A selector
+#          narrows it: a requirement id (R-TOKEN-NNN, the block with its scenarios), an
+#          invariant or non-goal id (INV-n, N-n, the one line), a section name (bare or
+#          exact), or "ids" (every requirement id with its title). Exit 1 if nothing matched.
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,13 +22,19 @@ PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
 ROOT="$(loom_repo_root)"
 
 MODE="session"
-QUERY_HDR=""
+QUERY_HDR=""; QUERY_CAP=""; QUERY_SEL=""
 if [ "${1:-}" = "--header" ]; then
   MODE="query"; shift
   QUERY_HDR="${1:-}"
   [ -n "$QUERY_HDR" ] || { echo "doc-slicer --header: missing header name" >&2; exit 2; }
   shift
   case "$QUERY_HDR" in "#"*) ;; *) QUERY_HDR="## $QUERY_HDR" ;; esac   # bare name → H2
+elif [ "${1:-}" = "--spec" ]; then
+  MODE="spec"; shift
+  QUERY_CAP="${1:-}"
+  [ -n "$QUERY_CAP" ] || { echo "doc-slicer --spec: missing capability name" >&2; exit 2; }
+  shift
+  QUERY_SEL="${1:-}"
 fi
 
 DEFAULT_CFG='context.recent_commits=15
@@ -57,6 +68,35 @@ emit_section() { # $1=file $2=header
     cap && /^## / { exit }
     cap { print }
   ' "$1"
+}
+
+# the capability a spec names: its first content line past the frontmatter is
+# "# Capability: <slug>". Prints the slug, or nothing for a doc that opens any other way.
+spec_capability() { # $1=file
+  awk '
+    NR == 1 && $0 == "---" { fm = 1; next }
+    fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next }
+    /^[ \t]*$/ { next }
+    { if ($0 ~ /^# Capability: /) { sub(/^# Capability: /, ""); print }; exit }
+  ' "$1"
+}
+
+# one block of a spec, by selector: none = the document past its frontmatter; "ids" = every
+# requirement id with its title; R-TOKEN-NNN = that requirement through its scenarios, up to
+# the next ### or ## line; INV-n / N-n = that one line; anything else = a section by header.
+emit_spec() { # $1=file $2=selector
+  case "$2" in
+    "")  awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next } { print }' "$1" ;;
+    ids) awk '/^### R-/ { sub(/^### /, ""); print }' "$1" ;;
+    R-*) awk -v id="$2" '
+           index($0, "### " id ": ") == 1 { cap = 1; print; next }
+           cap && (/^### / || /^## /) { exit }
+           cap && /^[ \t]*$/ { blank++; next }
+           cap { for (; blank > 0; blank--) print ""; print }
+         ' "$1" ;;
+    INV-*|N-*) awk -v id="$2" 'index($0, "- " id ": ") == 1 { print }' "$1" ;;
+    *)   hdr="$2"; case "$hdr" in "#"*) ;; *) hdr="## $hdr" ;; esac; emit_section "$1" "$hdr" ;;
+  esac
 }
 
 # one-line annotation for a managed doc, built from INJECT_FIELDS in order.
@@ -99,8 +139,31 @@ EOF
   exit 1
 fi
 
+# --- spec mode: one capability's spec, or one block of it, found by its Capability line ---
+if [ "$MODE" = "spec" ]; then
+  found=""; hit=""
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    [ "$(frontmatter_field "$ROOT/$rel" kind)" = "spec" ] || continue
+    [ "$(spec_capability "$ROOT/$rel")" = "$QUERY_CAP" ] || continue
+    found=1
+    body="$(emit_spec "$ROOT/$rel" "$QUERY_SEL")"
+    [ -n "$body" ] || continue
+    hit=1
+    ann="$(annotate "$rel")"
+    [ -n "$ann" ] && printf '_%s_\n\n' "$ann"
+    printf '%s\n\n' "$body"
+  done <<EOF
+$(managed_docs "$ROOT")
+EOF
+  [ -n "$hit" ] && exit 0
+  if [ -n "$found" ]; then echo "doc-slicer --spec: no block \"$QUERY_SEL\" in capability $QUERY_CAP" >&2
+  else echo "doc-slicer --spec: no managed spec names capability \"$QUERY_CAP\"" >&2; fi
+  exit 1
+fi
+
 # --- session mode: the SessionStart slice ---
-printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. When a task goes past a slice, pull the next section on demand — `bash "%s/doc-slicer" --header "<name>" [path-filter]` — instead of reading whole files._\n\n' "$SELF_DIR"
+printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. When a task goes past a slice, pull the next section on demand — `bash "%s/doc-slicer" --header "<name>" [path-filter]`, or one spec block — `bash "%s/doc-slicer" --spec <capability> [id|section|ids]` — instead of reading whole files._\n\n' "$SELF_DIR" "$SELF_DIR"
 
 printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
 git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"

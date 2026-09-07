@@ -220,14 +220,18 @@ function shape_check(name, re, shape,   i, id) {     # L001 for Invariants / Non
     }
   }
 }
-function changelog_check(   i, t, ok, tok) {         # L001 for Change log: '- YYYY-MM-DD <R-ID|INV-n|N-n>: <text>' (no word checks)
-  for (i = 1; i <= nb["Change log"]; i++) {
+function changelog_check(   i, t, ok, tok, cid) {    # L001 for Change log: '- YYYY-MM-DD <R-ID|INV-n|N-n>: <text>' (no word checks)
+  for (i = 1; i <= nb["Change log"]; i++) {          # L002 (warn): a line that does not end '-> open' is decided and leaves the file
     t = BT["Change log", i]; ok = 0
     if (t ~ /^- [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] (R-[A-Z0-9]+-[0-9][0-9][0-9]|INV-[0-9]+|N-[0-9]+): [^ \t]/) {
       ok = 1
       if (substr(t, 14, 2) == "R-") { tok = substr(t, 16); sub(/-.*$/, "", tok); ok = (length(tok) >= 2 && length(tok) <= 8) }
     }
-    if (!ok) add("error", "L001", BL["Change log", i], "", "line must match '- YYYY-MM-DD <ID>: <text>'")
+    if (!ok) { add("error", "L001", BL["Change log", i], "", "line must match '- YYYY-MM-DD <ID>: <text>'"); continue }
+    if (t !~ / (->|→) open$/) {
+      cid = substr(t, 14); sub(/:.*$/, "", cid)
+      add("warn", "L002", BL["Change log", i], cid, "closed change-log line — a decided line leaves the file; git holds the why")
+    }
   }
 }
 function check_words(ln, text, rid, flagged,   lt) { # W001 always, W002 when flagged; each phrase once per line

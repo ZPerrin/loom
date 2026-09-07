@@ -40,4 +40,4 @@ IF token validation fails, THEN the system SHALL return HTTP 401 within 200 ms.
 
 ## Change log
 - 2026-08-28 R-AUTH-003: production config sets a 30-minute idle timeout -> open
-- 2026-09-05 N-1: whether sso stays a neighbor is the sso owner's call -> open
+- 2026-09-05 N-1: a change closed in this diff -> edited

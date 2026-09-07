@@ -1,12 +1,12 @@
 ---
 kind: spec
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Capability: context
 
 ## Purpose
-context is how loom gives an agent the right slice of the repo at the right time: bearings and the configured sections of every managed doc when a session opens, then one addressable section on demand. Slices are found by discovery and header, so an agent learns the shape of the docs and never their paths. Whoever dispatches pushes a slice and whoever works pulls the next one, which is progressive disclosure made mechanical.
+context is how loom gives an agent the right slice of the repo at the right time: bearings and the configured sections of every managed doc when a session opens, then one addressable section, or one block of a spec, on demand. Slices are found by discovery and header, so an agent learns the shape of the docs and never their paths. Whoever dispatches pushes a slice and whoever works pulls the next one, which is progressive disclosure made mechanical.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -47,10 +47,10 @@ WHEN a session starts, the system SHALL emit every [context].slice_headers secti
 - AND a fenced code block inside a harvested section stays in its body
 
 ### R-CONTEXT-003: The slice names the next ring
-WHEN a session starts, the system SHALL tell the agent how to pull one more section on demand.
+WHEN a session starts, the system SHALL tell the agent how to pull one more section, or one block of a spec, on demand.
 #### Scenario: preamble -> tests/test-doc-slicer.sh#advertises
 - WHEN the session slice runs
-- THEN its preamble names the header query
+- THEN its preamble names the header query and the spec query
 
 ### R-CONTEXT-004: One section on demand
 WHEN a header is queried, the system SHALL emit that section from every managed doc with its provenance and none of the session dressing.
@@ -99,14 +99,51 @@ IF a header query names no header, THEN the system SHALL refuse it and exit 2.
 - WHEN doc-slicer --header runs with no name
 - THEN it exits 2
 
+### R-CONTEXT-009: A spec is found by its capability
+WHEN a capability is queried, the system SHALL emit the spec whose first line names it, from every managed spec document that does, with provenance.
+#### Scenario: spec-by-capability -> tests/test-doc-slicer.sh#spec-by-capability
+- GIVEN a managed spec at an unrelated path whose first line is "# Capability: billing"
+- WHEN doc-slicer --spec billing runs
+- THEN the document past its frontmatter is emitted with its provenance
+- AND no bearings or preamble appear
+#### Scenario: spec-decoys -> tests/test-doc-slicer.sh#spec-decoys
+- GIVEN a spec document that opens with any other line and a readme that opens with the Capability line
+- WHEN doc-slicer --spec billing runs
+- THEN neither is emitted
+#### Scenario: spec-no-capability -> tests/test-doc-slicer.sh#spec-no-capability
+- WHEN doc-slicer --spec names a capability no managed spec opens with
+- THEN it says so and exits 1
+#### Scenario: spec-usage -> tests/test-doc-slicer.sh#spec-usage
+- WHEN doc-slicer --spec runs with no capability
+- THEN it exits 2
+
+### R-CONTEXT-010: One block of a spec on demand
+WHEN a selector follows the capability, the system SHALL emit only the requirement, invariant, non-goal, section, or id index it names.
+#### Scenario: spec-block -> tests/test-doc-slicer.sh#spec-block
+- GIVEN a spec with two requirements
+- WHEN doc-slicer --spec billing R-BILL-001 runs
+- THEN the header, sentence, and scenarios of R-BILL-001 are emitted
+- AND nothing of R-BILL-002 or the section after it is
+#### Scenario: spec-line -> tests/test-doc-slicer.sh#spec-line
+- GIVEN non-goals N-1 and N-10
+- WHEN doc-slicer --spec billing N-1 runs
+- THEN the N-1 line alone is emitted
+#### Scenario: spec-section -> tests/test-doc-slicer.sh#spec-section
+- WHEN doc-slicer --spec billing Non-goals runs
+- THEN the Non-goals body is emitted and no invariant is
+#### Scenario: spec-ids -> tests/test-doc-slicer.sh#spec-ids
+- WHEN doc-slicer --spec billing ids runs
+- THEN each requirement id and title is emitted on its own line and no scenario text is
+#### Scenario: spec-no-block -> tests/test-doc-slicer.sh#spec-no-block
+- WHEN the selector names nothing in the spec
+- THEN it says so and exits 1
+#### Scenario: spec-bytes -> tests/test-doc-slicer.sh#spec-bytes
+- WHEN the same query runs twice
+- THEN the two outputs are identical
+
 ## Non-goals
 - N-1: Which documents are managed, and the exclusion knob, belong to managed-docs.
-- N-2: Slicing a spec by capability, id, or section is item 7 of the 0.2.0 plan and is not promised here.
+- N-3: What the slice does with a config it cannot parse is control-plane's promise; that it still exits 0 is INV-2.
 
 ## Change log
-- 2026-09-06 R-CONTEXT-007: both harnesses document the same SessionStart hook loaded from hooks/hooks.json at the plugin root, but a closed Codex issue reported plugin hooks not loading at runtime; verify on Codex at the release smoke test, and until then warp pulls the slice when the opening context lacks one -> open
-- 2026-09-06 R-CONTEXT-002: a ## Now inside a fenced code block was harvested as a section, so the reference project's template roadmap opened every session; a fence is body -> edited
-- 2026-09-06 R-CONTEXT-001: the fixture had one commit, so the count could not be told from a constant; a three-commit repo with recent_commits = 2 now pins it -> asserted
-- 2026-09-06 R-CONTEXT-005: several filters OR-match in code and the sentence says filters; the test passed one -> asserted
-- 2026-09-06 R-CONTEXT-006: the no-config fixture had no managed doc, so the shipped header was never shown harvested -> asserted
-- 2026-09-06 R-CONTEXT-008: a query with no header name exited 2 in the test and no id named it -> edited
+- 2026-09-06 R-CONTEXT-007: Codex loads a plugin's hooks/hooks.json behind its plugin_hooks flag; the release smoke test verifies the slice arrives there, and until then warp pulls it when the opening context lacks one -> open

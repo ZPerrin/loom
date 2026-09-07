@@ -14,14 +14,14 @@ Close out a unit of work. weave scopes the session delta, distills durable chang
 
 ## Weave Control Surfaces
 
-These are the surfaces `weave` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
+These are the surfaces `weave` reads or writes directly; the full key map is the [reference project](../../references/reference-project.md).
 
 | Surface | Weave uses it for |
 |---|---|
 | `[weave].cleanup` | merged branch cleanup: `always`, `never`, or `ask` |
-| `[weave].rsi` | end-of-session retro filed to `.loom/warp.md`: `always`, `ask`, `never` (default on) |
-| `[weave].hook` | optional session-close command, run via `skill-hook` |
-| `.loom/weave.md` | repo opinion for distillation, pruning, and close-out convention |
+| `[weave].rsi` | end-of-session retro filed to `.loom/skills/warp.md`: `always`, `ask`, `never` (default on) |
+| `[weave].hook` | optional invocation command: the harness runs it through `skill-gate` the moment weave is invoked and its report arrives with this skill; run it by hand as the floor |
+| `.loom/skills/weave.md` | repo opinion for distillation, pruning, and close-out convention |
 | `.loom/scripts/*` | conventional home for hook scripts |
 
 ## Workflow Graph
@@ -32,11 +32,11 @@ flowchart TD
     cfg -->|no or configure| configure["Configure - survey, propose, confirm"]
     configure --> confirm{"Operator confirms?"}
     confirm -->|revise| configure
-    confirm -->|declines| reconcile["Reconcile - scope delta and spares"]
+    confirm -->|declines| scope["Scope - delta and spares"]
     confirm -->|approved| write["Write - [weave] + optional weave.md"]
-    cfg -->|yes| reconcile
-    write --> reconcile
-    reconcile --> distill["Distill - durable docs only"]
+    cfg -->|yes| scope
+    write --> scope
+    scope --> distill["Distill - durable docs only"]
     distill --> close{"Close out?"}
     close -->|no| stage["Stage docs and hand back"]
     close -->|yes or target named| check["Check - lint, tree, optional hook"]
@@ -44,7 +44,7 @@ flowchart TD
     check -->|pass| integrate["Integrate - commit, merge or handoff, cleanup"]
     integrate --> rsi{"[weave].rsi?"}
     rsi -->|never| handback["Hand back"]
-    rsi -->|always / ask / unset| retro["RSI retro - distill session -> .loom/warp.md"]
+    rsi -->|always / ask / unset| retro["RSI retro - distill session -> .loom/skills/warp.md"]
 ```
 
 ## Workflow
@@ -53,14 +53,14 @@ flowchart TD
 
 Use only on first run, missing `[weave]`, or `/weave configure`.
 
-- Survey how this repo closes work: target branch, merge vs PR handoff, branch cleanup, docs that usually move, existing `.loom/weave.md`, and close scripts.
-- Propose the `[weave]` knobs and any `.loom/weave.md` repo opinion.
+- Survey how this repo closes work: target branch, merge vs PR handoff, branch cleanup, docs that usually move, existing `.loom/skills/weave.md`, and close scripts.
+- Propose the `[weave]` knobs and any `.loom/skills/weave.md` repo opinion.
 - Write nothing until the operator approves the exact diff.
-- If the operator declines, write no config and continue to Reconcile only.
+- If the operator declines, write no config and continue to Scope only.
 
-### 2. Reconcile - scope the session
+### 2. Scope - the session delta
 
-- Read `.loom/weave.md` if present.
+- Read `.loom/skills/weave.md` if present and not already in your context.
 - Scope the work against the branch base: `git log`, `git diff <base>..HEAD`, and `git status --porcelain`.
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-scan"` and resolve markdown spares: distill, adopt, exclude, or leave for a named follow-up.
 - Pull sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`; read whole files only when rewriting them.
@@ -78,7 +78,7 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 
 - Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"`.
 - Resolve `git status --porcelain`: every untracked, modified, or deleted file is staged or explained.
-- If `[weave] hook` is set, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weave`.
+- If weave has a hook, `.loom/scripts/weave` or `[weave].hook`, and its report is not already in your context, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weave`.
 - Hook exit `0`: continue.
 - Hook exit `3`: no hook; continue on the built-in checks.
 - Other hook exit: stop and report the close hook failure.
@@ -95,11 +95,12 @@ Use only on first run, missing `[weave]`, or `/weave configure`.
 
 At close-out, run the retro when `[weave].rsi` is `always` or unset (the default is on), or `ask` (confirm first); skip on `never`.
 
+- Settle the experiments already filed in `.loom/skills/warp.md`: one whose test ran this session is resolved into the opinion above it or deleted; one whose test can no longer run is rewritten or deleted.
 - Look back over the session: where it snagged (failed calls, retries, denials, serialized waits, discovery loops), what context, hooks, and overrides helped, and what got in the way.
 - Distill that into a handful of experiments to try next session: testable nudges, not a session log.
-- Append them under an `## Experiments` heading in `.loom/warp.md` so the next `/warp` picks them up. Create the file (`kind: loom-config`, stamped today) if it does not exist; never overwrite warp's existing repo opinion.
+- Append them under an `## Experiments` heading in `.loom/skills/warp.md` so the next `/warp` picks them up. Create the file (`kind: loom-config`, stamped today) if it does not exist; never overwrite warp's existing repo opinion.
 - If nothing durable surfaced, say so and write nothing.
 
 ## Output
 
-Report the scoped delta, spares resolved, docs/config changed with one-line rationales, hook and check results, staged files, any close-out action taken, and the retro experiments filed to `.loom/warp.md`, if any. If nothing durable changed, say so and make no edit.
+Report the scoped delta, spares resolved, docs/config changed with one-line rationales, hook and check results, staged files, any close-out action taken, and the retro experiments filed to `.loom/skills/warp.md`, if any. If nothing durable changed, say so and make no edit.

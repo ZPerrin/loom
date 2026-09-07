@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# skill-gate — a loom skill opens with the repo's opinion of it and the report of its hook,
+# handed to the model as context before the skill's first step, at either way a skill is
+# invoked and on either harness. Registered in hooks/hooks.json on PreToolUse with matcher
+# Skill, which a model-invoked skill goes through, and on UserPromptSubmit, which sees a typed
+# invocation; on the second it exits within milliseconds for any ordinary prompt.
+#   stdin: the harness payload, or the first argument where a harness passes it that way.
+#   PreToolUse: tool_input.skill names the skill ("loom:warp"), tool_input.args its text.
+#   UserPromptSubmit: the prompt, when it opens with /loom:<skill> or $loom:<skill>, or mentions
+#   $<skill> the way Codex spells one.
+#   For a loom skill: .loom/skills/<skill>.md past its frontmatter, if present, and the report
+#   of the skill's hook run through skill-hook with the invocation's text, if one exists, are
+#   returned together as additionalContext. Nothing to say, or a payload the gate cannot read,
+#   is silence. Exit 0 always: a gate never blocks a skill or a prompt, and a failing hook is
+#   reported to the skill, whose prose says what it means. Text is read up to the first escaped quote.
+set -u
+SELF="$(cd "$(dirname "$0")" && pwd)"
+. "$SELF/lib/discover.sh"
+
+# stdin -> one JSON string body: backslash, quote, tab, and CR escaped; lines joined with \n.
+json_esc() {
+  awk '{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r")
+         out = out (n++ ? "\\n" : "") $0 }
+       END { printf "%s", out }'
+}
+
+payload="$(cat 2>/dev/null | tr -d '\n')"
+[ -n "$payload" ] || payload="$(printf '%s' "${1:-}" | tr -d '\n')"
+q='"'
+event=""
+case "$payload" in *"${q}hook_event_name${q}"*)
+  event="${payload#*"${q}hook_event_name${q}"}"; event="${event#*$q}"; event="${event%%$q*}" ;;
+esac
+args=""
+if [ "$event" = "UserPromptSubmit" ]; then
+  case "$payload" in *"${q}prompt${q}"*) ;; *) exit 0 ;; esac
+  prompt="${payload#*"${q}prompt${q}"}"; prompt="${prompt#*$q}"; prompt="${prompt%%$q*}"
+  case "$prompt" in
+    /loom:*|\$loom:*) skill="${prompt#?loom:}"; skill="${skill%%[ \\]*}"; args="${prompt#?loom:$skill}"; args="${args# }" ;;
+    *) skill=""
+       for s in warp weave weft dress spec refine-spec; do
+         case "$prompt" in *"\$$s"|*"\$$s "*|*"\$$s\\"*) skill="$s"; break ;; esac
+       done
+       [ -n "$skill" ] || exit 0
+       args="$prompt" ;;
+  esac
+  args="$(printf '%s' "$args" | sed 's/\\n/ /g; s/\\t/ /g; s/\\\\/\\/g')"
+else
+  event="PreToolUse"
+  case "$payload" in *"${q}tool_name${q}"*"${q}Skill${q}"*"${q}skill${q}"*) ;; *) exit 0 ;; esac
+  skill="${payload#*"${q}skill${q}"}"; skill="${skill#*$q}"; skill="${skill%%$q*}"
+  case "$skill" in loom:*) skill="${skill#loom:}" ;; *) exit 0 ;; esac
+  case "$payload" in *"${q}args${q}"*)
+    args="${payload#*"${q}args${q}"}"; args="${args#*$q}"; args="${args%%$q*}" ;;
+  esac
+fi
+case "$skill" in ""|*[!a-z-]*) exit 0 ;; esac          # a skill name is lowercase letters and hyphens
+ROOT="$(loom_repo_root)"
+
+ctx=""
+f="$ROOT/.loom/skills/$skill.md"
+if [ -f "$f" ]; then
+  body="$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next } { print }' "$f" | json_esc)"
+  [ -n "$body" ] && ctx="Repo opinion for $skill, from .loom/skills/$skill.md, layered over the skill you are about to load:\\n\\n$body"
+fi
+
+# The repo's hook, routed by skill-hook: 3 is none; 0 reports its output; anything else reports
+# the exit code with what it printed. The gate interprets none of it.
+report="$( (cd "$ROOT" && bash "$SELF/skill-hook" "$skill" "$args") 2>&1 )"; rc=$?
+case "$rc" in
+  3) ;;
+  0) [ -n "$report" ] && ctx="${ctx:+$ctx\\n\\n}The $skill hook ran at invocation and printed:\\n\\n$(printf '%s\n' "$report" | json_esc)" ;;
+  *) ctx="${ctx:+$ctx\\n\\n}The $skill hook exited $rc at invocation:\\n\\n$(printf '%s\n' "$report" | json_esc)" ;;
+esac
+[ -n "$ctx" ] || exit 0
+printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"%s"}}\n' "$event" "$ctx"
+exit 0

@@ -103,4 +103,96 @@ assert_contains "$bco" "commit: second"     "bearings-count: second commit shown
 assert_not_contains "$bco" "commit: first"  "bearings-count: the third-newest commit is cut by recent_commits = 2"
 rm -rf "$BC"
 
+# --- spec mode: one capability's spec, or one block of it, found by its Capability line ---
+SR="$DIR/fixtures/spec-slice-repo"; rm -rf "$SR"; mkdir -p "$SR/notes" "$SR/docs/specs"
+cat > "$SR/notes/spec-b.md" <<'EOS'
+---
+kind: spec
+status: living
+updated: 2026-09-06
+---
+# Capability: billing
+
+## Purpose
+billing is what the customer pays.
+
+## Invariants
+- INV-1: A charge is never made twice.
+- INV-2: An invoice is immutable once sent.
+
+## Requirements
+### R-BILL-001: An invoice is sent once
+WHEN an invoice is finalized, the system SHALL send it once.
+#### Scenario: send-once -> tests/bill.sh#once
+- WHEN an invoice is finalized
+- THEN it is sent once
+#### Scenario: resend-refused -> tests/bill.sh#resend
+- WHEN a sent invoice is finalized again
+- THEN the second send is refused
+
+### R-BILL-002: A refund reverses a charge
+WHEN a refund is issued, the system SHALL reverse the charge.
+#### Scenario: refund -> tests/bill.sh#refund
+- WHEN a refund is issued
+- THEN the charge is reversed
+
+## Non-goals
+- N-1: Tax is the ledger capability.
+- N-10: Currency conversion is the ledger capability.
+
+## Change log
+- 2026-09-06 R-BILL-001: the resend refusal was untested -> asserted
+EOS
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-06\n---\n# Billing decoy\n\nNo Capability line, so no capability.\n' > "$SR/docs/specs/decoy.md"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Capability: billing\n\nA readme decoy that borrows the first line.\n' > "$SR/README.md"
+( cd "$SR" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: spec slice repo" )
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing 2>&1)"; src=$?
+assert_exit "$src" "0" "spec-by-capability: exits 0"
+assert_contains "$so" "R-BILL-001" "spec-by-capability: the spec body is emitted"
+assert_contains "$so" "notes/spec-b.md" "spec-by-capability: provenance names the path the Capability line was found at"
+assert_not_contains "$so" "status: living" "spec-by-capability: frontmatter is stripped"
+assert_not_contains "$so" "Bearings" "spec-by-capability: no bearings"
+assert_not_contains "$so" "opening context" "spec-by-capability: no preamble"
+assert_not_contains "$so" "decoy" "spec-decoys: a spec without a Capability line and a readme with one are both skipped"
+
+so2="$(cd "$SR" && bash "$SLICER" --spec billing 2>&1)"
+assert_eq "$so2" "$so" "spec-bytes: the same query yields identical bytes"
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing ids 2>&1)"
+assert_contains "$so" "R-BILL-001: An invoice is sent once" "spec-ids: each requirement id with its title"
+assert_contains "$so" "R-BILL-002: A refund reverses a charge" "spec-ids: every requirement is listed"
+assert_not_contains "$so" "WHEN" "spec-ids: no sentence or scenario text"
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing R-BILL-001 2>&1)"; src=$?
+assert_exit "$src" "0" "spec-block: a requirement id exits 0"
+assert_contains "$so" "### R-BILL-001: An invoice is sent once" "spec-block: the header is emitted"
+assert_contains "$so" "WHEN an invoice is finalized, the system SHALL send it once." "spec-block: the normative sentence is emitted"
+assert_contains "$so" "resend-refused" "spec-block: the requirement's scenarios come with it"
+assert_not_contains "$so" "R-BILL-002" "spec-block: the next requirement is not"
+assert_not_contains "$so" "Non-goals" "spec-block: the section after it is not"
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing N-1 2>&1)"
+assert_contains "$so" "N-1: Tax" "spec-line: the one non-goal line"
+assert_not_contains "$so" "N-10" "spec-line: N-1 does not match N-10"
+so="$(cd "$SR" && bash "$SLICER" --spec billing INV-2 2>&1)"
+assert_contains "$so" "INV-2: An invoice is immutable" "spec-line: an invariant by id"
+assert_not_contains "$so" "INV-1" "spec-line: only the named invariant"
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing Non-goals 2>&1)"
+assert_contains "$so" "N-10: Currency" "spec-section: a section by bare name"
+assert_not_contains "$so" "INV-1" "spec-section: only that section"
+
+so="$(cd "$SR" && bash "$SLICER" --spec billing R-BILL-009 2>&1)"; src=$?
+assert_exit "$src" "1" "spec-no-block: an id the spec lacks exits 1"
+assert_contains "$so" "no block" "spec-no-block: the miss says so"
+so="$(cd "$SR" && bash "$SLICER" --spec ledger 2>&1)"; src=$?
+assert_exit "$src" "1" "spec-no-capability: a capability no spec names exits 1"
+assert_contains "$so" "no managed spec" "spec-no-capability: the miss says so"
+so="$(cd "$SR" && bash "$SLICER" --spec 2>&1)"; src=$?
+assert_exit "$src" "2" "spec-usage: --spec with no capability exits 2"
+so="$(cd "$SR" && bash "$SLICER" 2>&1)"
+assert_contains "$so" "--spec" "advertises: the session preamble names the spec query too"
+rm -rf "$SR"
+
 finish

@@ -1,7 +1,7 @@
 ---
 kind: loom-config
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Refine spec
 

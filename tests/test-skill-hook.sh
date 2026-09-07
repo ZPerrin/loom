@@ -29,7 +29,7 @@ o="$(cd "$R" && bash "$HOOK" weave 2>&1)"; rc=$?
 assert_exit "$rc" "7" "failing hook propagates its exit code"
 
 printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nbranch_convention = "feature/<slug>"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+o="$(cd "$R" && bash "$HOOK" spec 2>&1)"; rc=$?
 assert_exit "$rc" "3" "no hook configured → exit 3"
 
 # no-partial-effect: a config the parser refuses is refused whole. The hook line sits above
@@ -69,7 +69,27 @@ assert_not_contains "$o" "NOEXEC" "cannot-run: the hook body never runs"
 
 # no-config-file: no .loom/loom.toml at all is the same outcome as no hook, exit 3.
 rm -f "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+o="$(cd "$R" && bash "$HOOK" spec 2>&1)"; rc=$?
 assert_exit "$rc" "3" "no-config-file: no loom.toml → exit 3"
+
+# convention: with no key, an executable under scripts_dir named after the skill is the hook,
+# with or without .sh; a key wins over the file.
+printf '#!/usr/bin/env bash\necho "CONVENTION=$1"\n' > "$R/.loom/scripts/weft"; chmod +x "$R/.loom/scripts/weft"
+printf '#!/usr/bin/env bash\necho "CONVENTION_SH=$1"\n' > "$R/.loom/scripts/dress.sh"; chmod +x "$R/.loom/scripts/dress.sh"
+printf '[warp]\nhook = "args.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" weft "by-name" 2>&1)"; rc=$?
+assert_exit "$rc" "0" "convention-name: a script named after the skill runs with no key"
+assert_contains "$o" "CONVENTION=by-name" "convention-name: it receives the argument"
+o="$(cd "$R" && bash "$HOOK" dress x 2>&1)"
+assert_contains "$o" "CONVENTION_SH=x" "convention-sh: the .sh spelling is found too"
+rm -f "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" weft "no-config" 2>&1)"; rc=$?
+assert_exit "$rc" "0" "convention-noconf: no loom.toml at all still runs the named script"
+assert_contains "$o" "CONVENTION=no-config" "convention-noconf: with the argument"
+printf '#!/usr/bin/env bash\necho "FILE"\n' > "$R/.loom/scripts/warp"; chmod +x "$R/.loom/scripts/warp"
+printf '[warp]\nhook = "args.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp k 2>&1)"
+assert_contains "$o" "ARG=k" "convention-key-wins: a configured key wins over the file"
+assert_not_contains "$o" "FILE" "convention-key-wins: the file does not also run"
 
 rm -rf "$R"; finish
