@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Spec writing rules
 
@@ -70,7 +70,7 @@ spec; specs outlive implementations.
 **Promise, not mechanism.**
 Wrong: WHEN the repo is not a git checkout, the system SHALL find markdown with a bounded find that skips .git and node_modules.
 Right: WHEN the repo is not a git checkout, the system SHALL still find its markdown files.
-Why: the skip list is taste; a different one breaks no promise the owner made, and a line that pins it forbids the better solution. A requirement states what the feature promises the people and skills that use it; the code keeps the how, and a test that pins the how gets no scenario.
+Why: the skip list is taste; a different one breaks no promise the operator made, and a line that pins it forbids the better solution. A requirement states what the feature promises the people and skills that use it; the code keeps the how, and a test that pins the how gets no scenario.
 
 **Weak verbs hide the behavior.**
 Wrong: The system SHALL support exporting reports.
@@ -104,11 +104,14 @@ re-proposed by the next agent that cannot see them.
 
 ## Change-log lines
 
-`- YYYY-MM-DD <id>: <text> -> <disposition>`. The text is the observation or the edit. The
-disposition is `edited` (the spec changed in this diff), `kept` (the spec stands and the code is
-the bug), `fixed` (the spec stands and the code now keeps it), `asserted` (the spec stands and a
-test now pins it), or `open` (a human decides). A reconciliation pass only ever writes `open`; a
-human closes it. Rationale lives here, not in the requirement.
+`- YYYY-MM-DD <id>: <text> -> open`. The text is the observation, and the only disposition a
+line in the file carries is `open`: the log holds what a human has not yet decided, and nothing
+else. A ruling that closes a line deletes it in the diff that closes it, and that commit carries
+the why; git holds the history. A ruling that leaves work behind, the spec standing and the code
+the bug, stays `open` with the ruling written into the text until the fix lands. The closing words
+name a ruling in a report and a commit, never in the file: `edited` (the spec changed), `kept`
+(the spec stands and the code is the bug), `fixed` (the code now keeps it), `asserted` (a test
+now pins it). Rationale for an open line lives here, not in the requirement.
 
 ## Word lists
 

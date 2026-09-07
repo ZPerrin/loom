@@ -1,5 +1,5 @@
 [discovery]
-exclude = ["tests/fixtures", "skills"]
+exclude = ["tests/fixtures", "skills", "CLAUDE.md"]
 
 [context]
 recent_commits = 10

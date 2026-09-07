@@ -13,6 +13,44 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/run-hook.cmd\" skill-gate",
+            "commandWindows": "\"%CLAUDE_PLUGIN_ROOT%\\scripts\\run-hook.cmd\" skill-gate",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/run-hook.cmd\" skill-gate",
+            "commandWindows": "\"%CLAUDE_PLUGIN_ROOT%\\scripts\\run-hook.cmd\" skill-gate",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/run-hook.cmd\" lint-hook",
+            "commandWindows": "\"%CLAUDE_PLUGIN_ROOT%\\scripts\\run-hook.cmd\" lint-hook",
+            "timeout": 30
+          }
+        ]
+      }
     ]
   }
 }

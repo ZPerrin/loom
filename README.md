@@ -1,7 +1,7 @@
 ---
 kind: readme
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # loom
 
@@ -26,17 +26,21 @@ It's also very much a work in progress.
 | [spec](skills/spec/SKILL.md) | authors or extends one capability's living spec under the [spec grammar](references/spec-grammar.md), lint-clean before it is presented |
 | [refine-spec](skills/refine-spec/SKILL.md) | reconciles one capability's spec against its tests and code and reports drift by requirement id; the writing goes back through spec |
 
-Two files configure them, and five scripts do the deterministic work:
+Two files configure them, and eight scripts do the deterministic work:
 
 | control surface | what it does |
 |---|---|
 | `.loom/loom.toml` | settings the scripts enforce the same way on every run |
-| `.loom/<skill>.md` | one opinion file per skill, for guidance that hasn't earned determinism yet |
+| `.loom/skills/<skill>.md` | one opinion file per skill, for guidance that hasn't earned determinism yet |
+| `.loom/scripts/<skill>` | one hook per skill, run the moment the skill is invoked |
 | `doc-scan` | lists the managed docs and the markdown that could join them |
 | `doc-linter` | keeps managed docs mechanically clean; specs are graded against the grammar |
-| `doc-slicer` | the SessionStart slice, and one section on demand |
+| `doc-slicer` | the SessionStart slice; one section, or one spec block by capability and id, on demand |
 | `doc-stamp` | sets frontmatter fields |
 | `skill-hook` | runs a skill's configured hook |
+| `lint-hook` | lints a managed doc the moment a write lands on it, on a host whose hooks fire after tool calls |
+| `skill-gate` | hands a loom skill its repo opinion and its hook's report the moment it is invoked, by conversation or by typing, on a host whose hooks fire there |
+| `hook-trace` | logs every hook event it is registered on, to learn what a harness fires before a real hook is written against it |
 
 The [reference project](references/reference-project.md) shows a minimal dressed repo. This repo
 is dressed with itself: `.loom/` is loom's own config, and [docs/specs](docs/specs/) says what

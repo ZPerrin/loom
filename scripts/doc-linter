@@ -49,7 +49,7 @@ DEFAULT_KINDS="$(default_get lint.kinds)"
 DEFAULT_STATUSES="$(default_get lint.statuses)"
 KINDS="${RAW_KINDS:-$DEFAULT_KINDS}"
 STATUSES="${RAW_STATUSES:-$DEFAULT_STATUSES}"
-CONFIG_DIR=".loom"   # loom's one home in a repo; overrides live beside loom.toml
+CONFIG_DIR=".loom/skills"   # the per-skill overrides; loom.toml and the data plane sit above them
 SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/scripts}"; SCRIPTS_DIR="${SCRIPTS_DIR%/}"
 
 # [lint.specs]: budgets, the ears knob, and word lists for the spec checker. Defaults here mirror
@@ -173,12 +173,12 @@ check_spec() { # $1=file — kind: spec docs run through the awk checker; tab-se
                -f "$SPEC_AWK" "$f")
 }
 
-check_placement() { # $1=file $2=kind  — loom-config docs must live at .loom/<skill>.md
+check_placement() { # $1=file $2=kind  — loom-config docs must live at .loom/skills/<skill>.md
   [ "$2" = "loom-config" ] || return 0
   local f="$1" rel dir base; rel="${f#"$ROOT"/}"
   dir="$(dirname "$rel")"; base="$(basename "$rel" .md)"
   if [ "$dir" != "$CONFIG_DIR" ]; then
-    add "PLACEMENT $rel: loom-config outside .loom/ — its skill won't find it"
+    add "PLACEMENT $rel: loom-config outside .loom/skills/ — its skill won't find it"
     return
   fi
   if [ -n "$SKILLS" ] && ! in_list "$base" "$SKILLS"; then
@@ -198,6 +198,29 @@ validate_hook_form() {
   if [ -f "$cand" ] && [ ! -x "$cand" ]; then
     add "HOOK     .loom/loom.toml: hook script $first not executable (chmod +x $SCRIPTS_DIR/$first)"
   fi
+}
+
+check_skill_hooks() { # every [<skill>].hook value, and every script named after a skill
+  local v s f b       # under SCRIPTS_DIR (with or without .sh), gets the executable check
+  if [ -f "$CONF" ]; then
+    while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      validate_hook_form "$v"
+    done <<EOF
+$(printf '%s\n' "$CFG" | awk -F= '$1 ~ /^[a-z-]+\.hook$/ { sub(/^[^=]*=/, ""); print }')
+EOF
+  fi
+  while IFS= read -r s; do
+    [ -n "$s" ] || continue
+    for f in "$ROOT/$SCRIPTS_DIR/$s" "$ROOT/$SCRIPTS_DIR/$s.sh"; do
+      [ -f "$f" ] && [ ! -x "$f" ] || continue
+      b="${f##*/}"
+      case "$FINDINGS" in *"hook script $b not executable"*) continue ;; esac   # already named by a key
+      add "HOOK     $SCRIPTS_DIR/$b: script named after a skill but not executable (chmod +x $SCRIPTS_DIR/$b)"
+    done
+  done <<EOF
+$SKILLS
+EOF
 }
 
 check_lint_config() {
@@ -246,7 +269,6 @@ check_warp_config() { # optional [warp] section; required-and-valid iff present.
     "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask|harness)" ;;
     *)  add "WARP     .loom/loom.toml: [warp] worktree=$wt invalid (use always|never|ask|harness)" ;;
   esac
-  validate_hook_form "$wh"
 }
 
 check_weave_config() { # optional [weave] section; required-and-valid iff present.
@@ -266,7 +288,6 @@ check_weave_config() { # optional [weave] section; required-and-valid iff presen
     *)  add "WEAVE    .loom/loom.toml: [weave] rsi=$rsi invalid (use always|never|ask)" ;;
   esac
   wh="$(cfg_get weave.hook)"
-  validate_hook_form "$wh"
 }
 
 # --- run ---
@@ -303,6 +324,7 @@ else
   check_layout_config
   check_warp_config
   check_weave_config
+  check_skill_hooks
 fi
 
 [ -n "$WARNS" ] && printf '%s' "$WARNS"

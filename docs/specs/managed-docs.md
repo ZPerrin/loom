@@ -1,12 +1,12 @@
 ---
 kind: spec
 status: living
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 # Capability: managed-docs
 
 ## Purpose
-managed-docs is how loom knows which markdown files in a repo it looks after and keeps them mechanically clean. Membership comes from frontmatter, hygiene comes from doc-linter, and a document whose kind carries a grammar is graded against that grammar as well. Every check reads the repo and writes nothing; only a stamp the owner asked for changes a file.
+managed-docs is how loom knows which markdown files in a repo it looks after and keeps them mechanically clean. Membership comes from frontmatter, hygiene comes from doc-linter, and a document whose kind carries a grammar is graded against that grammar as well. Every check reads the repo and writes nothing; only a stamp the operator asked for changes a file.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -104,7 +104,10 @@ WHEN link text sits in backticks or a list item names an existing path in backti
 - GIVEN a list item naming mod/README.md in backticks followed by an em dash and no link
 - WHEN doc-linter runs
 - THEN it reports MISSING naming mod/README.md
-- AND a listed path that is gitignored or absent produces no finding
+#### Scenario: listed-path-absent-or-ignored -> tests/test-doc-linter.sh#MISSING-negative
+- GIVEN list items naming a gitignored path and an absent path in backticks
+- WHEN doc-linter runs
+- THEN no MISSING is reported
 
 ### R-DOCS-008: Frontmatter values are vocabulary-checked
 WHEN a managed document's kind or status is outside the configured vocabulary or its updated value is not an ISO date, the system SHALL report FRONTMATTER naming the value.
@@ -139,13 +142,13 @@ The system SHALL check kind and status against [lint] kinds and statuses when se
 - THEN values are checked against the shipped lists with no LINT finding
 
 ### R-DOCS-010: A loom-config document sits where its skill looks
-WHEN a document of kind loom-config lies outside .loom/ or its basename is not a plugin skill, the system SHALL report PLACEMENT naming the document.
+WHEN a document of kind loom-config lies outside .loom/skills/ or its basename is not a plugin skill, the system SHALL report PLACEMENT naming the document.
 #### Scenario: misplaced-override -> tests/test-doc-linter.sh#outside
 - GIVEN docs/loom-overrides/weave.md with kind: loom-config
 - WHEN doc-linter runs
-- THEN it reports PLACEMENT saying the document is outside .loom/
+- THEN it reports PLACEMENT saying the document is outside .loom/skills/
 #### Scenario: unknown-skill -> tests/test-doc-linter.sh#non-skill
-- GIVEN .loom/notaskill.md with kind: loom-config
+- GIVEN .loom/skills/notaskill.md with kind: loom-config
 - WHEN doc-linter runs
 - THEN it reports PLACEMENT saying no skill is named notaskill
 
@@ -373,24 +376,22 @@ WHERE the spec checker runs with json set, the system SHALL emit each finding as
 - WHEN the checker runs with json set
 - THEN one JSON object is emitted carrying the file, severity, rule, line, and id
 
+### R-DOCS-026: A decided change-log line is flagged
+WHEN a change-log line ends with any word but open, the system SHALL report SPECWARN L002 naming the line's id.
+#### Scenario: closed-changelog-line -> tests/test-lint-spec.sh#l002-closed-changelog-line
+- GIVEN a change-log line ending with a closing word
+- WHEN doc-linter runs
+- THEN it reports SPECWARN L002 at that line, naming its id
+#### Scenario: closed-line-alone -> tests/test-lint-spec.sh#l002-isolated
+- GIVEN a conforming spec whose only fault is a decided change-log line
+- WHEN doc-linter runs
+- THEN it warns L002 and exits 0
+
 ## Non-goals
 - N-1: The config grammar, its shipped defaults, the sections only skills read, and each consumer's behavior on an unparseable config belong to control-plane.
-- N-2: Session slices and the on-demand header query belong to context.
+- N-2: Session slices, the on-demand header query, and the spec query belong to context.
 - N-3: Hook execution and the executable-form check on hook values belong to hooks.
 - N-4: Editorial judgment on prose is weft's pass and never a check here.
 - N-5: Which documents a repo adopts, excludes, or seeds is dress's decision; this capability lists and grades what it finds.
 
 ## Change log
-- 2026-09-05 R-DOCS-016: the grammar says INV-n and N-n ids follow the same uniqueness law; the checker tests only R ids -> open
-- 2026-09-05 R-DOCS-022: an invalid [lint.specs] budget reports LINT yet still reaches the checker, where a non-numeric value disables that budget and a zero, negative, or partly numeric one trips it on every sentence -> open
-- 2026-09-05 R-DOCS-023: the test table lists auth-session.md as clean but the loop skips clean rows, so no assertion covers this scenario -> open
-- 2026-09-05 R-DOCS-016: INV and N uniqueness is now checked under R-DOCS-024 -> edited
-- 2026-09-05 R-DOCS-022: an invalid value reports LINT and the checker runs at the shipped default; work spec 2026-09-05-managed-docs landed -> edited
-- 2026-09-05 R-DOCS-023: the spec-repo loop asserts clean rows, so the scenario's test now asserts it -> edited
-- 2026-09-06 R-DOCS-007: the MISSING check tests that a path exists and is not ignored, never that git tracks it, so tracked left the sentence -> edited
-- 2026-09-06 R-DOCS-009: the missing-vocab scenario asserted two LINT findings that INV-2 of control-plane forbids; the linter now takes the shipped vocabulary silently and the scenario says so -> edited
-- 2026-09-06 R-DOCS-019: the bad-bullet ref matched two fixture rows; each fixture now has its own scenario -> edited
-- 2026-09-06 R-DOCS-020: the Non-goals half of the line-shape rule had no fixture -> asserted
-- 2026-09-06 R-DOCS-025: the checker's json output had no requirement and no test -> edited
-- 2026-09-06 N-2: the neighbors are named context and hooks, as their specs are; N-3 the same -> edited
-- 2026-09-06 R-DOCS-009: the shipped status list carried scaffolding and ideation, two draft states the doc convention rules out; the list is now the convention's three, and loom's own config matches -> fixed

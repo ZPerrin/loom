@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# hook-trace — append every event it is registered on to a log, to learn what a harness fires
+# and what each payload holds before a real hook is written against it. Register it on the
+# events in question for one session, with a match-all matcher where one is needed, invoke a
+# skill both ways, and read the log; then point a real hook at what fired.
+#   log: $LOOM_HOOK_TRACE, else $CLAUDE_PLUGIN_DATA/hook-trace.jsonl, else /tmp/loom-hook-trace.jsonl
+#   line: {"ts":"<utc>","argv":"<arguments, space-joined>","stdin":"<payload>"}
+# Exit 0 always: a tracer never blocks anything.
+set -u
+json_esc() {
+  awk '{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r")
+         out = out (n++ ? "\\n" : "") $0 }
+       END { printf "%s", out }'
+}
+log="${LOOM_HOOK_TRACE:-${CLAUDE_PLUGIN_DATA:+$CLAUDE_PLUGIN_DATA/hook-trace.jsonl}}"
+log="${log:-/tmp/loom-hook-trace.jsonl}"
+mkdir -p "$(dirname "$log")" 2>/dev/null || exit 0
+payload="$(cat 2>/dev/null)"
+printf '{"ts":"%s","argv":"%s","stdin":"%s"}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(printf '%s' "$*" | json_esc)" "$(printf '%s' "$payload" | json_esc)" >> "$log" 2>/dev/null || true
+exit 0
