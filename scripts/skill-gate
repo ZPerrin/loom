@@ -2,12 +2,12 @@
 # skill-gate — a loom skill opens with the repo's opinion of it and the report of its hook,
 # handed to the model as context before the skill's first step, at either way a skill is
 # invoked and on either harness. Registered in hooks/hooks.json on PreToolUse with matcher
-# Skill, which a model-invoked skill goes through, and on UserPromptSubmit, which sees a typed
-# invocation; on the second it exits within milliseconds for any ordinary prompt.
+# Skill for Claude's model-invoked skills, and on UserPromptSubmit for typed invocations.
+# Codex's model-chosen skills retain the prose floor; ordinary prompts get a fast exit.
 #   stdin: the harness payload, or the first argument where a harness passes it that way.
 #   PreToolUse: tool_input.skill names the skill ("loom:warp"), tool_input.args its text.
 #   UserPromptSubmit: the prompt, when it opens with /loom:<skill> or $loom:<skill>, or mentions
-#   $<skill> the way Codex spells one.
+#   $<skill>. Codex's picker wraps a mention as [$loom:<skill>](path) or [$<skill>](path).
 #   For a loom skill: .loom/skills/<skill>.md past its frontmatter, if present, and the report
 #   of the skill's hook run through skill-hook with the invocation's text, if one exists, are
 #   returned together as additionalContext. Nothing to say, or a payload the gate cannot read,
@@ -39,7 +39,10 @@ if [ "$event" = "UserPromptSubmit" ]; then
     /loom:*|\$loom:*) skill="${prompt#?loom:}"; skill="${skill%%[ \\]*}"; args="${prompt#?loom:$skill}"; args="${args# }" ;;
     *) skill=""
        for s in warp weave weft dress spec refine-spec; do
-         case "$prompt" in *"\$$s"|*"\$$s "*|*"\$$s\\"*) skill="$s"; break ;; esac
+         case "$prompt" in
+           *"[\$loom:$s]("*")"*|*"[\$$s]("*")"*|*"\$$s"|*"\$$s "*|*"\$$s\\"*)
+             skill="$s"; break ;;
+         esac
        done
        [ -n "$skill" ] || exit 0
        args="$prompt" ;;

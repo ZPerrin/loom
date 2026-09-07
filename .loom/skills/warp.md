@@ -86,3 +86,7 @@ hiding signal: the operator still catches substantive misses at the gate.
   one concept is put as a one-paragraph proposal first and built only after the shape is agreed,
   and a recommendation that is host-specific names the host in its first sentence; if the next
   design round needs no collapse, both lines move into Discourse.
+- 2026-09-07 (s9): The gate's fixture checks passed while Codex's actual picker payload was
+  unrecognized. Test: the next harness-hook validation records the installed revision, a native
+  payload and script count beside the component result for every claimed route; if the Claude
+  review can reproduce the finding without rediscovering the setup, make that a validation rule.

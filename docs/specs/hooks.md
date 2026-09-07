@@ -133,6 +133,10 @@ WHEN a harness reports a loom skill's invocation, the system SHALL return that s
 - WHEN the harness reports the prompt submitted
 - THEN the opinion is returned as context for that prompt
 - AND an ordinary prompt gets nothing
+#### Scenario: gate-picker -> tests/test-skill-gate.sh#gate-picker
+- GIVEN a prompt naming warp through the Codex desktop skill picker
+- WHEN the harness reports the prompt submitted
+- THEN the opinion is returned whether the skill mention opens the prompt or appears inside it
 #### Scenario: gate-no-opinion -> tests/test-skill-gate.sh#gate-no-opinion
 - GIVEN a repo with no .loom/skills/weft.md
 - WHEN the harness reports the weft skill invoked
@@ -158,6 +162,10 @@ WHEN a loom skill that has a hook is invoked, the system SHALL run the hook on t
 - GIVEN [warp] hook naming a script that echoes its argument
 - WHEN the harness reports loom:warp invoked with the text issue 12
 - THEN the script's output is returned as context beside the opinion, with issue 12 in it
+#### Scenario: hook-picker -> tests/test-skill-gate.sh#gate-picker
+- GIVEN a prompt naming warp through the Codex desktop skill picker and a hook for warp
+- WHEN the harness reports the prompt submitted
+- THEN the hook receives the whole prompt and its report reaches the skill
 #### Scenario: hook-failed -> tests/test-skill-gate.sh#hook-failed
 - GIVEN [weave] hook naming a script that exits 7
 - WHEN the harness reports the weave skill invoked
@@ -215,7 +223,7 @@ WHEN a harness passes the payload as the first argument or names the written fil
 - N-3: Which events a harness fires, and with what payload, is the harness's own contract; loom registers on the documented ones and records the rest with hook-trace.
 
 ## Change log
-- 2026-09-07 R-HOOKS-006: the PostToolUse registration fires only in a live session, so the release smoke test covers it on both harnesses, Codex's apply_patch matcher included -> open
-- 2026-09-07 R-HOOKS-007: the gate is registered on the Skill tool for a model-invoked skill and on prompt submission for a typed one, at the cost of a fast exit on every prompt; UserPromptExpansion is the Claude refinement to verify; Codex runs a plugin's hooks once each is trusted at its prompt and documents prompt submission, but no event fires when a skill loads, so a $mention is the typed path there and a model-chosen skill keeps the prose floor until hook-trace at the smoke test shows otherwise -> open
+- 2026-09-07 R-HOOKS-006: Codex desktop returned a broken-link finding through a nested apply_patch call and stayed silent after repair; the Claude live smoke test remains -> open
+- 2026-09-07 R-HOOKS-007: Codex desktop delivered the opinion and hook report through both the corrected picker matcher and a short dollar mention; tests pin the captured picker shape. A narrow tool-read probe also delivered context, but is not shipped and does not establish a skill-invocation event. Claude's native routes and overlap still need validation; model-chosen Codex skills retain the prose floor. Evidence and options are in the [validation report](../../.loom/reports/2026-09-07-codex-hooks-validation.md) -> open
 - 2026-09-06 R-HOOKS-008: a skill's hook is repo code the harness runs at invocation; loom leans on the harness's own trust prompt for project hooks and adds no check of its own, which the operator may want revisited -> open
 - 2026-09-06 R-HOOKS-007: a gate exits 0 whatever it finds, which every gate scenario asserts one by one; a candidate invariant for the operator to type -> open

@@ -57,6 +57,24 @@ assert_contains "$out" 'hello please $warp into issue 12' "gate-mention: the who
 out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"the $specific case"}')"
 assert_eq "$out" "" "gate-mention: a longer word starting like a skill name is not a mention"
 
+# Codex desktop's picker sends a Markdown skill link in the prompt. The fixture preserves
+# the observed payload shape with session and machine paths replaced by test values.
+out="$(run_gate "$(cat "$DIR/fixtures/hooks/codex-skill-mention.json")")"; rc=$?
+assert_exit "$rc" "0" "gate-picker: a desktop skill link exits 0"
+assert_contains "$out" '"hookEventName":"UserPromptSubmit"' "gate-picker: the result belongs to prompt submission"
+assert_contains "$out" 'Repo opinion for warp' "gate-picker: the desktop picker receives the opinion"
+assert_contains "$out" 'hello [$loom:warp](/plugin-cache/loom/0.2.0/skills/warp/SKILL.md) Codex desktop hook smoke test. Orient only and keep the current branch and workspace.' "gate-picker: the hook receives the whole invocation"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"please [$loom:warp](/plugin-cache/loom/skills/warp/SKILL.md) orient"}')"
+assert_contains "$out" 'hello please [$loom:warp](/plugin-cache/loom/skills/warp/SKILL.md) orient' "gate-picker: a skill link can appear inside a prompt"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"[$warp](/plugin-cache/loom/skills/warp/SKILL.md) orient"}')"
+assert_contains "$out" 'Repo opinion for warp' "gate-picker: an unqualified skill link is recognized too"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"[$other:warp](/plugin-cache/other/skills/warp/SKILL.md) orient"}')"
+assert_eq "$out" "" "gate-picker-other: another plugin's skill link is ignored"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"[$loom:warped](/plugin-cache/loom/skills/warped/SKILL.md) orient"}')"
+assert_eq "$out" "" "gate-picker-other: a longer skill name is not a match"
+out="$(run_gate '{"hook_event_name":"UserPromptSubmit","prompt":"[$loom:../warp](/plugin-cache/loom/skills/warp/SKILL.md) orient"}')"
+assert_eq "$out" "" "gate-picker-other: an invalid skill name is ignored"
+
 # A harness that passes the payload as the first argument instead of stdin gets the same answer.
 out="$( ( cd "$R" && bash "$GATE" "$warp_payload" </dev/null 2>&1 ) )"; rc=$?
 assert_exit "$rc" "0" "gate-argv: a payload in the first argument exits 0"

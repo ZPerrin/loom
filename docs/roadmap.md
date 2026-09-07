@@ -16,9 +16,11 @@ dated orchestration state under `.loom/`. The design is the
 
 Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
 skills, the lint fixtures, four repo specs on loom itself reconciled against the code twice, spec
-slicing by capability and id, the skill cohesion pass, and the harness hooks: the opinion gate the
-moment a skill is invoked, lint on write, a hook by name under `.loom/scripts/`, and a tracer for
-learning what a host fires. Left, in order:
+slicing by capability and id, the skill cohesion pass, and the harness hooks: the opinion gate on
+recognized skill entries, lint on write, a hook by name under `.loom/scripts/`, and a tracer for
+learning what a host fires. Codex desktop's picker correction and native smoke results are in the
+[hook validation report](../.loom/reports/2026-09-07-codex-hooks-validation.md), with route options
+and the remaining Claude checks. Left, in order:
 
 - [ ] Orchestration state: `.loom/handoffs/` as the third data-plane directory, its template
       distilled from the orchestrator repo and warp's delegation opinion; a delegate worktree
