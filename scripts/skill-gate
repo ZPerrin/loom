@@ -4,10 +4,12 @@
 #   stdin: the harness payload, or the first argument where a host passes it that way.
 #   Registered in hooks/hooks.json on PreToolUse with matcher Skill for Claude's model-invoked
 #   skills, and on UserPromptSubmit for typed invocations on either host; an ordinary prompt
-#   gets a fast exit. PreToolUse: tool_input.skill names the skill ("loom:warp"),
-#   UserPromptSubmit: the prompt, when it opens with /loom:<skill> or $loom:<skill>, or
-#   mentions $<skill> anywhere; Codex's picker wraps a mention as [$loom:<skill>](path) or
-#   [$<skill>](path). Only the skill's name is read; a hook takes no input.
+#   gets a fast exit. PreToolUse: tool_input.skill names the skill, "loom:warp" or the bare
+#   "warp" a host resolved itself; another plugin's "x:warp" is not loom's. UserPromptSubmit:
+#   the prompt, when it opens with /loom:<skill>, $loom:<skill>, or the bare /<skill> a host
+#   resolved itself, or mentions $<skill> anywhere; Codex's picker wraps a mention as
+#   [$loom:<skill>](path) or [$<skill>](path).
+#   Only the skill's name is read; a hook takes no input.
 # The answer opens with the receipt: the skill, then whether .loom/skills/<skill>.md was read,
 # then which hook ran through skill-hook and how it exited, or that there is none, or that the
 # config was refused. The opinion and the hook's output follow. A
@@ -40,6 +42,8 @@ if [ "$event" = "UserPromptSubmit" ]; then
   case "$prompt" in
     /loom:*|\$loom:*)                      # the name ends at a space, an escape, or the string's close
       skill="${prompt#?loom:}"; skill="${skill%%[[:space:]]*}"; skill="${skill%%\\*}"; skill="${skill%%\"*}" ;;
+    /*)                                    # a bare /warp the host resolved itself; the checks below decide
+      skill="${prompt#/}"; skill="${skill%%[[:space:]]*}"; skill="${skill%%\\*}"; skill="${skill%%\"*}" ;;
     *) skill=""                            # a mention is looked for in the whole payload, so a quote before it hides nothing
        for s in $SKILLS; do
          case "$payload" in
@@ -53,7 +57,7 @@ else
   event="PreToolUse"
   case "$payload" in *"${q}tool_name${q}"*"${q}Skill${q}"*"${q}skill${q}"*) ;; *) exit 0 ;; esac
   skill="${payload#*"${q}skill${q}"}"; skill="${skill#*$q}"; skill="${skill%%$q*}"
-  case "$skill" in loom:*) skill="${skill#loom:}" ;; *) exit 0 ;; esac
+  case "$skill" in loom:*) skill="${skill#loom:}" ;; *:*) exit 0 ;; esac
 fi
 case "$skill" in ""|*[!a-z-]*) exit 0 ;; esac          # a skill name is lowercase letters and hyphens
 case " $SKILLS " in *" $skill "*) ;; *) exit 0 ;; esac

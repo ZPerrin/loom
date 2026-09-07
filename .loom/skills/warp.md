@@ -49,7 +49,10 @@ hiding signal: the operator still catches substantive misses at the gate.
 
 A harness validation records the installed plugin revision, the native payload, and the script
 count beside every claimed route, and a claim about a payload's shape is checked against the
-installed binary or a live event before it changes code.
+installed binary or a live event before it changes code. Orient names the installed plugin
+cache's revision against the checkout and diffs `scripts/`, `hooks/`, and `skills/` against it
+before any live hook check. A validation hook logs outside the repo and records whether
+`CLAUDE_PLUGIN_ROOT` was set, which tells a harness run from a floor run.
 
 ## Experiments
 
@@ -96,7 +99,11 @@ installed binary or a live event before it changes code.
   on every edit, nine times in one session, and was unregistered. Test: the next deterministic
   rail runs one session as an opt-in before it enters hooks.json, and its per-turn cost is named
   in that session's weave; if it survives, the rule moves into opinion.
-- 2026-09-07 (s9): The installed plugin cache lagged the checkout by one commit and the operator
-  had to say so. Test: the next warp report names the cache revision against the checkout
-  unprompted; if it does, the diff of scripts/, hooks/, and skills/ against the cache becomes a
-  line in Orient or a script.
+- 2026-09-07 (s10): A Sonnet delegate saw the gate's receipt and opinion and declined the
+  opinion's instruction because its brief said to report and nothing else. Test: the next
+  delegate brief says the loom gate's opinion is part of its instructions; if the Return shows it
+  honored, the line joins the contract shape under Delegation.
+- 2026-09-07 (s10): Two spellings the host resolves itself, a bare Skill name and a typed
+  `/warp`, reached the skill with no receipt, and the floor covered both before the matcher was
+  widened. Test: the next host or version check opens by typing each spelling the host accepts
+  before the matcher is trusted; if it misses none, the step moves into Validation.
