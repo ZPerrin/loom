@@ -1,6 +1,6 @@
 ---
 kind: report
-status: living
+status: hardened
 updated: 2026-09-07
 ---
 # Claude hook validation
@@ -8,7 +8,7 @@ updated: 2026-09-07
 Every route a loom skill can be invoked by on Claude Code, run live against the
 [hooks capability](../../docs/specs/hooks.md) with a hook on each of the six skills, a marker in
 each opinion, and a log outside the repo counting script runs apart from gate receipts. The
-Codex side is the [Codex report](2026-09-07-codex-hooks-validation.md).
+Codex side is the [Codex routes report](2026-09-07-codex-routes-validation.md).
 
 ## Setup
 

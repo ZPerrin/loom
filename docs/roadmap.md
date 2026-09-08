@@ -7,32 +7,33 @@ updated: 2026-09-07
 
 ## Now
 
-0.2.0 is living specs. Repo specs say what the code does, one per capability, kept in sync by
-reconciliation so work is reviewed against the spec apart from the plan; work specs and plans are
-dated orchestration state under `.loom/`. The design is the
-[spec grammar](../references/spec-grammar.md) and its
-[writing rules](../references/spec-writing-rules.md); the order of work is the
-[plan](../.loom/plans/2026-08-30-0.2.0-living-specs.md).
+0.2.0 is out. Specs are living documents, one per capability, written in a grammar the linter
+grades and kept true by a reconciliation skill. Every skill opens with its repo opinion and its
+hook's report, on Claude Code and Codex alike. Work state lives under `.loom/` as dated specs,
+plans, handoffs, and reports, and every session opens with a tools block that says where all of
+it is.
 
-Landed: spec checks in `doc-linter`, the grammar and writing rules, the `spec` and `refine-spec`
-skills, the lint fixtures, four repo specs on loom itself reconciled against the code twice, spec
-slicing by capability and id, the skill cohesion pass, the harness hooks: the skill gate and
-its receipt on every route a host reports and as each skill's own first step where a host reports
-none, a hook by name under `.loom/scripts/`, and a tracer for learning what a host fires; and the
-data plane whole: `.loom/handoffs/` and `.loom/reports/` beside `specs/` and `plans/` as shipped
-kinds with location overrides, the session slice opening with a tools block that
-`doc-slicer --tools` reprints for a delegate's brief, and every `[warp]` key defaulted. Each
-host's native routes and what each ran are in the
-[Codex](../.loom/reports/2026-09-07-codex-routes-validation.md) and
-[Claude](../.loom/reports/2026-09-07-claude-hooks-validation.md) validation reports. Dispatch
-itself is the 0.3 idea below. Left, in order:
+The next month is driving loom on real repos. What that teaches accumulates on `release/0.3.0`
+and lands under Next.
 
-- [ ] Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces
-      table, few hard constraints, output contract, a graph only where topology demands it) with
-      constraints-over-steps as the maintenance rule; superpowers and Pocock technique distilled
-      in. Ground it in the ablations before it hardens.
-- [ ] Release: weft cohesion pass, smoke-test the install on Claude Code and Codex, promote and
-      tag only with explicit approval.
+## Next
+
+0.3.0: orchestration patterns and experimentation.
+
+- Orchestration: a delegate worktree carries a marker naming its handoff, and its session slice
+  opens with that in place of the roadmap; the worktree-and-marker recipe becomes
+  `.loom/scripts/delegate`; a delegate is a background session (`claude --bg -w`) whose id the
+  handoff records; the orchestrator repo retires into the bare `.loom` + `.git` workspace.
+- Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
+  few hard constraints, output contract, a graph only where topology demands it),
+  constraints-over-steps as the maintenance rule, superpowers and Pocock technique distilled in;
+  the technique survey and the Pocock distillation are in `~/Downloads/living-specs-bundle`.
+- Skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
+  element present or absent, two or three objective tasks, the spec checks' pass rate as the
+  deterministic grader plus one judge rubric — to learn which scaffolding earns its lines before
+  the meta-reference hardens. Then keep ablating as maintenance: delete a step or block from a
+  skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
+  compensations only older models needed.
 
 ## Later
 
@@ -54,15 +55,4 @@ itself is the 0.3 idea below. Left, in order:
   - **RSI retro as the grader.** Each retro that records "pass missed X, operator caught X" is a labeled datum; the exemplar gallery grows from real misses, the only place taste data comes from. The shuttle ledger miss is datum #1.
 - taxonomy + rsi = powerful enough to codify into loom?
 
-- 0.3, orchestration: a delegate worktree carries a marker naming its handoff and its session
-  slice opens with that in place of the roadmap; the worktree-and-marker recipe graduates to
-  `.loom/scripts/delegate`; a delegate is a background session (`claude --bg -w`) whose id the
-  handoff records; the orchestrator repo retires into the bare `.loom` + `.git` workspace
-  pattern. Moved out of 0.2.0 on 2026-09-07.
 
-- skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
-  element present or absent, two or three objective tasks, the spec checks' pass rate as the
-  deterministic grader plus one judge rubric — to learn which scaffolding earns its lines before
-  the meta-reference hardens. Then keep ablating as maintenance: delete a step or block from a
-  skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
-  compensations only older models needed.

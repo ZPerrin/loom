@@ -18,3 +18,6 @@ worktree = "harness"
 [weave]
 cleanup = "always"
 rsi = "always"
+
+[lint.specs]
+max_file_lines = 500

@@ -33,7 +33,7 @@ These are the surfaces `spec` reads or writes directly; the full key map is the 
 - **Write what the code does.** A requirement comes from a test or the code it exercises, and its scenario names that test. Write it at the altitude of the promise: the how stays in code, and a test that pins the how gets no scenario. Where the operator rules the code wrong, write the ruling into an open line that stays until the fix lands. An assertion nobody found or ruled on is a defect, not a requirement.
 - **The linter is the authority.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-linter"` before presenting. A SPEC finding sends you back to the draft: fix the sentence, split the requirement, or drop the block; `[lint.specs]` stands as configured. A SPECWARN reaches the report by id.
 - **One file.** Write the spec and nothing else: no code, test, or config edit to make a scenario true. Drift you notice while reading is an `-> open` line, whichever side is wrong.
-- **Invariants are the operator's.** Ask for them in the fence and carry them in the report; a line under `## Invariants` is typed by the operator.
+- **Invariants are the operator's.** Ask for them in the fence and carry them in the report for the operator to type; the grammar's write tiers say who writes what.
 - **Ids and status are permanent.** Mint the next number in the capability's sequence, checking any open work spec; a new spec starts at 001 and is `living`; an existing spec keeps the status it has.
 
 ## Workflow

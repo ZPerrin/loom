@@ -40,7 +40,7 @@ The editorial ethos below is my working attempt at combating this. The jury is s
 - **Determinism over prose.** 
   - If determinism can carry it, prose shouldn't — and prose is where
     guidance lives only until it earns determinism. A step observed working the same way graduates
-    into a `hook` (a script or command named in `loom.toml`); the prose that described it drops to
+    into a `hook` (a script under `.loom/scripts/` or a command named in `loom.toml`); the prose that described it drops to
     a floor beneath it. Reserve prose for what can't yet execute.
 
 ## Kinds and homes

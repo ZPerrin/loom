@@ -107,4 +107,4 @@ or `off` (the shape check is skipped), default `strict`; the one-modal rule hold
 
 The grammar guarantees addressability: a slice recipe is (capabilities, ids, sections, scenarios
 on or off), and one recipe resolves to the same bytes every time, sorted by capability then id.
-Spec-aware slicing beside `doc-slicer` is on the [roadmap](../docs/roadmap.md).
+`doc-slicer --spec <capability> [id|section|ids]` is that recipe.

@@ -10,7 +10,7 @@ updated: 2026-09-07
 A capability is cut at the 20,000-foot view: a script may serve several, a feature may span
 several, and the rules a feature enforces are its scenarios. The token is one word in capitals.
 Each spec's Purpose says what the operator gets and its Non-goals name the neighbors; the six skills
-are prose and get specs once a run can be graded.
+are prose and have no spec.
 
 A knob's validation lives with the capability whose code reads it; knobs only skills read belong
 to control-plane. A spec absorbed within this repo is deleted, not superseded; `superseded` is

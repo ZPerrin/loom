@@ -1,6 +1,6 @@
 ---
 kind: report
-status: living
+status: hardened
 updated: 2026-09-07
 ---
 # Codex route validation
@@ -8,8 +8,7 @@ updated: 2026-09-07
 Live validation completed after operator hook review and task reload. One matcher miss was
 reproduced, fixed, and retested live; all routes below now have an observed result. Scope is R-HOOKS-007, R-HOOKS-008,
 R-HOOKS-012 and each skill's invocation floor. The
-[Claude report](2026-09-07-claude-hooks-validation.md) supplies the probe setup; the
-[earlier Codex report](2026-09-07-codex-hooks-validation.md) supplies the prior host findings.
+[Claude report](2026-09-07-claude-hooks-validation.md) supplies the probe setup.
 
 ## Setup
 
