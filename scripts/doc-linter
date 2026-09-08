@@ -5,7 +5,7 @@
 #         SPEC / SPECWARN (kind: spec docs, via lib/lint-spec.awk — warnings print but do not fail).
 #         LINT / LAYOUT / WARP / WEAVE / HOOK (loom.toml sections valid iff present).
 # Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + ears + word
-#         lists, [specs]/[plans] locations) or embedded defaults.
+#         lists, [specs]/[plans]/[handoffs]/[reports] locations) or embedded defaults.
 # Usage: doc-linter                 — full lint of the managed set.
 #        doc-linter --links [FILE…] — link checks only (BROKEN/CODELINK/MISSING) over the given
 #                                      files, or the whole non-excluded doc universe if none given;
@@ -28,6 +28,8 @@ lint.kinds=reference
 lint.kinds=roadmap
 lint.kinds=spec
 lint.kinds=plan
+lint.kinds=handoff
+lint.kinds=report
 lint.kinds=design
 lint.kinds=review
 lint.kinds=loom-config
@@ -241,10 +243,10 @@ check_lint_config() {
   esac
 }
 
-check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a relative in-repo path
+check_layout_config() { # [specs]/[plans]/[handoffs]/[reports] location keys are optional; iff set, a relative in-repo path
   [ -f "$CONF" ] || return 0
   local key v
-  for key in specs.repo_dir specs.work_dir plans.dir; do
+  for key in specs.repo_dir specs.work_dir plans.dir handoffs.dir reports.dir; do
     v="$(cfg_get "$key")"
     case "$v" in
       "") ;;
@@ -253,20 +255,13 @@ check_layout_config() { # [specs]/[plans] location keys are optional; iff set, a
   done
 }
 
-check_warp_config() { # optional [warp] section; required-and-valid iff present.
-  # Detect the header itself, as check_weave_config does: an empty [warp] yields no parsed
-  # keys, so key-detection would pass it as absent.
-  [ -f "$CONF" ] && grep -q '^\[warp\]' "$CONF" || return 0
-  local bc sr wt wh
-  bc="$(cfg_get warp.branch_convention)"
-  sr="$(cfg_get warp.source_repo)"
+check_warp_config() { # optional [warp] section; every key optional with a default (the harness opens
+  # the workspace before warp runs, so a required key is ceremony); worktree from its set iff set.
+  [ -f "$CONF" ] || return 0
+  local wt
   wt="$(cfg_get warp.worktree)"
-  wh="$(cfg_get warp.hook)"
-  [ -n "$bc" ] || add "WARP     .loom/loom.toml: [warp] missing branch_convention"
-  [ -n "$sr" ] || add "WARP     .loom/loom.toml: [warp] missing source_repo"
   case "$wt" in
-    always|never|ask|harness) ;;
-    "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask|harness)" ;;
+    ""|always|never|ask|harness) ;;
     *)  add "WARP     .loom/loom.toml: [warp] worktree=$wt invalid (use always|never|ask|harness)" ;;
   esac
 }

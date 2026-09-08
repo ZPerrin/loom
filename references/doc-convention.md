@@ -51,6 +51,11 @@ The editorial ethos below is my working attempt at combating this. The jury is s
 - **Work specs and plans** (`kind: spec`, `kind: plan`) are orchestration state: dated
   `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/` or their overrides,
   listed by age, committed or ignored as the operator chooses.
+- **Handoffs and reports** (`kind: handoff`, `kind: report`) are delegation state, dated the same
+  way under `.loom/handoffs/` and `.loom/reports/` or their overrides. A handoff is one brief per
+  delegated task: Objective, Scope in and out, Constraints, Acceptance, Return; it cites behavior
+  by reference and never restates it. A report is what that run found: the outcome, its evidence,
+  and what stays open.
 - **Status carries a doc's life**: `living` while iterated in place, `hardened` once settled,
   `superseded` when replaced. No draft state, no changes queue; git and a change-log section hold
   history.

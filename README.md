@@ -35,7 +35,7 @@ Two files configure them, and eight scripts do the deterministic work:
 | `.loom/scripts/<skill>` | one hook per skill, run the moment the skill is invoked |
 | `doc-scan` | lists the managed docs and the markdown that could join them |
 | `doc-linter` | keeps managed docs mechanically clean; specs are graded against the grammar |
-| `doc-slicer` | the SessionStart slice; one section, or one spec block by capability and id, on demand |
+| `doc-slicer` | the SessionStart slice; on demand, one section, one spec block by capability and id, or the tools block for a delegate's brief |
 | `doc-stamp` | sets frontmatter fields |
 | `skill-hook` | runs a skill's configured hook |
 | `lint-hook` | lints a managed doc the moment a write lands on it; not registered by the plugin, a repo opts in on its host's post-write event |

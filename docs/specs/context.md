@@ -6,7 +6,7 @@ updated: 2026-09-07
 # Capability: context
 
 ## Purpose
-context is how loom gives an agent the right slice of the repo at the right time: bearings and the configured sections of every managed doc when a session opens, then one addressable section, or one block of a spec, on demand. Slices are found by discovery and header, so an agent learns the shape of the docs and never their paths. Whoever dispatches pushes a slice and whoever works pulls the next one, which is progressive disclosure made mechanical.
+context is how loom gives an agent the right slice of the repo at the right time: the tools, bearings, and the configured sections of every managed doc when a session opens, then one addressable section, or one block of a spec, on demand. Slices are found by discovery and header, so an agent learns the shape of the docs and never their paths. Whoever dispatches pushes a slice and whoever works pulls the next one, which is progressive disclosure made mechanical.
 
 ## Invariants
 - INV-1: Every script runs on bash 3.2 and POSIX awk with no other dependency.
@@ -46,11 +46,20 @@ WHEN a session starts, the system SHALL emit every [context].slice_headers secti
 - THEN nothing from that doc is emitted under ## Now
 - AND a fenced code block inside a harvested section stays in its body
 
-### R-CONTEXT-003: The slice names the next ring
-WHEN a session starts, the system SHALL tell the agent how to pull one more section, or one block of a spec, on demand.
+### R-CONTEXT-003: The slice opens with the tools
+WHEN a session starts, the system SHALL open with the scripts' directory, one line per script, and the resolved spec and work-state locations.
 #### Scenario: preamble -> tests/test-doc-slicer.sh#advertises
 - WHEN the session slice runs
-- THEN its preamble names the header query and the spec query
+- THEN its tools block names the header query and the spec query
+#### Scenario: tools-listed -> tests/test-doc-slicer.sh#tools-listed
+- WHEN the session slice runs
+- THEN the block names the scripts' directory, doc-scan, doc-linter, and doc-stamp
+- AND the shipped repo spec, handoff, and report locations
+#### Scenario: locations-resolved -> tests/test-doc-slicer.sh#locations-resolved
+- GIVEN [specs] repo_dir and [handoffs] dir set and no [reports] section
+- WHEN the tools block is emitted
+- THEN the configured locations are named as directories with one trailing slash
+- AND reports takes its shipped default
 
 ### R-CONTEXT-004: One section on demand
 WHEN a header is queried, the system SHALL emit that section from every managed doc with its provenance and none of the session dressing.
@@ -140,6 +149,20 @@ WHEN a selector follows the capability, the system SHALL emit only the requireme
 #### Scenario: spec-bytes -> tests/test-doc-slicer.sh#spec-bytes
 - WHEN the same query runs twice
 - THEN the two outputs are identical
+
+### R-CONTEXT-011: The tools block on demand
+WHEN the tools block is queried, the system SHALL emit it alone, with no bearings and no harvested section.
+#### Scenario: tools-alone -> tests/test-doc-slicer.sh#tools-alone
+- WHEN doc-slicer --tools runs
+- THEN the block is emitted naming the scripts' directory
+- AND no Bearings heading, harvested section, or slices line appears
+#### Scenario: tools-bytes -> tests/test-doc-slicer.sh#tools-bytes
+- WHEN doc-slicer --tools runs twice
+- THEN the two outputs are identical
+#### Scenario: tools-noconf -> tests/test-doc-slicer.sh#tools-noconf
+- GIVEN a repo with no .loom directory
+- WHEN doc-slicer --tools runs
+- THEN the shipped locations are named and the run exits 0
 
 ## Non-goals
 - N-1: Which documents are managed, and the exclusion knob, belong to managed-docs.

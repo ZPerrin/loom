@@ -1,5 +1,5 @@
 ---
-kind: reference
+kind: report
 status: living
 updated: 2026-09-07
 ---

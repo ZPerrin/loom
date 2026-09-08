@@ -247,7 +247,7 @@ WHEN the gate recognizes a loom skill, the system SHALL open its answer with a r
 
 ## Non-goals
 - N-1: What warp or weave do with an outcome is their own prose.
-- N-2: Whether a warp or weave section is whole is control-plane.
+- N-2: What a warp or weave section must hold, and each key's default, is control-plane.
 - N-3: Which events a harness fires, and with what payload, is the harness's own contract; loom registers on the documented ones and records the rest with hook-trace.
 - N-4: Exactly-once execution of a hook is not promised; a hook may run again for one invocation, and tolerating the repeat is the hook's own job.
 - N-5: A read of a skill's file is not an invocation, so a skill invoked with no harness event prepares itself by its own prose, reading its opinion and running its hook through skill-hook.

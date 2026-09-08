@@ -1,5 +1,5 @@
 ---
-kind: reference
+kind: report
 status: living
 updated: 2026-09-07
 ---
@@ -8,8 +8,7 @@ updated: 2026-09-07
 Evidence and routing options for the [hooks capability](../../docs/specs/hooks.md), tested in
 Codex desktop against the local `release/0.2.0` candidate and prepared for validation with
 Claude. This supports steps 7 and 10 of the
-[release plan](../plans/2026-08-30-0.2.0-living-specs.md). The `.loom/reports/` convention will be
-formalized during orchestration work; this report uses the existing reference metadata.
+[release plan](../plans/2026-08-30-0.2.0-living-specs.md).
 
 ## Release handoff
 

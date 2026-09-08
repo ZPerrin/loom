@@ -3,6 +3,7 @@ set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/lib.sh"
 SLICER="$DIR/../scripts/doc-slicer"
+SCRIPTS="$(cd "$DIR/../scripts" && pwd)"
 R="$DIR/fixtures/slice-repo"
 
 rm -rf "$R/.git"
@@ -10,6 +11,14 @@ rm -rf "$R/.git"
 out="$(cd "$R" && bash "$SLICER" 2>&1)"; rc=$?
 assert_exit "$rc" "0" "slicer exits 0"
 assert_contains "$out" "Bearings"              "emits Bearings heading"
+assert_contains "$out" "## Tools"              "tools-listed: the slice opens with the tools block"
+assert_contains "$out" "\`$SCRIPTS\`"          "tools-listed: names the scripts directory"
+assert_contains "$out" "\`doc-scan\`"          "tools-listed: doc-scan"
+assert_contains "$out" "\`doc-linter\`"        "tools-listed: doc-linter"
+assert_contains "$out" "\`doc-stamp "          "tools-listed: doc-stamp"
+assert_contains "$out" "Repo specs: \`docs/specs/\`"      "tools-listed: the shipped repo specs location"
+assert_contains "$out" "handoffs \`.loom/handoffs/\`"     "tools-listed: the shipped handoffs location"
+assert_contains "$out" "reports \`.loom/reports/\`"       "tools-listed: the shipped reports location"
 assert_contains "$out" "seed: slice repo"      "includes recent commit"
 assert_contains "$out" "Shipping the slicer."  "harvests ## Now body"
 assert_contains "$out" "the example module"    "harvests ## Module Map body"
@@ -32,6 +41,7 @@ assert_contains "$qo" "Module overview body." "query: emits the section body"
 assert_contains "$qo" "mod/README.md"         "query: carries provenance annotation"
 assert_not_contains "$qo" "Bearings"          "query: no Bearings block"
 assert_not_contains "$qo" "opening context"   "query: no session preamble"
+assert_not_contains "$qo" "## Tools"          "query: no tools block"
 
 # Bare name is forgiving (Overview -> ## Overview).
 qo="$(cd "$R" && bash "$SLICER" --header Overview 2>&1)"
@@ -63,6 +73,17 @@ assert_exit "$qrc" "2" "query: missing header name exits 2"
 # Session mode advertises the on-demand query in the preamble.
 so="$(cd "$R" && bash "$SLICER" 2>&1)"
 assert_contains "$so" "--header" "session preamble advertises the query"
+
+# --- tools mode: the block alone, for a delegate's brief ---
+to="$(cd "$R" && bash "$SLICER" --tools 2>&1)"; trc=$?
+assert_exit "$trc" "0" "tools-alone: --tools exits 0"
+assert_contains "$to" "## Tools" "tools-alone: the block is emitted"
+assert_contains "$to" "\`$SCRIPTS\`" "tools-alone: names the scripts directory"
+assert_not_contains "$to" "Bearings" "tools-alone: no bearings"
+assert_not_contains "$to" "Shipping the slicer." "tools-alone: no harvested section"
+assert_not_contains "$to" "opening context" "tools-alone: no slices line"
+to2="$(cd "$R" && bash "$SLICER" --tools 2>&1)"
+assert_eq "$to2" "$to" "tools-bytes: the same query yields identical bytes"
 rm -rf "$R/.git"
 
 # No loom.toml: defaults (## Now header, no managed docs) -> Bearings only, no crash.
@@ -76,6 +97,9 @@ assert_exit "$nrc" "0" "no-config slicer exits 0"
 assert_contains "$nout" "Bearings"      "no-config still emits Bearings"
 assert_contains "$nout" "seed: no conf" "no-config includes git log"
 assert_contains "$nout" "Shipped header body." "no-config harvests the shipped ## Now header from a managed doc"
+nto="$(cd "$NC" && bash "$SLICER" --tools 2>&1)"; ntrc=$?
+assert_exit "$ntrc" "0" "tools-noconf: --tools with no config exits 0"
+assert_contains "$nto" "handoffs \`.loom/handoffs/\`" "tools-noconf: the shipped handoffs location is named"
 rm -rf "$NC"
 
 # session-start-degrades: an unparseable loom.toml is refused whole and the slice runs on
@@ -90,6 +114,7 @@ assert_exit "$dgrc" "0" "session-start-degrades: an unparseable config still exi
 assert_contains "$dgo" "Bearings"                     "session-start-degrades: bearings are still emitted"
 assert_contains "$dgo" "Shipping the default header." "session-start-degrades: the shipped ## Now header is harvested"
 assert_not_contains "$dgo" "The overridden header."   "session-start-degrades: no key from the refused file takes effect"
+assert_contains "$dgo" "## Tools"                     "session-start-degrades: the tools block is still emitted"
 rm -rf "$DG"
 
 # bearings-count: the commit count comes from [context].recent_commits, not a constant.
@@ -102,6 +127,20 @@ assert_contains "$bco" "commit: third"      "bearings-count: newest commit shown
 assert_contains "$bco" "commit: second"     "bearings-count: second commit shown"
 assert_not_contains "$bco" "commit: first"  "bearings-count: the third-newest commit is cut by recent_commits = 2"
 rm -rf "$BC"
+
+# locations-resolved: the tools block names each location from its key, or its shipped default,
+# as a directory with one trailing slash whatever the key held.
+LR="$DIR/fixtures/locations-repo"; rm -rf "$LR"; mkdir -p "$LR/.loom"
+printf '[specs]\nrepo_dir = "documentation/specs/"\n[handoffs]\ndir = ".loom/briefs"\n' > "$LR/.loom/loom.toml"
+( cd "$LR" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: locations" )
+lro="$(cd "$LR" && bash "$SLICER" --tools 2>&1)"; lrrc=$?
+assert_exit "$lrrc" "0" "locations-resolved: exits 0"
+assert_contains "$lro" "Repo specs: \`documentation/specs/\`" "locations-resolved: a configured repo_dir, one trailing slash"
+assert_contains "$lro" "handoffs \`.loom/briefs/\`" "locations-resolved: a configured handoffs dir"
+assert_contains "$lro" "reports \`.loom/reports/\`" "locations-resolved: an unset reports dir takes the shipped default"
+assert_contains "$lro" "plans \`.loom/plans/\`" "locations-resolved: an unset plans dir takes the shipped default"
+assert_not_contains "$lro" "docs/specs/" "locations-resolved: the default is not named when the key is set"
+rm -rf "$LR"
 
 # --- spec mode: one capability's spec, or one block of it, found by its Capability line ---
 SR="$DIR/fixtures/spec-slice-repo"; rm -rf "$SR"; mkdir -p "$SR/notes" "$SR/docs/specs"
