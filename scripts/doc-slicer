@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
 # doc-slicer — SessionStart context for loom (bash 3.2 + awk, no deps).
-# Emits a preamble, a git "Bearings" block, then harvests every section whose header is
-# in context.slice_headers across the discovered managed-doc set, each prefixed with a
-# context.inject_fields annotation (frontmatter values; `location` = the source path).
+# Emits the tools block (the scripts, how to run them, where repo specs and work state live),
+# a git "Bearings" block, then harvests every section whose header is in context.slice_headers
+# across the discovered managed-doc set, each prefixed with a context.inject_fields annotation
+# (frontmatter values; `location` = the source path).
 # Path-free: slices are found by discovery + header, so moving a file never breaks them.
 # Usage: doc-slicer                                    — SessionStart slice (hook mode).
+#        doc-slicer --tools                            — the tools block alone, for a delegate's
+#          brief or an agent that opened without the slice: this script's directory, one line
+#          per script, and the five locations from [specs], [plans], [handoffs], and [reports]
+#          or their shipped defaults. It reads no prompt, transcript, or document body.
 #        doc-slicer --header <name> [path-filter…]     — on-demand query: emit just that
 #          section (same provenance annotation) from every managed doc that has it,
 #          optionally narrowed to docs whose path contains a filter. "<name>" may be bare
 #          ("Overview") or exact ("## Overview" / "### Deep"). Exit 1 if nothing matched.
+#        doc-slicer --spec <capability> [selector]     — one spec, found by its first line
+#          "# Capability: <slug>" among managed kind: spec docs, never by path. A selector
+#          narrows it: a requirement id (R-TOKEN-NNN, the block with its scenarios), an
+#          invariant or non-goal id (INV-n, N-n, the one line), a section name (bare or
+#          exact), or "ids" (every requirement id with its title). Exit 1 if nothing matched.
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,13 +27,21 @@ PARSE_AWK="$SELF_DIR/lib/parse-toml.awk"
 ROOT="$(loom_repo_root)"
 
 MODE="session"
-QUERY_HDR=""
+QUERY_HDR=""; QUERY_CAP=""; QUERY_SEL=""
 if [ "${1:-}" = "--header" ]; then
   MODE="query"; shift
   QUERY_HDR="${1:-}"
   [ -n "$QUERY_HDR" ] || { echo "doc-slicer --header: missing header name" >&2; exit 2; }
   shift
   case "$QUERY_HDR" in "#"*) ;; *) QUERY_HDR="## $QUERY_HDR" ;; esac   # bare name → H2
+elif [ "${1:-}" = "--spec" ]; then
+  MODE="spec"; shift
+  QUERY_CAP="${1:-}"
+  [ -n "$QUERY_CAP" ] || { echo "doc-slicer --spec: missing capability name" >&2; exit 2; }
+  shift
+  QUERY_SEL="${1:-}"
+elif [ "${1:-}" = "--tools" ]; then
+  MODE="tools"; shift
 fi
 
 DEFAULT_CFG='context.recent_commits=15
@@ -44,15 +62,71 @@ case "$COMMITS" in ''|*[!0-9]*) COMMITS=15 ;; esac
 SLICE_HEADERS="$(cfg_get context.slice_headers)"
 INJECT_FIELDS="$(cfg_get context.inject_fields)"
 
+# a location as a directory: the configured key or its shipped default, one trailing slash.
+loc() { local v; v="$(cfg_get "$1")"; v="${v:-$2}"; printf '%s/' "${v%/}"; }
+REPO_SPECS="$(loc specs.repo_dir docs/specs)"
+WORK_SPECS="$(loc specs.work_dir .loom/specs)"
+PLANS_DIR="$(loc plans.dir .loom/plans)"
+HANDOFFS_DIR="$(loc handoffs.dir .loom/handoffs)"
+REPORTS_DIR="$(loc reports.dir .loom/reports)"
+
+# the tools block: what an agent needs to use loom here. Its inputs are this script's directory
+# and the five locations above, nothing else.
+emit_tools() {
+  printf '## Tools\n\n'
+  printf 'loom%ss scripts live at `%s`; run each with bash from the repo root:\n\n' "'" "$SELF_DIR"
+  printf -- '- `doc-scan`: the managed docs, and the markdown that could join them\n'
+  printf -- '- `doc-linter`: checks the managed docs, and a spec against the grammar\n'
+  printf -- '- `doc-slicer --header "<name>" [path-filter]`: one section, from every doc that has it\n'
+  printf -- '- `doc-slicer --spec <capability> [id|section|ids]`: one spec, or one block of it\n'
+  printf -- '- `doc-slicer --tools`: this block, for a delegate%ss brief\n' "'"
+  printf -- '- `doc-stamp <file> key=value ...`: sets frontmatter\n\n'
+  printf 'Config: `.loom/loom.toml`. Repo specs: `%s`. Dated work state: specs `%s`, plans `%s`, handoffs `%s` (one brief per delegated task), reports `%s` (what a run found, with its evidence).\n' \
+    "$REPO_SPECS" "$WORK_SPECS" "$PLANS_DIR" "$HANDOFFS_DIR" "$REPORTS_DIR"
+}
+
 # print the markdown under "<header>" in <file>, header line excluded, stop at next "## ".
+# Fenced code (``` or ~~~) is body, never a header: a fenced example of a section is not one,
+# and a fenced "## " line does not end the section it sits in.
 # Match is exact ($0 == hdr); trailing whitespace in the file would prevent a match.
 emit_section() { # $1=file $2=header
   [ -f "$1" ] || return 0
   awk -v hdr="$2" '
+    /^ ? ? ?(```|~~~)/ { if (cap) print; fence = !fence; next }
+    fence { if (cap) print; next }
     $0 == hdr { cap = 1; next }
     cap && /^## / { exit }
     cap { print }
   ' "$1"
+}
+
+# the capability a spec names: its first content line past the frontmatter is
+# "# Capability: <slug>". Prints the slug, or nothing for a doc that opens any other way.
+spec_capability() { # $1=file
+  awk '
+    NR == 1 && $0 == "---" { fm = 1; next }
+    fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next }
+    /^[ \t]*$/ { next }
+    { if ($0 ~ /^# Capability: /) { sub(/^# Capability: /, ""); print }; exit }
+  ' "$1"
+}
+
+# one block of a spec, by selector: none = the document past its frontmatter; "ids" = every
+# requirement id with its title; R-TOKEN-NNN = that requirement through its scenarios, up to
+# the next ### or ## line; INV-n / N-n = that one line; anything else = a section by header.
+emit_spec() { # $1=file $2=selector
+  case "$2" in
+    "")  awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 ~ /^---[ \t]*$/) fm = 0; next } { print }' "$1" ;;
+    ids) awk '/^### R-/ { sub(/^### /, ""); print }' "$1" ;;
+    R-*) awk -v id="$2" '
+           index($0, "### " id ": ") == 1 { cap = 1; print; next }
+           cap && (/^### / || /^## /) { exit }
+           cap && /^[ \t]*$/ { blank++; next }
+           cap { for (; blank > 0; blank--) print ""; print }
+         ' "$1" ;;
+    INV-*|N-*) awk -v id="$2" 'index($0, "- " id ": ") == 1 { print }' "$1" ;;
+    *)   hdr="$2"; case "$hdr" in "#"*) ;; *) hdr="## $hdr" ;; esac; emit_section "$1" "$hdr" ;;
+  esac
 }
 
 # one-line annotation for a managed doc, built from INJECT_FIELDS in order.
@@ -70,6 +144,9 @@ $INJECT_FIELDS
 EOF
   printf '%s' "$out"
 }
+
+# --- tools mode: the block alone ---
+if [ "$MODE" = "tools" ]; then emit_tools; exit 0; fi
 
 # --- query mode: one header, on demand — a section instead of a whole-file read ---
 if [ "$MODE" = "query" ]; then
@@ -95,8 +172,32 @@ EOF
   exit 1
 fi
 
+# --- spec mode: one capability's spec, or one block of it, found by its Capability line ---
+if [ "$MODE" = "spec" ]; then
+  found=""; hit=""
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    [ "$(frontmatter_field "$ROOT/$rel" kind)" = "spec" ] || continue
+    [ "$(spec_capability "$ROOT/$rel")" = "$QUERY_CAP" ] || continue
+    found=1
+    body="$(emit_spec "$ROOT/$rel" "$QUERY_SEL")"
+    [ -n "$body" ] || continue
+    hit=1
+    ann="$(annotate "$rel")"
+    [ -n "$ann" ] && printf '_%s_\n\n' "$ann"
+    printf '%s\n\n' "$body"
+  done <<EOF
+$(managed_docs "$ROOT")
+EOF
+  [ -n "$hit" ] && exit 0
+  if [ -n "$found" ]; then echo "doc-slicer --spec: no block \"$QUERY_SEL\" in capability $QUERY_CAP" >&2
+  else echo "doc-slicer --spec: no managed spec names capability \"$QUERY_CAP\"" >&2; fi
+  exit 1
+fi
+
 # --- session mode: the SessionStart slice ---
-printf '_The slices below are your opening context — the next ring of progressive disclosure past AGENTS.md. When a task goes past a slice, pull the next section on demand — `bash "%s/doc-slicer" --header "<name>" [path-filter]` — instead of reading whole files._\n\n' "$SELF_DIR"
+emit_tools
+printf '\n_The slices below are the opening context, the ring past AGENTS.md. When a task goes past one, pull the next section or spec block instead of reading whole files._\n\n'
 
 printf '## Bearings — recent activity (from git)\n\n_Where the work just was, newest first:_\n\n'
 git -C "$ROOT" log --oneline -"$COMMITS" 2>/dev/null || echo "(no git history)"

@@ -1,7 +1,7 @@
 ---
 kind: reference
 status: living
-updated: 2026-07-03
+updated: 2026-09-07
 ---
 # Doc convention
 
@@ -40,5 +40,23 @@ The editorial ethos below is my working attempt at combating this. The jury is s
 - **Determinism over prose.** 
   - If determinism can carry it, prose shouldn't — and prose is where
     guidance lives only until it earns determinism. A step observed working the same way graduates
-    into a `hook` (a script or command named in `loom.toml`); the prose that described it drops to
+    into a `hook` (a script under `.loom/scripts/` or a command named in `loom.toml`); the prose that described it drops to
     a floor beneath it. Reserve prose for what can't yet execute.
+
+## Kinds and homes
+
+- **Repo specs** (`kind: spec`) say what the code does: one living document per capability,
+  committed under `docs/specs/` or the `[specs].repo_dir` override. Ids are the join key across
+  files; filenames never are.
+- **Work specs and plans** (`kind: spec`, `kind: plan`) are orchestration state: dated
+  `yyyy-mm-dd-<slug-or-issue>.md` under `.loom/specs/` and `.loom/plans/` or their overrides,
+  listed by age, committed or ignored as the operator chooses.
+- **Handoffs and reports** (`kind: handoff`, `kind: report`) are delegation state, dated the same
+  way under `.loom/handoffs/` and `.loom/reports/` or their overrides. A handoff is one brief per
+  delegated task: Objective, Scope in and out, Constraints, Acceptance, Return; it cites behavior
+  by reference and never restates it. A report is what that run found: the outcome, its evidence,
+  and what stays open.
+- **Status carries a doc's life**: `living` while iterated in place, `hardened` once settled,
+  `superseded` when replaced. No draft state, no changes queue; git and a change-log section hold
+  history.
+- **Discovery is kind-based**, so placement never breaks hygiene. The managed set is its own index.

@@ -1,38 +1,48 @@
 ---
 kind: roadmap
 status: living
-updated: 2026-07-15
+updated: 2026-09-07
 ---
 # Roadmap
 
 ## Now
 
-- RSI baked into weave as a configuration control surface -> review session and find points of friction -> what helped more than hurt from the provided context, hooks, overrides, documentation etc.  What did any agent stumble on that we could automate or make more streamlined / clear etc.
-- additions are added to the override skills for the next turn -> goal is slowly move prose into deterministic rails if we can, or better context if we cant.
+0.2.0 is out. Specs are living documents, one per capability, written in a grammar the linter
+grades and kept true by a reconciliation skill. Every skill opens with its repo opinion and its
+hook's report, on Claude Code and Codex alike. Work state lives under `.loom/` as dated specs,
+plans, handoffs, and reports, and every session opens with a tools block that says where all of
+it is.
 
-- final plugin cohesion pass.
-
-- 0.1.0 Release
+The next month is driving loom on real repos. What that teaches accumulates on `release/0.3.0`
+and lands under Next.
 
 ## Next
 
-- **Cross-platform line-ending robustness (Windows + OS X) in the plugin itself.** Field finding
-  from jack (2026-07-12, Windows 11): a checkout with `core.autocrlf=true` and no `.gitattributes`
-  puts `\r` on every line, and the awk frontmatter parser in `scripts/lib/discover.sh` compares
-  `$0 != "---"` literally — so *every* doc reads as unmanaged. The failure is silent and total:
-  SessionStart injects only git bearings (no configured slices), `doc-slicer --header` finds
-  nothing, and `doc-linter` reports a vacuous "clean". Fix in the plugin, not per-repo: strip `\r`
-  in the frontmatter/section parsers (and audit the other awk/grep comparisons in `scripts/` for
-  the same trap), so loom behaves identically on Windows and OS X checkouts regardless of a repo's
-  eol config. Second Windows breakage, root-caused: `skill-hook`'s
-  `PATH="$ROOT/$scripts_dir:$PATH"` uses `git rev-parse --show-toplevel`, which returns `C:/…` on
-  Git Bash — the drive colon splits the PATH entry, so a bare-command hook never resolves.
-  Normalize with `cygpath -u` (or invoke the hook by path). Also worth absorbing: repos there
-  work around it with `hook = "bash .loom/scripts/<script>"`, and `ln -s` on Git Bash silently
-  copies — boot-style scripts need NTFS junctions/hardlinks (see jack's `worktree-boot.sh
-  link_dir`/`link_file` for a working pattern).
+0.3.0: orchestration patterns and experimentation.
 
-- (post-0.1.0) hook enforcement / determinism. tool-call hooks (PreToolUse/PostToolUse) are the enforced cross-tool rail -> fire on every matching tool call, can block or repair, read loom.toml for policy. scope by tool-name matcher + payload inspection (skills aren't tools, so no "my-plugin-only" filter). skill-frontmatter hooks would give enforced + skill-scoped but are claude-only. for 0.1.0 we ship prose + the prose-driven skill hooks ([skill].hook); graduate specific steps to enforced hooks later, driven by observed friction.
+- Orchestration: a delegate worktree carries a marker naming its handoff, and its session slice
+  opens with that in place of the roadmap; the worktree-and-marker recipe becomes
+  `.loom/scripts/delegate`; a delegate is a background session (`claude --bg -w`) whose id the
+  handoff records; the orchestrator repo retires into the bare `.loom` + `.git` workspace.
+- Skill-authoring meta-reference: the house format (contract paragraph, control-surfaces table,
+  few hard constraints, output contract, a graph only where topology demands it),
+  constraints-over-steps as the maintenance rule, superpowers and Pocock technique distilled in;
+  the technique survey and the Pocock distillation are in `~/Downloads/living-specs-bundle`.
+- Skill-format ablation: delegate a handful of cheap runs — a small model, each house-format
+  element present or absent, two or three objective tasks, the spec checks' pass rate as the
+  deterministic grader plus one judge rubric — to learn which scaffolding earns its lines before
+  the meta-reference hardens. Then keep ablating as maintenance: delete a step or block from a
+  skill, observe, let the deletion stand if nothing breaks. Keeps skills from carrying
+  compensations only older models needed.
+
+## Later
+
+- Dispatch beyond hand-authored handoffs; an RSI grading signal for slice recipes; a vendoring
+  build that emits standalone skill directories from the one source.
+- Skill-scoped hooks: SKILL.md frontmatter hooks are enforced for the rest of the session and are
+  Claude-only; a candidate once the tool-call rail has run.
+- Windows portability debt from the shell-only choice; the field findings are in `ed9f30b` and
+  `a33fe3e`.
 
 ## Ideas
 
@@ -43,11 +53,6 @@ updated: 2026-07-15
   - **Exemplars over rules.** Taste transmits few-shot. Embed one real before/after pair (the shuttle taxonomy doc with its ledger, and the cut version, one line of why) in the weft reference; a rules paragraph describes taste, a pair of documents transmits it.
   - **Tripwires over gates.** A doc-linter check flagging negation-density in `kind: reference` docs (retired/deprecated/never/don't/instead-of) that rejects nothing — it summons judgment: the next weft pass must justify or cut each flagged line. Style guide plus editor, not compiler.
   - **RSI retro as the grader.** Each retro that records "pass missed X, operator caught X" is a labeled datum; the exemplar gallery grows from real misses, the only place taste data comes from. The shuttle ledger miss is datum #1.
-- taxonomy + rsi = powerful enough to codify into harness?
+- taxonomy + rsi = powerful enough to codify into loom?
 
-## Milestones
 
-- [x] Prove-out across varied external repos
-- [ ] Smoke-test the install on Claude + Codex
-- [ ] Official git repository (final home)
-- [ ] Codify marketplace publishing

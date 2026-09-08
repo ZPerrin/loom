@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # doc-linter — doc hygiene for loom-managed Markdown (bash 3.2 + awk, no deps).
 # Managed set = discovery (frontmatter with a kind: key), via scripts/lib/discover.sh.
-# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs).
-# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses) or embedded defaults.
+# Checks: BROKEN, CODELINK, MISSING (links); FRONTMATTER (kind/status/updated); PLACEMENT (loom-config docs);
+#         SPEC / SPECWARN (kind: spec docs, via lib/lint-spec.awk — warnings print but do not fail).
+#         LINT / LAYOUT / WARP / WEAVE / HOOK (loom.toml sections valid iff present).
+# Config: <repo>/.loom/loom.toml ([lint] kinds/statuses, [lint.specs] budgets + ears + word
+#         lists, [specs]/[plans]/[handoffs]/[reports] locations) or embedded defaults.
 # Usage: doc-linter                 — full lint of the managed set.
 #        doc-linter --links [FILE…] — link checks only (BROKEN/CODELINK/MISSING) over the given
 #                                      files, or the whole non-excluded doc universe if none given;
@@ -25,14 +28,14 @@ lint.kinds=reference
 lint.kinds=roadmap
 lint.kinds=spec
 lint.kinds=plan
+lint.kinds=handoff
+lint.kinds=report
 lint.kinds=design
 lint.kinds=review
 lint.kinds=loom-config
 lint.statuses=living
 lint.statuses=hardened
-lint.statuses=superseded
-lint.statuses=scaffolding
-lint.statuses=ideation'
+lint.statuses=superseded'
 CONF="$ROOT/.loom/loom.toml"
 if [ -f "$CONF" ]; then
   CFG="$(awk -f "$PARSE_AWK" "$CONF")" || { echo "doc-linter: bad loom.toml" >&2; exit 2; }
@@ -48,8 +51,23 @@ DEFAULT_KINDS="$(default_get lint.kinds)"
 DEFAULT_STATUSES="$(default_get lint.statuses)"
 KINDS="${RAW_KINDS:-$DEFAULT_KINDS}"
 STATUSES="${RAW_STATUSES:-$DEFAULT_STATUSES}"
-CONFIG_DIR="$(cfg_get skills.config_dir)"; CONFIG_DIR="${CONFIG_DIR:-.loom}"; CONFIG_DIR="${CONFIG_DIR%/}"
+CONFIG_DIR=".loom/skills"   # the per-skill overrides; loom.toml and the data plane sit above them
 SCRIPTS_DIR="$(cfg_get skills.scripts_dir)"; SCRIPTS_DIR="${SCRIPTS_DIR:-.loom/scripts}"; SCRIPTS_DIR="${SCRIPTS_DIR%/}"
+
+# [lint.specs]: budgets, the ears knob, and word lists for the spec checker. Defaults here mirror
+# lib/lint-spec.awk; the toml overrides them, and banned/flagged arrays append to the checker's
+# built-in lists.
+SPEC_AWK="$SELF_DIR/lib/lint-spec.awk"
+SPEC_BUDGET_KEYS="max_norm_words max_purpose_sentences max_scenarios max_file_lines"
+# An invalid value is reported by check_lint_config; the checker itself runs at the shipped default.
+spec_budget() { local v; v="$(cfg_get "lint.specs.$1")"; case "$v" in ""|0*|*[!0-9]*) printf '%s' "$2" ;; *) printf '%s' "$v" ;; esac; }
+SPEC_MAX_NORM="$(spec_budget max_norm_words 30)"
+SPEC_MAX_PURPOSE="$(spec_budget max_purpose_sentences 3)"
+SPEC_MAX_SCEN="$(spec_budget max_scenarios 8)"
+SPEC_MAX_LINES="$(spec_budget max_file_lines 400)"
+SPEC_EARS="$(cfg_get lint.specs.ears)"; case "$SPEC_EARS" in strict|warn|off) ;; *) SPEC_EARS=strict ;; esac
+SPEC_BANNED="$(cfg_get lint.specs.banned | paste -s -d '|' -)"
+SPEC_FLAGGED="$(cfg_get lint.specs.flagged | paste -s -d '|' -)"
 
 # Known skills = basenames of the plugin's skills/ dirs (sibling of scripts/). Empty if absent.
 SKILLS=""
@@ -62,6 +80,9 @@ done
 
 FINDINGS=""
 add() { FINDINGS="${FINDINGS}$1
+"; }
+WARNS=""
+warn() { WARNS="${WARNS}$1
 "; }
 
 # Emit, per line of a markdown file, candidate findings. awk extracts; bash resolves
@@ -130,12 +151,36 @@ check_frontmatter() { # $1=file  (every managed doc has frontmatter; validate va
   esac
 }
 
-check_placement() { # $1=file $2=kind  — loom-config docs must live at <config_dir>/<skill>.md
+check_spec() { # $1=file — kind: spec docs run through the awk checker; tab-separated findings back
+  local f="$1" rel; rel="${f#"$ROOT"/}"
+  [ -f "$SPEC_AWK" ] || { add "SPEC     $rel: spec checker missing (${SPEC_AWK#"$SELF_DIR"/})"; return; }
+  local tab line sev rule ln rid msg rest
+  tab="$(printf '\t')"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    # split on literal tabs by hand: an IFS tab would collapse the empty rid field
+    sev="${line%%"$tab"*}";  rest="${line#*"$tab"}"
+    rule="${rest%%"$tab"*}"; rest="${rest#*"$tab"}"
+    ln="${rest%%"$tab"*}";   rest="${rest#*"$tab"}"
+    rid="${rest%%"$tab"*}";  msg="${rest#*"$tab"}"
+    case "$sev" in
+      error) add  "SPEC     $rel:$ln: $msg${rid:+ [$rid]} ($rule)" ;;
+      *)     warn "SPECWARN $rel:$ln: $msg${rid:+ [$rid]} ($rule)" ;;
+    esac
+  done < <(LC_ALL=C awk -v rel="$rel" \
+               -v max_norm_words="$SPEC_MAX_NORM" \
+               -v max_purpose_sentences="$SPEC_MAX_PURPOSE" -v max_scenarios="$SPEC_MAX_SCEN" \
+               -v max_file_lines="$SPEC_MAX_LINES" -v ears="$SPEC_EARS" \
+               -v extra_banned="$SPEC_BANNED" -v extra_flagged="$SPEC_FLAGGED" \
+               -f "$SPEC_AWK" "$f")
+}
+
+check_placement() { # $1=file $2=kind  — loom-config docs must live at .loom/skills/<skill>.md
   [ "$2" = "loom-config" ] || return 0
   local f="$1" rel dir base; rel="${f#"$ROOT"/}"
   dir="$(dirname "$rel")"; base="$(basename "$rel" .md)"
   if [ "$dir" != "$CONFIG_DIR" ]; then
-    add "PLACEMENT $rel: loom-config outside config_dir ($CONFIG_DIR/) — its skill won't find it"
+    add "PLACEMENT $rel: loom-config outside .loom/skills/ — its skill won't find it"
     return
   fi
   if [ -n "$SKILLS" ] && ! in_list "$base" "$SKILLS"; then
@@ -157,34 +202,73 @@ validate_hook_form() {
   fi
 }
 
-check_lint_config() {
-  [ -f "$CONF" ] || return 0
-  [ -n "$RAW_KINDS" ] || add "LINT     .loom/loom.toml: [lint] missing kinds"
-  [ -n "$RAW_STATUSES" ] || add "LINT     .loom/loom.toml: [lint] missing statuses"
+check_skill_hooks() { # every [<skill>].hook value, and every script named after a skill
+  local v s f b       # under SCRIPTS_DIR (with or without .sh), gets the executable check
+  if [ -f "$CONF" ]; then
+    while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      validate_hook_form "$v"
+    done <<EOF
+$(printf '%s\n' "$CFG" | awk -F= '$1 ~ /^[a-z-]+\.hook$/ { sub(/^[^=]*=/, ""); print }')
+EOF
+  fi
+  while IFS= read -r s; do
+    [ -n "$s" ] || continue
+    for f in "$ROOT/$SCRIPTS_DIR/$s" "$ROOT/$SCRIPTS_DIR/$s.sh"; do
+      [ -f "$f" ] && [ ! -x "$f" ] || continue
+      b="${f##*/}"
+      case "$FINDINGS" in *"hook script $b not executable"*) continue ;; esac   # already named by a key
+      add "HOOK     $SCRIPTS_DIR/$b: script named after a skill but not executable (chmod +x $SCRIPTS_DIR/$b)"
+    done
+  done <<EOF
+$SKILLS
+EOF
 }
 
-check_warp_config() { # the [warp] section is optional, but required-and-valid iff present
-  printf '%s\n' "$CFG" | grep -q '^warp\.' || return 0
-  local bc sr sb wt wh
-  bc="$(cfg_get warp.branch_convention)"
-  sr="$(cfg_get warp.source_repo)"
-  sb="$(cfg_get warp.source_branch)"
+check_lint_config() {
+  [ -f "$CONF" ] || return 0
+  # kinds and statuses are optional: an absent key takes the shipped vocabulary (INV-2).
+  local key v
+  for key in $SPEC_BUDGET_KEYS; do   # [lint.specs] is optional; budgets must be positive integers iff set
+    v="$(cfg_get "lint.specs.$key")"
+    case "$v" in
+      "") ;;
+      0*|*[!0-9]*) add "LINT     .loom/loom.toml: [lint.specs] $key=$v not a positive integer" ;;
+    esac
+  done
+  v="$(cfg_get lint.specs.ears)"       # [lint.specs].ears is optional; strict|warn|off iff set
+  case "$v" in
+    ""|strict|warn|off) ;;
+    *) add "LINT     .loom/loom.toml: [lint.specs] ears=$v not strict|warn|off" ;;
+  esac
+}
+
+check_layout_config() { # [specs]/[plans]/[handoffs]/[reports] location keys are optional; iff set, a relative in-repo path
+  [ -f "$CONF" ] || return 0
+  local key v
+  for key in specs.repo_dir specs.work_dir plans.dir handoffs.dir reports.dir; do
+    v="$(cfg_get "$key")"
+    case "$v" in
+      "") ;;
+      /*|../*|*/../*|*/..|..) add "LAYOUT   .loom/loom.toml: [${key%%.*}] ${key#*.}=$v must be a relative path inside the repo" ;;
+    esac
+  done
+}
+
+check_warp_config() { # optional [warp] section; every key optional with a default (the harness opens
+  # the workspace before warp runs, so a required key is ceremony); worktree from its set iff set.
+  [ -f "$CONF" ] || return 0
+  local wt
   wt="$(cfg_get warp.worktree)"
-  wh="$(cfg_get warp.hook)"
-  [ -n "$bc" ] || add "WARP     .loom/loom.toml: [warp] missing branch_convention"
-  [ -n "$sr" ] || add "WARP     .loom/loom.toml: [warp] missing source_repo"
-  [ -n "$sb" ] || add "WARP     .loom/loom.toml: [warp] missing source_branch"
   case "$wt" in
-    always|never|ask|harness) ;;
-    "") add "WARP     .loom/loom.toml: [warp] missing worktree (always|never|ask|harness)" ;;
+    ""|always|never|ask|harness) ;;
     *)  add "WARP     .loom/loom.toml: [warp] worktree=$wt invalid (use always|never|ask|harness)" ;;
   esac
-  validate_hook_form "$wh"
 }
 
 check_weave_config() { # optional [weave] section; required-and-valid iff present.
   # Single-knob section: detect the header itself — an empty [weave] yields no parsed
-  # keys, so key-detection (as in check_warp_config) would miss a missing cleanup.
+  # keys, so key-detection would miss a missing cleanup.
   [ -f "$CONF" ] && grep -q '^\[weave\]' "$CONF" || return 0
   local cl rsi wh
   cl="$(cfg_get weave.cleanup)"
@@ -199,7 +283,6 @@ check_weave_config() { # optional [weave] section; required-and-valid iff presen
     *)  add "WEAVE    .loom/loom.toml: [weave] rsi=$rsi invalid (use always|never|ask)" ;;
   esac
   wh="$(cfg_get weave.hook)"
-  validate_hook_form "$wh"
 }
 
 # --- run ---
@@ -230,12 +313,16 @@ else
     check_links "$f"
     check_frontmatter "$f"
     check_placement "$f" "$k"
+    [ "$k" = "spec" ] && check_spec "$f"
   done < <(managed_docs "$ROOT")
   check_lint_config
+  check_layout_config
   check_warp_config
   check_weave_config
+  check_skill_hooks
 fi
 
+[ -n "$WARNS" ] && printf '%s' "$WARNS"
 if [ -z "$FINDINGS" ]; then
   [ "$MODE" = "links" ] && echo "doc-linter --links: clean ✓" || echo "doc-linter: clean ✓"
   exit 0

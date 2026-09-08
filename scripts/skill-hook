@@ -1,23 +1,45 @@
 #!/usr/bin/env bash
-# skill-hook — run a skill's configured [<skill>] hook with scripts_dir on PATH.
-#   usage: skill-hook <skill> [args…]
-# exit: 0 hook ran clean · 3 no hook configured · other = hook's own failing code.
+# skill-hook — run a skill's hook with scripts_dir on PATH: the [<skill>].hook key, or beneath
+# it an executable under scripts_dir named after the skill (warp or warp.sh). The harness fires
+# it through skill-gate the moment the skill is invoked; the skill's prose runs it as the floor.
+# A hook takes no input: it is what the repo always wants run at that moment.
+#   usage: skill-hook [--name] <skill>
+# --name prints the hook it would run, key or conventional file, and runs nothing; the exit
+# codes below still apply, so 3 says there is none and 2 that the config was refused.
+# exit: 0 hook ran clean · 2 loom.toml unparseable · 3 no hook configured ·
+#       other = hook's own failing code.
 # The runner does not interpret failure — the calling skill does (warp: fall to floor;
-# weave: stop close-out). See references/tooling.md.
+# weave: stop close-out).
 set -u
 SELF="$(cd "$(dirname "$0")" && pwd)"
-skill="${1:?usage: skill-hook <skill> [args…]}"; shift || true
+name_only=""
+if [ "${1:-}" = "--name" ]; then name_only=1; shift; fi
+skill="${1:?usage: skill-hook [--name] <skill>}"
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CONF="$ROOT/.loom/loom.toml"
-[ -f "$CONF" ] || exit 3
+CFG=""
 
-CFG="$(awk -f "$SELF/lib/parse-toml.awk" "$CONF" 2>/dev/null)"
+# A config the parser refuses is refused whole: its partial stdout would name a hook the
+# operator never validly configured, and a broken config is not "no hook" (exit 3) — it is a
+# repo the runner cannot read, so say so once and stop. No config file is the shipped defaults.
+if [ -f "$CONF" ] && ! CFG="$(awk -f "$SELF/lib/parse-toml.awk" "$CONF" 2>/dev/null)"; then
+  printf 'skill-hook: unparseable .loom/loom.toml — refusing to run the %s hook\n' "$skill" >&2
+  exit 2
+fi
 get() { printf '%s\n' "$CFG" | awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print}'; }
 
-hook="$(get "${skill}.hook")"
-[ -n "$hook" ] || exit 3
-
 scripts_dir="$(get skills.scripts_dir)"; scripts_dir="${scripts_dir:-.loom/scripts}"; scripts_dir="${scripts_dir%/}"
-PATH="$ROOT/$scripts_dir:$PATH" bash -c "$hook" _ "$@"
+hook="$(get "${skill}.hook")"
+# Convention beneath the key: an executable under scripts_dir named after the skill, with or
+# without .sh, is the hook when no key names one.
+if [ -z "$hook" ]; then
+  for cand in "$skill" "$skill.sh"; do
+    if [ -f "$ROOT/$scripts_dir/$cand" ] && [ -x "$ROOT/$scripts_dir/$cand" ]; then hook="$cand"; break; fi
+  done
+fi
+[ -n "$hook" ] || exit 3
+if [ -n "$name_only" ]; then printf '%s\n' "$hook"; exit 0; fi
+# A bare script name resolves on that PATH; anything else is a shell command.
+PATH="$ROOT/$scripts_dir:$PATH" bash -c "$hook"
 exit $?

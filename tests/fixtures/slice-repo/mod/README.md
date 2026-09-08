@@ -8,3 +8,9 @@ updated: 2026-06-23
 ## Overview
 
 Module overview body.
+
+```md
+## Now
+
+Fenced Now body.
+```

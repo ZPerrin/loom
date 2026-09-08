@@ -47,4 +47,34 @@ assert_not_contains "$xman" "sub/c.md" "excluded prefix drops sub/c.md from mana
 assert_contains    "$xman" "a.md"     "non-excluded managed doc still present"
 rm -rf "$R/.git" "$R/.loom"
 
+# no-partial-effect: a config the parser refuses yields no excludes at all. The exclude sits
+# above the unparseable line, so a read that stopped at the error and kept what it had would
+# drop sub/c.md; refusing the file whole keeps the whole universe.
+rm -rf "$R/.git" "$R/.loom"
+mkdir -p "$R/.loom"
+printf '[discovery]\nexclude = ["sub"]\n\n[lint]\nbad = { inline = "table" }\n' > "$R/.loom/loom.toml"
+( cd "$R" && test_git_init && git add a.md b.md sub/c.md .gitignore .loom/loom.toml )
+assert_eq "$(doc_excludes "$R")" "" "no-partial-effect: a refused config yields no exclude prefixes"
+bman="$(managed_docs "$R")"
+assert_contains "$bman" "sub/c.md" "no-partial-effect: the exclude above the bad line does not take effect"
+assert_contains "$bman" "a.md"     "no-partial-effect: the rest of the repo is still discovered"
+rm -rf "$R/.git" "$R/.loom"
+
+# no-git-fallback: outside a git checkout the universe comes from a bounded find. The probe
+# directory sits inside loom's own worktree, so GIT_CEILING_DIRECTORIES stops git's upward
+# search at tests/fixtures and makes it genuinely not-a-checkout.
+NG="$DIR/fixtures/nogit-dir"; rm -rf "$NG"; mkdir -p "$NG/sub"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# n\n' > "$NG/n.md"
+printf -- '---\nkind: spec\nstatus: living\nupdated: 2026-09-06\n---\n# d\n' > "$NG/sub/d.md"
+export GIT_CEILING_DIRECTORIES="$DIR/fixtures"
+if git -C "$NG" rev-parse --git-dir >/dev/null 2>&1; then is_repo=yes; else is_repo=no; fi
+nguni="$(doc_universe "$NG")"
+ngman="$(managed_docs "$NG")"
+unset GIT_CEILING_DIRECTORIES
+assert_eq "$is_repo" "no" "no-git-fallback: the probe directory is not a git checkout"
+assert_contains "$nguni" "n.md"     "no-git-fallback: top-level markdown is still found"
+assert_contains "$nguni" "sub/d.md" "no-git-fallback: nested markdown is still found"
+assert_contains "$ngman" "sub/d.md" "no-git-fallback: the found files still classify as managed"
+rm -rf "$NG"
+
 finish

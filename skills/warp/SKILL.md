@@ -9,21 +9,20 @@ Open a unit of work. warp orients the session, establishes the branch/worktree w
 
 `warp` handles two repo states:
 
-- **Unconfigured:** no `[warp]` section exists in `.loom/loom.toml`; configure the flow or orient only.
+- **Unconfigured:** no `[warp]` section exists in `.loom/loom.toml`, so every key is at its default; configure the flow or orient only.
 - **Configured:** `[warp]` section exists in `.loom/loom.toml`; run the confirmed flow and stop only for real session unknowns or git safety.
 
 ## Warp Control Surfaces
 
-These are the surfaces `warp` reads or writes directly. The full `.loom/loom.toml` key map lives in the reference project.
+These are the surfaces `warp` reads or writes directly; the full key map is the [reference project](../../references/reference-project.md).
 
 | Surface | Warp uses it for |
 |---|---|
-| `[warp].branch_convention` | session-open branch naming pattern, or `ask` |
-| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` |
-| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` |
-| `[warp].source_branch` | base branch new work forks from |
-| `[warp].hook` | optional session-open command, run via `skill-hook` |
-| `.loom/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
+| `[warp].branch_convention` | session-open branch naming pattern, or `ask` (the default) |
+| `[warp].worktree` | worktree behavior: `always`, `never`, `ask`, or `harness` (the default) |
+| `[warp].source_repo` | local path or GitHub ref used to interpret `/warp <arg>` (default `.`) |
+| `[warp].hook` | optional invocation command: run through `skill-gate` the moment warp is invoked, by the harness or by this skill's floor; its receipt and report arrive as context |
+| `.loom/skills/warp.md` | repo opinion for orientation, workspace setup, and kickoff |
 | `.loom/scripts/*` | conventional home for hook scripts |
 
 ## Workflow Graph
@@ -44,37 +43,39 @@ flowchart TD
 
 ## Workflow
 
+The gate first: a `loom gate: warp` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/warp.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" warp`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Configure - approval boundary
 
 Use only on first run, missing `[warp]`, or `/warp configure`.
 
-- Survey how the repo opens work: branch names, source branch, worktree habit, ticket refs, existing `.loom/warp.md`, and open scripts.
-- Propose the `[warp]` knobs and any `.loom/warp.md` repo opinion.
+- Survey how the repo opens work: branch names, worktree habit, ticket refs, existing `.loom/skills/warp.md`, and open scripts.
+- Propose the `[warp]` knobs and any `.loom/skills/warp.md` repo opinion.
 - Write nothing until the operator approves the exact diff.
 - If the operator declines, write nothing and continue to Orient only.
 
 ### 2. Orient - load enough context
 
-- Read `.loom/warp.md` if present, including any `## Experiments` a prior weave retro filed for this session to weigh.
-- Treat the SessionStart slice as already loaded; pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`.
+- Weigh the repo opinion the gate carried, including any `## Experiments` a prior weave retro filed for this session.
+- Treat the SessionStart slice as already loaded; if the opening context shows no slice, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer"` first. Pull extra sections with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --header "<name>" [path-filter]`, and a spec or one of its blocks with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/doc-slicer" --spec <capability> [id|section|ids]`.
 - Resolve `/warp <arg>` through `source_repo`: GitHub ref means fetch the issue/PR; local path means free-text work description; no arg means ask only if needed.
 - Do not mutate the workspace before orientation.
 
 ### 3. Open - establish the workspace
 
-- If `[warp] hook` is set, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" warp "<slug>"`.
-- Hook exit `0`: verify the working directory and continue.
-- Hook exit `3`: no hook; open by hand.
-- Other hook exit: surface the failure, then fall back to the prose floor unless git safety blocks.
-- Manual open: name the branch from `branch_convention`, branch from `source_repo` / `source_branch`, and apply `worktree`.
+- The hook, `.loom/scripts/warp` or `[warp].hook`, rules the open, by the receipt's hook line or your own run of it.
+- Ran, exit 0: verify the working directory and continue.
+- None, or exit 3: open by hand.
+- Failed: surface the failure, then fall back to the prose floor unless git safety blocks.
+- Manual open: name the branch from `branch_convention`, fork from the checkout warp was invoked on unless the invocation names a base, and apply `worktree`.
 - `worktree = always|ask` means the session works inside the worktree; verify `pwd` before the first edit.
-- `worktree = harness` delegates worktree creation to the host harness; a hook there handles only residual setup.
+- `worktree = harness`, the default, leaves the worktree and its branch to the host harness: verify `pwd`, and leave renaming the branch to a hook.
 - Never discard, stash, switch away from, or move uncommitted work without confirmation.
 
 ### 4. Kick off - compose or hand back
 
-Compose only what `.loom/warp.md` names: a brainstorm, plan, code pass, or no tool at all. If a named tool is absent, say so and continue with an oriented workspace.
+Compose only what `.loom/skills/warp.md` names: a brainstorm, plan, code pass, or no tool at all. If a named tool is absent, say so and continue with an oriented workspace.
 
 ## Output
 
-Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/warp.md` changes. warp never commits.
+Report the oriented work, loaded context, branch/worktree and verified working directory, hook result, kickoff action or handback, and any named tool that was unavailable. In configure mode, report the `[warp]` knobs and `.loom/skills/warp.md` changes.

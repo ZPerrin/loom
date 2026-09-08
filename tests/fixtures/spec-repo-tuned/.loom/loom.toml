@@ -1,0 +1,6 @@
+[lint]
+kinds = ["readme", "spec"]
+statuses = ["living"]
+
+[lint.specs]
+max_norm_words = 12

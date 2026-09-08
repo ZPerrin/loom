@@ -24,7 +24,7 @@ assert_contains "$dout" "FRONTMATTER"       "reports bad frontmatter kind"
 assert_contains "$dout" "my mod/README.md"  "spaced-dir managed doc is checked (no word-split)"
 assert_not_contains "$dout" "STAMP"         "STAMP tier removed"
 assert_contains "$dout" "PLACEMENT"          "reports misplaced loom-config doc"
-assert_contains "$dout" "outside config_dir" "flags loom-config in the wrong directory"
+assert_contains "$dout" "outside .loom/" "flags loom-config in the wrong directory"
 assert_contains "$dout" "no skill named"     "flags loom-config with a non-skill basename"
 rm -rf "$DIR/fixtures/repo-dirty/.git"
 
@@ -67,16 +67,15 @@ assert_contains "$lo" "status=frozen not allowed" "configured statuses are enfor
 rm -f "$LR/docs/playbook.md"
 printf '[discovery]\nexclude = ["docs/archive"]\n' > "$LR/.loom/loom.toml"
 lo="$(cd "$LR" && bash "$LINTER" 2>&1)"; lrc=$?
-assert_exit "$lrc" "1" "loom.toml without lint vocab: exit 1"
-assert_contains "$lo" "[lint] missing kinds" "missing lint kinds is explicit"
-assert_contains "$lo" "[lint] missing statuses" "missing lint statuses is explicit"
+assert_exit "$lrc" "0" "loom.toml without lint vocab: exit 0, the shipped vocabulary applies"
+assert_not_contains "$lo" "[lint] missing" "an absent [lint] section is not a finding"
 assert_not_contains "$lo" "kind=readme not allowed" "missing lint vocab falls back to shipped kind defaults"
 assert_not_contains "$lo" "status=living not allowed" "missing lint vocab falls back to shipped status defaults"
 
 rm -rf "$LR"
 
 # --- [warp] section validation (control-plane config enforcement) ---
-# Optional section; when present, the linter requires the core knobs, valid.
+# Optional section, every key optional with a default; worktree must be from its set iff set.
 WR="$DIR/fixtures/warp-repo"
 rm -rf "$WR"; mkdir -p "$WR/.loom"
 ( cd "$WR" && test_git_init )
@@ -88,36 +87,28 @@ assert_not_contains "$wo" "WARP" "[warp] absent: no warp finding"
 assert_exit "$wrc" "0" "[warp] absent: clean exit"
 
 # Present + valid -> no WARP finding.
-printf '[warp]\nbranch_convention = "zeb/<slug>"\nworktree = "never"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
+printf '[warp]\nbranch_convention = "zeb/<slug>"\nworktree = "never"\nsource_repo = "."\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
 assert_not_contains "$wo" "WARP" "valid [warp]: no warp finding"
 
-# Missing worktree knob -> finding naming it, exit 1.
-printf '[warp]\nbranch_convention = "x"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
+# absent-knob: a section without worktree takes the default; no finding, exit 0.
+printf '[warp]\nbranch_convention = "x"\nsource_repo = "."\n' > "$WR/.loom/loom.toml"
 wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
-assert_exit "$wrc" "1" "[warp] missing knob: exit 1"
-assert_contains "$wo" "WARP"     "[warp] missing worktree: warp finding"
-assert_contains "$wo" "worktree" "[warp] names the missing worktree knob"
+assert_exit "$wrc" "0" "absent-knob: [warp] without worktree exits 0"
+assert_not_contains "$wo" "WARP" "absent-knob: an absent key takes its default"
 
-# Invalid worktree value -> finding naming the bad value.
-printf '[warp]\nbranch_convention = "x"\nworktree = "sometimes"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
-wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
-assert_contains "$wo" "sometimes" "[warp] invalid worktree value flagged"
+# empty-warp: a bare header takes every default; no finding, exit 0.
+printf '[warp]\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
+assert_exit "$wrc" "0" "[warp] empty-warp section: exit 0"
+assert_not_contains "$wo" "WARP" "[warp] empty-warp: no finding"
 
-# Missing branch_convention -> finding.
-printf '[warp]\nworktree = "ask"\nsource_repo = "."\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
-wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
-assert_contains "$wo" "branch_convention" "[warp] missing branch_convention: finding"
-
-# Missing source_repo -> finding.
-printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\nsource_branch = "main"\n' > "$WR/.loom/loom.toml"
-wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
-assert_contains "$wo" "source_repo" "[warp] missing source_repo: finding"
-
-# Missing source_branch -> finding.
-printf '[warp]\nbranch_convention = "x"\nworktree = "ask"\nsource_repo = "."\n' > "$WR/.loom/loom.toml"
-wo="$(cd "$WR" && bash "$LINTER" 2>&1)"
-assert_contains "$wo" "source_branch" "[warp] missing source_branch: finding"
+# Invalid worktree value -> finding naming the bad value, exit 1.
+printf '[warp]\nworktree = "sometimes"\n' > "$WR/.loom/loom.toml"
+wo="$(cd "$WR" && bash "$LINTER" 2>&1)"; wrc=$?
+assert_exit "$wrc" "1" "[warp] invalid worktree: exit 1"
+assert_contains "$wo" "WARP" "[warp] invalid worktree: warp finding"
+assert_contains "$wo" "worktree=sometimes" "[warp] invalid worktree value flagged"
 
 rm -rf "$WR"
 
@@ -150,6 +141,17 @@ printf '[weave]\ncleanup = "sometimes"\n' > "$WV/.loom/loom.toml"
 fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
 assert_contains "$fo" "sometimes" "[weave] invalid cleanup value flagged"
 
+# rsi is the section's optional knob: absent is fine, a value outside the set is not.
+printf '[weave]\ncleanup = "always"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"
+assert_not_contains "$fo" "rsi" "[weave] absent rsi: no finding (on by default when unset)"
+
+printf '[weave]\ncleanup = "always"\nrsi = "sometimes"\n' > "$WV/.loom/loom.toml"
+fo="$(cd "$WV" && bash "$LINTER" 2>&1)"; frc=$?
+assert_exit "$frc" "1" "[weave] invalid rsi: exit 1"
+assert_contains "$fo" "WEAVE"         "[weave] invalid rsi: weave finding"
+assert_contains "$fo" "rsi=sometimes" "[weave] invalid rsi value flagged"
+
 rm -rf "$WV"
 
 # --- executable-hooks config validation ---
@@ -157,14 +159,13 @@ HR="$DIR/fixtures/hook-lint"; rm -rf "$HR"; mkdir -p "$HR/.loom/scripts"
 mk_toml() { printf '%s\n' "$1" > "$HR/.loom/loom.toml"; }
 lint_hr() { (cd "$HR" && rm -rf .git && test_git_init && git add -A 2>/dev/null; bash "$LINTER" 2>&1); }
 
-# valid: warp with source_repo/branch + worktree=harness + a hook naming an executable script
+# valid: warp with source_repo + worktree=harness + a hook naming an executable script
 printf '#!/usr/bin/env bash\necho hi\n' > "$HR/.loom/scripts/warp.sh"; chmod +x "$HR/.loom/scripts/warp.sh"
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
 [warp]
 branch_convention = "feature/<slug>"
 source_repo = "."
-source_branch = "master"
 worktree = "harness"
 hook = "warp.sh"'
 o="$(lint_hr)"; assert_not_contains "$o" "WARP" "valid warp+hook config: no WARP finding"
@@ -173,16 +174,8 @@ o="$(lint_hr)"; assert_not_contains "$o" "WARP" "valid warp+hook config: no WARP
 mk_toml '[warp]
 branch_convention = "feature/<slug>"
 source_repo = "."
-source_branch = "master"
 worktree = "bogus"'
 o="$(lint_hr)"; assert_contains "$o" "worktree=bogus" "invalid worktree value flagged"
-
-# invalid: [warp] present but missing source_branch
-mk_toml '[warp]
-branch_convention = "feature/<slug>"
-source_repo = "."
-worktree = "always"'
-o="$(lint_hr)"; assert_contains "$o" "missing source_branch" "missing source_branch flagged"
 
 # invalid: hook names a script that exists but is NOT executable
 printf 'echo hi\n' > "$HR/.loom/scripts/warp.sh"; chmod -x "$HR/.loom/scripts/warp.sh"
@@ -191,7 +184,6 @@ scripts_dir = ".loom/scripts"
 [warp]
 branch_convention = "feature/<slug>"
 source_repo = "."
-source_branch = "master"
 worktree = "always"
 hook = "warp.sh"'
 if [ -x "$HR/.loom/scripts/warp.sh" ]; then
@@ -202,6 +194,42 @@ else
   assert_contains "$o" "not executable" "non-executable hook script flagged"
 fi
 
+# invalid: a hook under a skill section the linter has no other check for names a script
+# that exists but is NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/open.sh"; chmod -x "$HR/.loom/scripts/open.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"
+[spec]
+hook = "open.sh"'
+if [ -x "$HR/.loom/scripts/open.sh" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "open.sh not executable" "skill-hook-key: non-executable skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" "open.sh not executable" "skill-hook-key: a non-executable hook under any skill section is flagged"
+fi
+
+# invalid: a script named after a skill under scripts_dir, no key at all, NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/weft"; chmod -x "$HR/.loom/scripts/weft"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"'
+if [ -x "$HR/.loom/scripts/weft" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "scripts/weft" "by-name: non-executable skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" ".loom/scripts/weft: script named after a skill but not executable" "by-name: a non-executable script named after a skill is flagged"
+fi
+rm -f "$HR/.loom/scripts/weft"
+chmod +x "$HR/.loom/scripts/warp.sh"   # an earlier case left warp.sh without the bit; by name it is now a finding
+
+# invalid: the .sh spelling named after a skill, no key, NOT executable
+printf 'echo hi\n' > "$HR/.loom/scripts/weft.sh"; chmod -x "$HR/.loom/scripts/weft.sh"
+mk_toml '[skills]
+scripts_dir = ".loom/scripts"'
+if [ -x "$HR/.loom/scripts/weft.sh" ]; then
+  o="$(lint_hr)"; assert_not_contains "$o" "scripts/weft" "by-name-suffixed: skipped when chmod -x is not observable"
+else
+  o="$(lint_hr)"; assert_contains "$o" ".loom/scripts/weft.sh: script named after a skill but not executable" "by-name-suffixed: weft.sh is flagged"
+fi
+rm -f "$HR/.loom/scripts/weft.sh"
+
 # valid: inline pipeline hook (not a file under scripts_dir) accepted as-is
 mk_toml '[skills]
 scripts_dir = ".loom/scripts"
@@ -209,6 +237,155 @@ scripts_dir = ".loom/scripts"
 cleanup = "ask"
 hook = "git status --porcelain | grep ."'
 o="$(lint_hr)"; assert_not_contains "$o" "HOOK" "inline pipeline hook accepted"
+
+# valid: [specs]/[plans]/[handoffs]/[reports] location overrides as relative in-repo paths (need not exist yet)
+mk_toml '[specs]
+repo_dir = "documentation/specs"
+work_dir = ".loom/work"
+[plans]
+dir = ".loom/plans"
+[handoffs]
+dir = ".loom/briefs"
+[reports]
+dir = "docs/reports"'
+o="$(lint_hr)"; assert_not_contains "$o" "LAYOUT" "relative location overrides accepted"
+
+# invalid: absolute or parent-escaping locations
+mk_toml '[specs]
+repo_dir = "/srv/specs"
+work_dir = "../shared/specs"
+[plans]
+dir = ".loom/../../plans"
+[handoffs]
+dir = "/srv/handoffs"
+[reports]
+dir = "../reports"'
+o="$(lint_hr)"; orc=$?
+assert_exit "$orc" "1" "bad location overrides fail the lint"
+assert_contains "$o" "LAYOUT   .loom/loom.toml: [specs] repo_dir=/srv/specs" "absolute repo_dir flagged"
+assert_contains "$o" "[specs] work_dir=../shared/specs"                      "parent-escaping work_dir flagged"
+assert_contains "$o" "[plans] dir=.loom/../../plans"                         "embedded .. in plans dir flagged"
+assert_contains "$o" "[handoffs] dir=/srv/handoffs"                          "absolute handoffs dir flagged"
+assert_contains "$o" "[reports] dir=../reports"                              "parent-escaping reports dir flagged"
 rm -rf "$HR"
+
+# --- no config at all: the shipped vocabulary is what documents are checked against ---
+# Two shapes of "no config": no .loom directory (noconf-repo), and a .loom directory that
+# holds no loom.toml (no-loom-toml). Neither is a LINT finding — loom demands no
+# configuration to run — and under both, kind and status are checked against the lists
+# doc-linter ships with, so the vocabulary still bites.
+NCR="$DIR/fixtures/noconf-repo"; rm -rf "$NCR"; mkdir -p "$NCR/docs"
+( cd "$NCR" && test_git_init )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n' > "$NCR/README.md"
+nco="$(cd "$NCR" && bash "$LINTER" 2>&1)"; ncrc=$?
+assert_exit "$ncrc" "0" "noconf-repo: a repo with no .loom directory exits 0"
+assert_contains "$nco" "doc-linter: clean" "noconf-repo: the shipped vocabulary accepts readme/living"
+assert_not_contains "$nco" "LINT" "noconf-repo: an absent config is never a LINT finding"
+
+printf -- '---\nkind: bogus\nstatus: living\nupdated: 2026-09-06\n---\n# Odd\n' > "$NCR/docs/odd.md"
+nco="$(cd "$NCR" && bash "$LINTER" 2>&1)"; ncrc=$?
+assert_exit "$ncrc" "1" "noconf-repo: a kind outside the shipped list still exits 1"
+assert_contains "$nco" "kind=bogus not allowed" "noconf-repo: documents are checked against the shipped kinds"
+assert_not_contains "$nco" "LINT" "noconf-repo: still no LINT finding without a config"
+rm -f "$NCR/docs/odd.md"
+
+# no-loom-toml: the .loom directory exists and the config file does not — same defaults.
+mkdir -p "$NCR/.loom/skills"
+printf -- '---\nkind: loom-config\nstatus: living\nupdated: 2026-09-06\n---\n# weave notes\n' > "$NCR/.loom/skills/weave.md"
+nlo="$(cd "$NCR" && bash "$LINTER" 2>&1)"; nlrc=$?
+assert_exit "$nlrc" "0" "no-loom-toml: a .loom directory without loom.toml exits 0"
+assert_contains "$nlo" "doc-linter: clean" "no-loom-toml: values check clean against the shipped lists"
+assert_not_contains "$nlo" "LINT" "no-loom-toml: a missing loom.toml is not a LINT finding"
+rm -rf "$NCR"
+
+# --- data-plane: a dated handoff and a report under .loom/ lint clean with no config line ---
+# handoff and report are shipped kinds; an explicit [lint] kinds list without them still bites.
+DP="$DIR/fixtures/data-plane-repo"; rm -rf "$DP"; mkdir -p "$DP/.loom/handoffs" "$DP/.loom/reports"
+( cd "$DP" && test_git_init )
+printf -- '---\nkind: handoff\nstatus: living\nupdated: 2026-09-07\n---\n# Handoff: probe\n\n## Objective\n\nOne line.\n' > "$DP/.loom/handoffs/2026-09-07-probe.md"
+printf -- '---\nkind: report\nstatus: living\nupdated: 2026-09-07\n---\n# Report: probe\n\n## Outcome\n\nOne line.\n' > "$DP/.loom/reports/2026-09-07-probe.md"
+dpo="$(cd "$DP" && bash "$LINTER" 2>&1)"; dprc=$?
+assert_exit "$dprc" "0" "data-plane: a handoff and a report under .loom/ with no config exit 0"
+assert_contains "$dpo" "doc-linter: clean" "data-plane: handoff and report are shipped kinds"
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$DP/.loom/loom.toml"
+dpo="$(cd "$DP" && bash "$LINTER" 2>&1)"; dprc=$?
+assert_exit "$dprc" "1" "data-plane: an explicit kind list without them exits 1"
+assert_contains "$dpo" "kind=handoff not allowed" "data-plane: handoff outside an explicit vocabulary is a finding"
+assert_contains "$dpo" "kind=report not allowed"  "data-plane: report outside an explicit vocabulary is a finding"
+rm -rf "$DP"
+
+# --- MISSING-negative: a listed path that is absent or gitignored is not a MISSING finding ---
+MN="$DIR/fixtures/missing-neg-repo"; rm -rf "$MN"; mkdir -p "$MN/ignored"
+printf 'ignored/\n' > "$MN/.gitignore"
+printf '# hidden\n' > "$MN/ignored/x.md"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n\n- `ignored/x.md` — gitignored\n- `absent/y.md` — never existed\n' > "$MN/README.md"
+( cd "$MN" && test_git_init && git add -A && git -c user.email=t@t -c user.name=t commit -q -m "seed: missing neg" )
+mno="$(cd "$MN" && bash "$LINTER" 2>&1)"; mnrc=$?
+assert_exit "$mnrc" "0" "MISSING-negative: an absent or gitignored listed path exits 0"
+assert_not_contains "$mno" "MISSING" "MISSING-negative: neither path is a MISSING finding"
+rm -rf "$MN"
+
+# --- gate-refuses: an unparseable loom.toml stops the lint before it starts ---
+# A broken config is refused whole, not applied as far as it parsed: the linter names the
+# file and exits 2, and the BROKEN link this repo carries is never reported.
+GR="$DIR/fixtures/gate-refuses-repo"; rm -rf "$GR"; mkdir -p "$GR/.loom"
+( cd "$GR" && test_git_init )
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n# Home\n\n[gone](nope/missing.md)\n' > "$GR/README.md"
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\nbad = { inline = "table" }\n' > "$GR/.loom/loom.toml"
+gro="$(cd "$GR" && bash "$LINTER" 2>&1)"; grrc=$?
+assert_exit "$grrc" "2" "gate-refuses: an unparseable config exits 2"
+assert_contains "$gro" "loom.toml" "gate-refuses: the bad file is named"
+assert_not_contains "$gro" "BROKEN" "gate-refuses: nothing is linted"
+assert_not_contains "$gro" "clean"  "gate-refuses: no verdict is printed"
+rm -rf "$GR"
+
+# --- skipped-links: external, fragment-only, and fenced links are not link findings ---
+SL="$DIR/fixtures/skipped-links-repo"; rm -rf "$SL"; mkdir -p "$SL/.loom"
+( cd "$SL" && test_git_init )
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$SL/.loom/loom.toml"
+{ printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-09-06\n---\n'
+  printf '# Home\n\n'
+  printf 'An [external link](https://example.invalid/nope.md) and a [fragment link](#home).\n\n'
+  printf '```\n[fenced link](nope/missing.md)\n```\n'
+} > "$SL/README.md"
+slo="$(cd "$SL" && bash "$LINTER" 2>&1)"; slrc=$?
+assert_exit "$slrc" "0" "skipped-links: none of the three links is a finding"
+assert_contains "$slo" "doc-linter: clean" "skipped-links: the repo reports clean"
+assert_not_contains "$slo" "BROKEN" "skipped-links: no BROKEN finding at all"
+assert_not_contains "$slo" "nope/missing.md" "skipped-links: the link inside the fence is not resolved"
+assert_not_contains "$slo" "example.invalid" "skipped-links: the external link is not resolved"
+rm -rf "$SL"
+
+# --- bad-date: an updated value that is not YYYY-MM-DD is named ---
+BD="$DIR/fixtures/bad-date-repo"; rm -rf "$BD"; mkdir -p "$BD/.loom"
+( cd "$BD" && test_git_init )
+printf '[lint]\nkinds = ["readme"]\nstatuses = ["living"]\n' > "$BD/.loom/loom.toml"
+printf -- '---\nkind: readme\nstatus: living\nupdated: 2026-9-6\n---\n# Home\n' > "$BD/README.md"
+bdo="$(cd "$BD" && bash "$LINTER" 2>&1)"; bdrc=$?
+assert_exit "$bdrc" "1" "bad-date: a non-ISO updated value exits 1"
+assert_contains "$bdo" "FRONTMATTER"      "bad-date: reports FRONTMATTER"
+assert_contains "$bdo" "updated=2026-9-6" "bad-date: names the offending value"
+rm -rf "$BD"
+
+# --- links-mode / links-missing-file: --links runs the link checks alone ---
+# No frontmatter is required, so dress can preview a repo's link findings before adoption.
+LM="$DIR/fixtures/links-mode-repo"; rm -rf "$LM"; mkdir -p "$LM"
+( cd "$LM" && test_git_init )
+printf '# Draft\n\n[gone](nope/missing.md)\n' > "$LM/draft.md"
+printf '# Fine\n\n[the draft](draft.md)\n' > "$LM/fine.md"
+lmo="$(cd "$LM" && bash "$LINTER" --links draft.md 2>&1)"; lmrc=$?
+assert_exit "$lmrc" "1" "links-mode: a broken link in an unstamped file exits 1"
+assert_contains "$lmo" "BROKEN"          "links-mode: reports BROKEN for the link"
+assert_contains "$lmo" "nope/missing.md" "links-mode: names the missing href"
+assert_not_contains "$lmo" "FRONTMATTER" "links-mode: frontmatter is neither required nor checked"
+lmo="$(cd "$LM" && bash "$LINTER" --links fine.md 2>&1)"; lmrc=$?
+assert_exit "$lmrc" "0" "links-mode: a run with no link finding exits 0"
+assert_contains "$lmo" "doc-linter --links: clean" "links-mode: a clean run says so in its own words"
+
+lfo="$(cd "$LM" && bash "$LINTER" --links no/such/file.md 2>&1)"; lfrc=$?
+assert_exit "$lfrc" "1" "links-missing-file: a path that does not exist exits 1"
+assert_contains "$lfo" "INPUT"            "links-missing-file: reports INPUT"
+assert_contains "$lfo" "no/such/file.md"  "links-missing-file: names the path"
+rm -rf "$LM"
 
 finish

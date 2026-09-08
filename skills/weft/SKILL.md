@@ -12,7 +12,7 @@ weft is subtractive by default: it removes slop, dedupes, and moves each fact to
 `weft` handles two operator intents:
 
 - **Review:** report the weak spots and proposed cuts; edit nothing.
-  - **Winnow:** make one coherent editorial pass, then re-check.
+- **Winnow:** make one coherent editorial pass, then re-check.
 
 ## Weft Control Surfaces
 
@@ -23,7 +23,7 @@ weft has no `.loom/loom.toml` section. Its standard is the shared ethos, its che
 | [editorial ethos](../../references/doc-convention.md) | the standard every cut is judged against: durable signal, one home, compression, determinism over prose |
 | `doc-scan` / `doc-linter` | the managed set and the mechanical findings, before and after edits |
 | `README.md` / `AGENTS.md` | the project's front doors and voice anchors |
-| `.loom/weft.md` | optional repo opinion: local voice, known-stale areas, stricter taste |
+| `.loom/skills/weft.md` | optional repo opinion: local voice, known-stale areas, stricter taste |
 | project tree and code | evidence that a doc is true, stale, misplaced, or needless |
 
 ## Workflow Graph
@@ -41,13 +41,15 @@ flowchart TD
 
 ## Workflow
 
+The gate first: a `loom gate: weft` receipt in your context says whether the repo opinion was read and which hook ran, with that opinion and that hook's output beneath it. Without one for this invocation, do the same by hand: read `.loom/skills/weft.md` if it exists and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-hook" weft`; exit 3 is no hook. A receipt from an earlier invocation does not count, and a hook tolerates a repeat.
+
 ### 1. Load - the standard and the voice
 
-Load the ethos weft enforces, the front doors it must preserve, and any repo opinion:
+Load the ethos weft enforces and the front doors it must preserve; the repo opinion arrived with the gate:
 
 ```bash
 cat "${CLAUDE_PLUGIN_ROOT}/references/doc-convention.md"
-cat README.md AGENTS.md .loom/weft.md 2>/dev/null
+cat README.md AGENTS.md 2>/dev/null
 ```
 
 Hold the pass to that standard: docs orient and route, code is the road, thin is often correct. A sentence earns its place only if it is durable, well-placed, and changes the reader's next action — "true" is not enough.

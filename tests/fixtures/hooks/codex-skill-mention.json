@@ -1,0 +1,10 @@
+{
+  "session_id": "codex-picker-smoke",
+  "turn_id": "picker-turn",
+  "transcript_path": null,
+  "cwd": "/work/project",
+  "hook_event_name": "UserPromptSubmit",
+  "model": "test-model",
+  "permission_mode": "default",
+  "prompt": "[$loom:warp](/plugin-cache/loom/0.2.0/skills/warp/SKILL.md) Codex desktop hook smoke test. Orient only and keep the current branch and workspace.\n"
+}

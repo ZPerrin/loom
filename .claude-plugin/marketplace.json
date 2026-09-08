@@ -5,7 +5,7 @@
     {
       "name": "loom",
       "source": "./",
-      "description": "Docs & context harness — lean, routed docs for agents."
+      "description": "Agentic workflow toolkit — lean, routed docs and living specs for agents."
     }
   ]
 }

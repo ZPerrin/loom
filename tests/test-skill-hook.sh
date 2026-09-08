@@ -29,7 +29,66 @@ o="$(cd "$R" && bash "$HOOK" weave 2>&1)"; rc=$?
 assert_exit "$rc" "7" "failing hook propagates its exit code"
 
 printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nbranch_convention = "feature/<slug>"\n' > "$R/.loom/loom.toml"
-o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+o="$(cd "$R" && bash "$HOOK" spec 2>&1)"; rc=$?
 assert_exit "$rc" "3" "no hook configured → exit 3"
+
+# no-partial-effect: a config the parser refuses is refused whole. The hook line sits above
+# the unparseable one, so a runner reading the parser's partial stdout would run it; reading
+# the parser's exit status instead does not. Exit 2, not 3 — a broken config is not "no hook".
+printf '[skills]\nscripts_dir = ".loom/scripts"\n[warp]\nhook = "warp.sh"\n[lint]\nbad = { inline = "table" }\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "2" "no-partial-effect: an unparseable loom.toml exits 2"
+assert_not_contains "$o" "HELPER_RAN" "no-partial-effect: the hook above the bad line does not run"
+assert_contains "$o" "unparseable" "no-partial-effect: the one line printed says the config is unparseable"
+assert_eq "$(printf '%s\n' "$o" | grep -c .)" "1" "no-partial-effect: exactly one line is printed"
+
+# command-hook: a value that is not a bare script name runs as a shell command.
+printf '[warp]\nhook = "echo CMD; helper"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "0" "command-hook: a shell command as the hook exits 0"
+assert_contains "$o" "CMD" "command-hook: the command runs"
+assert_contains "$o" "HELPER_RAN" "command-hook: with scripts_dir on its PATH"
+
+# configured-scripts-dir: a non-default [skills].scripts_dir is read, not the default.
+mkdir -p "$R/tools/hooks"; printf '#!/usr/bin/env bash\necho ALT_RAN\n' > "$R/tools/hooks/alt.sh"; chmod +x "$R/tools/hooks/alt.sh"
+printf '[skills]\nscripts_dir = "tools/hooks"\n[warp]\nhook = "alt.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "0" "configured-scripts-dir: hook under a non-default scripts_dir runs"
+assert_contains "$o" "ALT_RAN" "configured-scripts-dir: the configured directory is on PATH"
+
+# cannot-run: a hook naming a script without the execute bit fails with the shell's own code,
+# 126, which is neither 2 (refused config) nor 3 (no hook).
+printf '#!/usr/bin/env bash\necho NOEXEC\n' > "$R/.loom/scripts/noexec.sh"
+printf '[warp]\nhook = "noexec.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"; rc=$?
+assert_exit "$rc" "126" "cannot-run: a non-executable hook exits 126"
+assert_not_contains "$o" "NOEXEC" "cannot-run: the hook body never runs"
+
+# no-config-file: no .loom/loom.toml at all is the same outcome as no hook, exit 3.
+rm -f "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" spec 2>&1)"; rc=$?
+assert_exit "$rc" "3" "no-config-file: no loom.toml → exit 3"
+
+# convention: with no key, an executable under scripts_dir named after the skill is the hook,
+# with or without .sh; a key wins over the file.
+printf '#!/usr/bin/env bash\necho CONVENTION\n' > "$R/.loom/scripts/weft"; chmod +x "$R/.loom/scripts/weft"
+printf '#!/usr/bin/env bash\necho CONVENTION_SH\n' > "$R/.loom/scripts/dress.sh"; chmod +x "$R/.loom/scripts/dress.sh"
+printf '#!/usr/bin/env bash\necho KEY\n' > "$R/.loom/scripts/key.sh"; chmod +x "$R/.loom/scripts/key.sh"
+printf '[warp]\nhook = "key.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" weft 2>&1)"; rc=$?
+assert_exit "$rc" "0" "convention-name: a script named after the skill runs with no key"
+assert_contains "$o" "CONVENTION" "convention-name: it runs"
+assert_eq "$(cd "$R" && bash "$HOOK" --name weft)" "weft" "convention-name: --name says which file"
+o="$(cd "$R" && bash "$HOOK" dress 2>&1)"
+assert_contains "$o" "CONVENTION_SH" "convention-sh: the .sh spelling is found too"
+rm -f "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" weft 2>&1)"; rc=$?
+assert_exit "$rc" "0" "convention-noconf: no loom.toml at all still runs the named script"
+assert_contains "$o" "CONVENTION" "convention-noconf: it runs"
+printf '#!/usr/bin/env bash\necho "FILE"\n' > "$R/.loom/scripts/warp"; chmod +x "$R/.loom/scripts/warp"
+printf '[warp]\nhook = "key.sh"\n' > "$R/.loom/loom.toml"
+o="$(cd "$R" && bash "$HOOK" warp 2>&1)"
+assert_contains "$o" "KEY" "convention-key-wins: a configured key wins over the file"
+assert_not_contains "$o" "FILE" "convention-key-wins: the file does not also run"
 
 rm -rf "$R"; finish

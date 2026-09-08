@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# lint-hook — PostToolUse: lint a managed doc the moment a write lands on it.
+#   stdin: the harness payload, or the first argument where a harness passes it that way. The
+#   files written are tool_input.file_path (Write, Edit, MultiEdit) or the "*** Add File" and
+#   "*** Update File" headers of an apply_patch. Runs doc-linter once and returns the findings
+#   that name those files on stderr with exit 2, the contract both harnesses feed back to the
+#   model after the tool has run. A clean doc, a file that is not a managed doc, or a payload the
+#   hook cannot read is silence and exit 0. The linter stays the authority; this only moves its
+#   verdict to the moment of the write. A path is read up to the first escaped quote.
+set -u
+SELF="$(cd "$(dirname "$0")" && pwd)"
+. "$SELF/lib/discover.sh"
+
+payload="$(cat 2>/dev/null | tr -d '\n')"
+[ -n "$payload" ] || payload="$(printf '%s' "${1:-}" | tr -d '\n')"
+q='"'
+files=""
+case "$payload" in
+  *"${q}file_path${q}"*)   # the first file_path: tool_input comes before content, and a doc may hold a payload example
+    f="${payload#*"${q}file_path${q}"}"; f="${f#*$q}"; files="${f%%$q*}" ;;
+  *'*** '*' File: '*)      # apply_patch: every file the patch adds or updates
+    files="$(printf '%s' "$payload" | awk '{ gsub(/\\n/, "\n"); print }' | grep -E '^\*\*\* (Add|Update) File: ' | sed 's/^\*\*\* [A-Za-z]* File: //')" ;;
+esac
+[ -n "$files" ] || exit 0
+
+ROOT=""; LINT=""; out=""
+while IFS= read -r file; do
+  [ -n "$file" ] || continue
+  file="$(printf '%s' "$file" | sed 's#\\\\#\\#g; s#\\/#/#g')"   # JSON's two escapes a path can carry
+  case "$file" in *.md) ;; *) continue ;; esac
+  case "$file" in /*) ;; *) file="$PWD/$file" ;; esac
+  [ -f "$file" ] || continue
+  root="$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null)" || root="$(loom_repo_root)"
+  case "$file" in "$root"/*) rel="${file#"$root"/}" ;; *) continue ;; esac
+  has_kind_frontmatter "$file" || continue
+  [ -n "$ROOT" ] || { ROOT="$root"; LINT="$( (cd "$ROOT" && bash "$SELF/doc-linter" 2>&1) )"; }
+  # A finding line is "<KIND> <path>[:<line>]: <message>"; keep the ones whose path is this doc.
+  findings="$(printf '%s\n' "$LINT" | awk -v r="$rel" '
+    NF >= 2 && substr($2, 1, length(r)) == r {
+      rest = substr($2, length(r) + 1)
+      if (rest == "" || substr(rest, 1, 1) == ":") print
+    }')"
+  [ -n "$findings" ] && out="${out:+$out
+}doc-linter on $rel:
+$findings"
+done <<FILES
+$files
+FILES
+[ -n "$out" ] || exit 0
+printf '%s\n' "$out" >&2
+exit 2

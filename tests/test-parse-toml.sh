@@ -16,6 +16,19 @@ assert_contains "$out" "lint.kinds=roadmap"              "lint array 1"
 assert_contains "$out" "lint.kinds=readme"               "lint array 2"
 assert_not_contains "$out" "# a comment"                 "comment stripped"
 
+qc="$(awk -f "$AWK" "$F/quoted-comma.toml" 2>&1)"; qrc=$?
+assert_exit "$qrc" "0" "quoted-comma.toml exits 0"
+assert_contains "$qc" "context.sections=a, b" "quoted-comma: a comma inside a quoted element stays in it"
+assert_contains "$qc" "context.sections=c"    "quoted-comma: the next element still arrives on its own"
+assert_not_contains "$qc" "sections=\"a"       "quoted-comma: no half-quoted fragment is emitted"
+
+ml="$(awk -f "$AWK" "$F/multiline.toml" 2>&1)"; mrc=$?
+assert_exit "$mrc" "2" "multiline.toml: multiline array rejected with exit 2"
+assert_contains "$ml" "multiline array" "multiline.toml: the refusal names the construct"
+il="$(awk -f "$AWK" "$F/inline.toml" 2>&1)"; irc=$?
+assert_exit "$irc" "2" "inline.toml: inline table rejected with exit 2"
+assert_contains "$il" "inline table" "inline.toml: the refusal names the construct"
+
 awk -f "$AWK" "$F/aot.toml" >/dev/null 2>&1
 assert_exit "$?" "2" "array-of-tables rejected with exit 2"
 

@@ -1,5 +1,5 @@
 [discovery]
-exclude = ["tests/fixtures", "skills"]
+exclude = ["tests/fixtures", "skills", "CLAUDE.md"]
 
 [context]
 recent_commits = 10
@@ -7,16 +7,17 @@ slice_headers = ["## Now"]
 inject_fields = ["updated", "kind", "location"]
 
 [lint]
-kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan"]
-statuses = ["living", "hardened", "superseded", "scaffolding", "ideation"]
+kinds = ["readme", "reference", "roadmap", "loom-config", "spec", "plan", "handoff", "report"]
+statuses = ["living", "hardened", "superseded"]
 
 [warp]
 branch_convention = "issue/<number>-<slug> | feature/<slug>"
 source_repo = "."
-source_branch = "master"
-worktree = "always"
-hook = "warp.sh"
+worktree = "harness"
 
 [weave]
 cleanup = "always"
 rsi = "always"
+
+[lint.specs]
+max_file_lines = 500
