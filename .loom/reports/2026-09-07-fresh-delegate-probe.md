@@ -1,13 +1,13 @@
 ---
 kind: report
-status: living
+status: hardened
 updated: 2026-09-07
 ---
 # Fresh delegate probe
 
 The Claude half of the s11 experiment: a delegate that receives only its handoff path and the
 runtime pointer, with no session slice, finds loom's tools and the context its task needs. Run
-against the [data-plane handoff](../handoffs/2026-09-07-0.2-data-plane-context.md)'s acceptance
+against the data-plane handoff's acceptance
 line for one small useful delegated task with hooks absent, on the uncommitted s12 work.
 
 ## Setup

@@ -26,7 +26,7 @@ It's also very much a work in progress.
 | [spec](skills/spec/SKILL.md) | authors or extends one capability's living spec under the [spec grammar](references/spec-grammar.md), lint-clean before it is presented |
 | [refine-spec](skills/refine-spec/SKILL.md) | reconciles one capability's spec against its tests and code and reports drift by requirement id; the writing goes back through spec |
 
-Two files configure them, and eight scripts do the deterministic work:
+Three surfaces configure them, and eight scripts do the deterministic work:
 
 | control surface | what it does |
 |---|---|

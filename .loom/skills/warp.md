@@ -79,10 +79,6 @@ while the runtime changes. For an uncommitted fix, record the changed script's d
   ran the suite under bash 3.2 unprompted, and surfaced two spec ambiguities. Test: the same
   brief shape on Sonnet for the next test-writing delegation; if its Return reads the same,
   "Sonnet by default" stands for test work too.
-- 2026-09-06 (s7): The operator estimated a tenth of the markdown universe was slop or drift; a
-  whole-set weft delegate cut 0.5% unprompted and 3% under a ruled block list. Test: the next
-  whole-set weft opens with one sample cut agreed with the operator; if the unprompted share then
-  lands within 2x of the estimate, calibration becomes weft.md's rule.
 - 2026-09-06 (s7): Two specs contradicted each other (a managed-docs scenario asserted the LINT
   findings control-plane's INV-2 forbids) with both tests passing; four delegates fenced to one
   capability each saw nothing, and the operator's ruling on one exposed it. Test: refine-spec's
@@ -130,3 +126,7 @@ while the runtime changes. For an uncommitted fix, record the changed script's d
   and set no budget. Test: the next brief's Return sets a line budget for Evidence; if the report
   lands within it and the coordinator misses nothing, the reference project's example Return
   names one.
+- 2026-09-07 (s13): A release-notes delegate briefed with a per-capability shape returned 60
+  lines where the operator wanted 20 at the 20,000-foot view. Test: the next summary brief sets
+  the altitude and a line budget instead of a shape; if the draft lands usable without a rewrite,
+  altitude-and-budget replaces shape in Delegation.
